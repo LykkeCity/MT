@@ -9,6 +9,8 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Common.Costs;
+using Lykke.Snow.Common.Percents;
+using Lykke.Snow.Common.Quotes;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -19,7 +21,6 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.TradingConditions;
-using OrderDirection = MarginTrading.Backend.Core.Orders.OrderDirection;
 
 #pragma warning disable 1998
 
@@ -119,121 +120,27 @@ namespace MarginTrading.Backend.Services.Services
 
         public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine, decimal additionalMargin)
         {
-            _log.WriteInfo(nameof(CheckIsEnoughBalance), new { Order = order, additionalMargin }.ToJson(),
-                "Start checking if account balance is enough ...");
+            var account = _accountsProvider.GetAccountById(order.AccountId);
+
+            if (account == null)
+                throw new InvalidOperationException($"Account with id {order.AccountId} not found");
+            
+            ThrowIfClientProfileSettingsInvalid(order.AssetPairId, account.TradingConditionId);
+            
+            var (entryCost, exitCost) = CalculateCosts(order, account.TradingConditionId);
+            
+            var marginAvailable = account.GetMarginAvailable() + additionalMargin;
             
             var orderMargin = _fplService.GetInitMarginForOrder(order);
-            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, orderMargin }.ToJson(),
-                "Order margin calculated");
             
-            var account =_accountsProvider.GetAccountById(order.AccountId);
-            var accountMarginAvailable = account.GetMarginAvailable() + additionalMargin;
-            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, Account = account, accountMarginAvailable }.ToJson(),
-                "Account margin available calculated");
-
-            var quote = _quoteCacheService.GetQuote(order.AssetPairId);
-
-            decimal openPrice;
-            decimal closePrice;
-            var directionForClose = order.Volume.GetClosePositionOrderDirection();
-
-            if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume) &&
-                quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
-            {
-                closePrice = quote.GetPriceForOrderDirection(directionForClose);
-                openPrice = quote.GetPriceForOrderDirection(order.Direction);
-            }
-            else
-            {
-                var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
-                var closePriceInfo =
-                    matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
-
-                if (openPriceInfo.price == null || closePriceInfo == null)
-                {
-                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
-                        "Price for open/close can not be calculated");
-                }
-
-                closePrice = closePriceInfo.Value;
-                openPrice = openPriceInfo.price.Value;
-
-            }
-            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, Quote = quote, openPrice, closePrice }.ToJson(),
-                "Open and close prices calculated");
+            var pnlAtExecution = CalculatePnlAtExecution(order, matchingEngine);
             
+            var orderBalanceAvailable = new OrderBalanceAvailable(marginAvailable, pnlAtExecution, entryCost, exitCost);
 
-            var pnlInTradingCurrency = (closePrice - openPrice) * order.Volume;
-            var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
-                order.AssetPairId, order.LegalEntity,
-                pnlInTradingCurrency > 0);
-            var pnl = pnlInTradingCurrency * fxRate;
-
-            // just in case... is should be always negative
-            if (pnl > 0)
-            {
-                _log.WriteWarning(nameof(CheckIsEnoughBalance), order.ToJson(),
-                    $"Theoretical PnL at the moment of order execution is positive");
-                pnl = 0;
-            }
-            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, pnlInTradingCurrency, fxRate, pnl }.ToJson(),
-                "PNL calculated");
-            
-            var assetType = _assetPairsCache.GetAssetPairById(order.AssetPairId).AssetType;
-            if (!_clientProfileSettingsCache.TryGetValue(account.TradingConditionId, assetType, out var clientProfileSettings))
-                throw new InvalidOperationException($"Client profile settings for [{account.TradingConditionId}] and asset type [{assetType}] were not found in cache");
-
-            var tradingInstrument =
-                _tradingInstrumentsCache.GetTradingInstrument(account.TradingConditionId, order.AssetPairId);
-
-            var entryCost = CostHelper.CalculateEntryCost(
-                order.Price,
-                order.Direction == OrderDirection.Buy ? Lykke.Snow.Common.Costs.OrderDirection.Buy : Lykke.Snow.Common.Costs.OrderDirection.Sell,
-                quote.Ask,
-                quote.Bid,
-                fxRate,
-                tradingInstrument.Spread,
-                tradingInstrument.HedgeCost,
-                _marginTradingSettings.BrokerDefaultCcVolume,
-                _marginTradingSettings.BrokerDonationShare);
-
-            _log.WriteInfo(nameof(CheckIsEnoughBalance),
-                new
-                {
-                    OrderPrice = order.Price, OrderDirection = order.Direction, quote.Ask, quote.Bid, fxRate,
-                    tradingInstrument.Spread, tradingInstrument.HedgeCost, _marginTradingSettings.BrokerDefaultCcVolume,
-                    _marginTradingSettings.BrokerDonationShare, CalculatedEntryCost = entryCost
-                }.ToJson(),
-                "Entry cost calculated");
-            
-            var exitCost = CostHelper.CalculateExitCost(
-                order.Price,
-                order.Direction == OrderDirection.Buy ? Lykke.Snow.Common.Costs.OrderDirection.Buy : Lykke.Snow.Common.Costs.OrderDirection.Sell,
-                quote.Ask,
-                quote.Bid,
-                fxRate,
-                tradingInstrument.Spread,
-                tradingInstrument.HedgeCost,
-                _marginTradingSettings.BrokerDefaultCcVolume,
-                _marginTradingSettings.BrokerDonationShare);
-            
-            _log.WriteInfo(nameof(CheckIsEnoughBalance),
-                new
-                {
-                    OrderPrice = order.Price, OrderDirection = order.Direction, quote.Ask, quote.Bid, fxRate,
-                    tradingInstrument.Spread, tradingInstrument.HedgeCost, _marginTradingSettings.BrokerDefaultCcVolume,
-                    _marginTradingSettings.BrokerDonationShare, CalculatedExitCost = exitCost
-                }.ToJson(),
-                "Exit cost calculated");
-
-            if (accountMarginAvailable + pnl - entryCost - exitCost < orderMargin)
+            if (orderBalanceAvailable < orderMargin)
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
-                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl}, entry cost: {entryCost}, exit cost: {exitCost} " +
-                    $"(open price: {openPrice}, close price: {closePrice}, fx rate: {fxRate})");
-            
-            _log.WriteInfo(nameof(CheckIsEnoughBalance), new { Order = order,  accountMarginAvailable, pnl, entryCost, exitCost, orderMargin}.ToJson(),
-                "Account balance is enough, validation succeeded.");
+                    $"Account available margin: {marginAvailable}, order margin: {orderMargin}, pnl at execution: {pnlAtExecution}, entry cost: {entryCost}, exit cost: {exitCost} ");
         }
 
         public async ValueTask RemoveLiquidationStateIfNeeded(string accountId,
@@ -289,7 +196,6 @@ namespace MarginTrading.Backend.Services.Services
             account.AccountFpl.MarginCall1Level = _marginTradingSettings.DefaultTradingConditionsSettings.MarginCall1;
             account.AccountFpl.MarginCall2Level = _marginTradingSettings.DefaultTradingConditionsSettings.MarginCall2;
             account.AccountFpl.StopOutLevel = _marginTradingSettings.DefaultTradingConditionsSettings.StopOut;
-
         }
 
         private ICollection<Position> GetPositions(string accountId) =>
@@ -297,5 +203,88 @@ namespace MarginTrading.Backend.Services.Services
 
         private ICollection<Order> GetActiveOrders(string accountId) =>
             _ordersProvider.GetActiveOrdersByAccountIds(accountId);
+        
+        private decimal CalculatePnlAtExecution(Order order, IMatchingEngineBase matchingEngine)
+        {
+            var quote = _quoteCacheService.GetQuote(order.AssetPairId);
+            
+            decimal openPrice;
+            decimal closePrice;
+            var directionForClose = order.Volume.GetClosePositionOrderDirection();
+
+            if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume) &&
+                quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
+            {
+                closePrice = quote.GetPriceForOrderDirection(directionForClose);
+                openPrice = quote.GetPriceForOrderDirection(order.Direction);
+            }
+            else
+            {
+                var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+                var closePriceInfo =
+                    matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
+
+                if (openPriceInfo.price == null || closePriceInfo == null)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                        "Price for open/close can not be calculated");
+                }
+
+                closePrice = closePriceInfo.Value;
+                openPrice = openPriceInfo.price.Value;
+
+            }
+
+            var pnlInTradingCurrency = (closePrice - openPrice) * order.Volume;
+            var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
+                order.AssetPairId, order.LegalEntity,
+                pnlInTradingCurrency > 0);
+            
+            var result = pnlInTradingCurrency * fxRate;
+
+            // just in case... is should be always negative
+            if (result > 0)
+            {
+                _log.WriteWarning(nameof(CalculatePnlAtExecution), order.ToJson(),
+                    $"Theoretical PnL at the moment of order execution is positive");
+
+                result = 0;
+            }
+
+            return result;
+        }
+
+        private (EntryCost, ExitCost) CalculateCosts(Order order, string tradingConditionId)
+        {
+            var quote = _quoteCacheService.GetQuote(order.AssetPairId).ToMathModel();
+
+            var tradingInstrument = _tradingInstrumentsCache.GetTradingInstrument(tradingConditionId, order.AssetPairId);
+
+            var executionPrice = order.Price.HasValue
+                ? new ExecutionPrice(order.Price.Value)
+                : quote.GetOrderExecutionPrice((Lykke.Snow.Common.Costs.OrderDirection)order.Direction);
+
+            var spread = quote.Spread == Spread.Zero
+                ? new Spread(tradingInstrument.Spread)
+                : quote.Spread;
+
+            return (
+                new EntryCost(executionPrice, spread, GetCostConfiguration),
+                new ExitCost(executionPrice, spread, GetCostConfiguration));
+
+            (HedgeCost hedgeCost, decimal defaultCcVolume, DonationShare donationShare) GetCostConfiguration() => (
+                new HedgeCost(tradingInstrument.HedgeCost),
+                _marginTradingSettings.BrokerDefaultCcVolume,
+                new DonationShare(_marginTradingSettings.BrokerDonationShare)
+            );
+        }
+
+        private void ThrowIfClientProfileSettingsInvalid(string assetPairId, string tradingConditionId)
+        {
+            var assetType = _assetPairsCache.GetAssetPairById(assetPairId).AssetType;
+            
+            if (!_clientProfileSettingsCache.TryGetValue(tradingConditionId, assetType, out _))
+                throw new InvalidOperationException($"Client profile settings for [{tradingConditionId}] and asset type [{assetType}] were not found in cache");
+        }
     }
 }

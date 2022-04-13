@@ -16,7 +16,7 @@
     <PackageReference Include="AutoMapper" Version="7.0.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Lykke.Common" Version="7.5.0" />
-    <PackageReference Include="Lykke.Snow.Common" Version="1.38.0" />
+    <PackageReference Include="Lykke.Snow.Common" Version="1.39.0" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="1.4.1" />
