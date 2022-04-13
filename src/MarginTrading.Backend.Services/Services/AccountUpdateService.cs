@@ -128,7 +128,7 @@ namespace MarginTrading.Backend.Services.Services
             ThrowIfClientProfileSettingsInvalid(order.AssetPairId, account.TradingConditionId);
             
             var (entryCost, exitCost) = CalculateCosts(order, account.TradingConditionId);
-            
+
             var marginAvailable = account.GetMarginAvailable() + additionalMargin;
             
             var orderMargin = _fplService.GetInitMarginForOrder(order);
@@ -136,6 +136,10 @@ namespace MarginTrading.Backend.Services.Services
             var pnlAtExecution = CalculatePnlAtExecution(order, matchingEngine);
             
             var orderBalanceAvailable = new OrderBalanceAvailable(marginAvailable, pnlAtExecution, entryCost, exitCost);
+
+            _log.WriteInfo(nameof(CheckIsEnoughBalance),
+                new { order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
+                $"Calculation made on order");
 
             if (orderBalanceAvailable < orderMargin)
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
