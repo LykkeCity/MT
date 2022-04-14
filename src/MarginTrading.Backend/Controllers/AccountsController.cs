@@ -171,7 +171,7 @@ namespace MarginTrading.Backend.Controllers
             }
             catch (AccountNotFoundException)
             {
-                return Task.FromResult((AccountCapitalFigures)null);
+                return Task.FromResult(AccountCapitalFigures.Empty);
             }
         }
 
