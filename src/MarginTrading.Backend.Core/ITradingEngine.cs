@@ -54,9 +54,9 @@ namespace MarginTrading.Backend.Core
             
         Task ChangeOrderAsync(string orderId, decimal price, OriginatorType originator,
             string additionalInfo, bool? forceOpen = null);
-            
-        (bool WillOpenPosition, decimal ReleasedMargin) MatchOnExistingPositions(Order order);
-        
+
+        OrderMatchingDecision MatchOnExistingPositions(Order order);
+
         void ProcessExpiredOrders(DateTime operationIntervalEnd);
 
         Task ChangeOrderValidityAsync(string orderId, DateTime validity, OriginatorType originator,

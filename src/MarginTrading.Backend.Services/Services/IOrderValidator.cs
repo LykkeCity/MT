@@ -13,12 +13,11 @@ using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Services
 {
-    public interface IValidateOrderService
+    public interface IOrderValidator
     {
         Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndCreateOrders(OrderPlaceRequest request);
 
-        void MakePreTradeValidation(Order order, bool shouldOpenNewPosition, IMatchingEngineBase matchingEngine,
-            decimal additionalMargin);
+        void PreTradeValidate(OrderMatchingDecision matchingDecision, IMatchingEngineBase matchingEngine);
 
         void ValidateOrderPriceChange(Order order, decimal newPrice);
 

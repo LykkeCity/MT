@@ -118,27 +118,27 @@ namespace MarginTrading.Backend.Services.Services
             }
         }
 
-        public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine, decimal additionalMargin)
+        public void CheckBalance(OrderMatchingDecision matchingDecision, IMatchingEngineBase matchingEngine)
         {
-            var account = _accountsProvider.GetAccountById(order.AccountId);
+            var account = _accountsProvider.GetAccountById(matchingDecision.Order.AccountId);
 
             if (account == null)
-                throw new InvalidOperationException($"Account with id {order.AccountId} not found");
+                throw new InvalidOperationException($"Account with id {matchingDecision.Order.AccountId} not found");
             
-            ThrowIfClientProfileSettingsInvalid(order.AssetPairId, account.TradingConditionId);
+            ThrowIfClientProfileSettingsInvalid(matchingDecision.Order.AssetPairId, account.TradingConditionId);
             
-            var (entryCost, exitCost) = CalculateCosts(order, account.TradingConditionId);
+            var (entryCost, exitCost) = CalculateCosts(matchingDecision.Order, matchingDecision.VolumeToMatch, account.TradingConditionId);
 
-            var marginAvailable = account.GetMarginAvailable() + additionalMargin;
+            var marginAvailable = account.GetMarginAvailable() + matchingDecision.PositionsState?.Margin ?? 0;
             
-            var orderMargin = _fplService.GetInitMarginForOrder(order);
+            var orderMargin = _fplService.GetInitMarginForOrder(matchingDecision.Order, matchingDecision.VolumeToMatch);
             
-            var pnlAtExecution = CalculatePnlAtExecution(order, matchingEngine);
+            var pnlAtExecution = CalculatePnlAtExecution(matchingDecision.Order, matchingDecision.VolumeToMatch, matchingEngine);
             
             var orderBalanceAvailable = new OrderBalanceAvailable(marginAvailable, pnlAtExecution, entryCost, exitCost);
 
-            _log.WriteInfo(nameof(CheckIsEnoughBalance),
-                new { order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
+            _log.WriteInfo(nameof(CheckBalance),
+                new { matchingDecision.Order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
                 $"Calculation made on order");
 
             if (orderBalanceAvailable < orderMargin)
@@ -171,7 +171,7 @@ namespace MarginTrading.Backend.Services.Services
             var positions = GetPositions(account.Id);
             var accuracy = AssetsConstants.DefaultAssetAccuracy;
             var positionsMargin = positions.Sum(item => item.GetOvernightMarginMaintenance());
-            var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
+            var pendingOrdersMargin = 0;
 
             return Math.Round(positionsMargin + pendingOrdersMargin, accuracy);
         }
@@ -185,7 +185,7 @@ namespace MarginTrading.Backend.Services.Services
             var accuracy = AssetsConstants.DefaultAssetAccuracy;
             var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
-            var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
+            var pendingOrdersMargin = 0;
 
             account.AccountFpl.PnL = Math.Round(positions.Sum(x => x.GetTotalFpl()), accuracy);
             account.AccountFpl.UnrealizedDailyPnl =
@@ -208,7 +208,7 @@ namespace MarginTrading.Backend.Services.Services
         private ICollection<Order> GetActiveOrders(string accountId) =>
             _ordersProvider.GetActiveOrdersByAccountIds(accountId);
         
-        private decimal CalculatePnlAtExecution(Order order, IMatchingEngineBase matchingEngine)
+        private decimal CalculatePnlAtExecution(Order order, decimal actualVolume, IMatchingEngineBase matchingEngine)
         {
             var quote = _quoteCacheService.GetQuote(order.AssetPairId);
             
@@ -216,17 +216,16 @@ namespace MarginTrading.Backend.Services.Services
             decimal closePrice;
             var directionForClose = order.Volume.GetClosePositionOrderDirection();
 
-            if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume) &&
-                quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
+            if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(actualVolume) &&
+                quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(actualVolume))
             {
                 closePrice = quote.GetPriceForOrderDirection(directionForClose);
                 openPrice = quote.GetPriceForOrderDirection(order.Direction);
             }
             else
             {
-                var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
-                var closePriceInfo =
-                    matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
+                var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, actualVolume);
+                var closePriceInfo = matchingEngine.GetPriceForClose(order.AssetPairId, actualVolume, openPriceInfo.externalProviderId);
 
                 if (openPriceInfo.price == null || closePriceInfo == null)
                 {
@@ -236,12 +235,12 @@ namespace MarginTrading.Backend.Services.Services
 
                 closePrice = closePriceInfo.Value;
                 openPrice = openPriceInfo.price.Value;
-
             }
 
-            var pnlInTradingCurrency = (closePrice - openPrice) * order.Volume;
+            var pnlInTradingCurrency = (closePrice - openPrice) * actualVolume;
             var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
-                order.AssetPairId, order.LegalEntity,
+                order.AssetPairId,
+                order.LegalEntity,
                 pnlInTradingCurrency > 0);
             
             var result = pnlInTradingCurrency * fxRate;
@@ -258,7 +257,7 @@ namespace MarginTrading.Backend.Services.Services
             return result;
         }
 
-        private (EntryCost, ExitCost) CalculateCosts(Order order, string tradingConditionId)
+        private (EntryCost, ExitCost) CalculateCosts(Order order, decimal volumeToMatch, string tradingConditionId)
         {
             var quote = _quoteCacheService.GetQuote(order.AssetPairId).ToMathModel();
 
@@ -273,14 +272,15 @@ namespace MarginTrading.Backend.Services.Services
                 : quote.Spread;
 
             return (
-                new EntryCost(executionPrice, spread, GetCostConfiguration),
-                new ExitCost(executionPrice, spread, GetCostConfiguration));
-
-            (HedgeCost hedgeCost, decimal defaultCcVolume, DonationShare donationShare) GetCostConfiguration() => (
-                new HedgeCost(tradingInstrument.HedgeCost),
-                _marginTradingSettings.BrokerDefaultCcVolume,
-                new DonationShare(_marginTradingSettings.BrokerDonationShare)
-            );
+                new EntryCost(executionPrice, spread, () => (
+                    new HedgeCost(tradingInstrument.HedgeCost),
+                    order.Volume,
+                    new DonationShare(_marginTradingSettings.BrokerDonationShare)
+                )),
+                new ExitCost(executionPrice, spread, () => (
+                    new HedgeCost(tradingInstrument.HedgeCost),
+                    volumeToMatch,
+                    new DonationShare(_marginTradingSettings.BrokerDonationShare))));
         }
 
         private void ThrowIfClientProfileSettingsInvalid(string assetPairId, string tradingConditionId)
