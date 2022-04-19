@@ -431,7 +431,7 @@ namespace MarginTradingTests
                             executedOrders++;
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         exceptions++;
                     }
@@ -1448,19 +1448,19 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURRUB", _account,
                 MarginTradingTestsUtils.TradingConditionId, newVolume);
 
-            var matchOnPositionsResult = _tradingEngine.MatchOnExistingPositions(order);
+            var matchingDecision = _tradingEngine.MatchOnExistingPositions(order);
             
-            Assert.AreEqual(willOpenPosition, matchOnPositionsResult.WillOpenPosition);
-            Assert.AreEqual(releasedMargin, matchOnPositionsResult.ReleasedMargin);
+            Assert.AreEqual(willOpenPosition, matchingDecision.ShouldOpenPosition);
+            Assert.AreEqual(releasedMargin, matchingDecision.PositionsState?.Margin ?? 0);
             
 
             var orderWithForce = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURRUB", _account,
                 MarginTradingTestsUtils.TradingConditionId, newVolume, forceOpen: true);
             
-            var matchOnPositionsWithForceResult = _tradingEngine.MatchOnExistingPositions(orderWithForce);
+            var matchingDecisionWithForce = _tradingEngine.MatchOnExistingPositions(orderWithForce);
 
-            Assert.AreEqual(true, matchOnPositionsWithForceResult.WillOpenPosition);
-            Assert.AreEqual(0m, matchOnPositionsWithForceResult.ReleasedMargin);
+            Assert.AreEqual(true, matchingDecisionWithForce.ShouldOpenPosition);
+            Assert.AreEqual(0m, matchingDecisionWithForce.PositionsState?.Margin ?? 0);
         }
 
         #endregion

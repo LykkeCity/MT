@@ -2,17 +2,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
-using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTradingTests.Helpers;
 using MarginTradingTests.Services;
 using NUnit.Framework;
@@ -107,13 +104,14 @@ namespace MarginTradingTests
             var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 96000);
 
-            Assert.DoesNotThrow(() => _accountUpdateService.CheckBalance(order1, me, 0));
+            Assert.DoesNotThrow(() =>
+                _accountUpdateService.CheckBalance(OrderMatchingDecision.Force(order1, DateTime.UtcNow, true), me));
 
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 97000);
 
             Assert.Throws<ValidateOrderException>(() =>
-                _accountUpdateService.CheckBalance(order2, me, 0));
+                _accountUpdateService.CheckBalance(OrderMatchingDecision.Force(order2, DateTime.UtcNow, true), me));
 
             var meWithSpread = new FakeMatchingEngine(10, closePrice: 1);
 
@@ -121,21 +119,21 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 96000);
 
             Assert.Throws<ValidateOrderException>(
-                () => _accountUpdateService.CheckBalance(order3, meWithSpread, 0));
+                () => _accountUpdateService.CheckBalance(OrderMatchingDecision.Force(order3, DateTime.UtcNow, true), meWithSpread));
             
             var meForLimitOk = new FakeMatchingEngine(999);
             
             var limitOrderOk = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
 
-            Assert.DoesNotThrow(() => _accountUpdateService.CheckBalance(limitOrderOk, meForLimitOk, 0));
+            Assert.DoesNotThrow(() => _accountUpdateService.CheckBalance(OrderMatchingDecision.Force(limitOrderOk, DateTime.UtcNow, true), meForLimitOk));
             
             var limitOrderErr = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
 
             var meWithHighPrice = new FakeMatchingEngine(1000, 10);
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _accountUpdateService.CheckBalance(limitOrderErr, meWithHighPrice, 0));
+                _accountUpdateService.CheckBalance(OrderMatchingDecision.Force(limitOrderErr, DateTime.UtcNow, true), meWithHighPrice));
 
             Console.WriteLine(ex.Comment);
         }
