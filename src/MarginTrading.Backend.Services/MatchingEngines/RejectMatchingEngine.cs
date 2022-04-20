@@ -17,10 +17,10 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
+        public ValueTask<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
-            return Task.FromResult(new MatchedOrderCollection());
+            return new ValueTask<MatchedOrderCollection>(new MatchedOrderCollection());
         }
 
         public (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume)

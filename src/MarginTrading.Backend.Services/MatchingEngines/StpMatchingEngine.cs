@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             Id = id;
         }
         
-        public async Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
+        public async ValueTask<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
             List<(string source, decimal? price)> prices = null;

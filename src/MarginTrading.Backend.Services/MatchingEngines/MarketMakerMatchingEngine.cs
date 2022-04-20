@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
+        public ValueTask<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
             using (_contextFactory.GetWriteSyncContext(
@@ -134,7 +134,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 _orderBooks.Update(orderFulfillmentPlan.Order.AssetPairId, orderBookTypeToMatch, matchedOrders);
                 ProduceBestPrice(orderFulfillmentPlan.Order.AssetPairId);
 
-                return Task.FromResult(matchedOrders);
+                return new ValueTask<MatchedOrderCollection>(matchedOrders);
             }
         }
 

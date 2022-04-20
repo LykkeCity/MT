@@ -8,9 +8,6 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -39,19 +36,22 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _externalExecutionTime = externalExecutionTime;
         }
         
-        public Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
+        public ValueTask<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
-            var col = new MatchedOrderCollection(new [] {new MatchedOrder
-            {
-                OrderId = _externalOrderId,
-                MarketMakerId = _marketMakerId,
-                Volume = Math.Abs(orderFulfillmentPlan.UnfulfilledVolume),
-                Price = _price,
-                MatchedDate = _externalExecutionTime,
-                IsExternal = true,
-            }});
-            return Task.FromResult(col);
+            return new ValueTask<MatchedOrderCollection>(
+                new MatchedOrderCollection(new[]
+                {
+                    new MatchedOrder
+                    {
+                        OrderId = _externalOrderId,
+                        MarketMakerId = _marketMakerId,
+                        Volume = Math.Abs(orderFulfillmentPlan.UnfulfilledVolume),
+                        Price = _price,
+                        MatchedDate = _externalExecutionTime,
+                        IsExternal = true,
+                    }
+                }));
         }
 
         public (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume)
@@ -66,7 +66,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public OrderBook GetOrderBook(string instrument)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }
