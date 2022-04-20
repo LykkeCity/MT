@@ -14,11 +14,7 @@ namespace MarginTrading.Backend.Core.Orders
         /// The order identifier state is linked to
         /// </summary>
         public string OrderId { get; }
-
-        /// <summary>
-        /// The timestamp of the state
-        /// </summary>
-        public DateTime Timestamp { get; }
+        
 
         /// <summary>
         /// All matching positions margin
@@ -31,12 +27,10 @@ namespace MarginTrading.Backend.Core.Orders
         public decimal Volume { get; }
 
         public MatchedPositionsState(string orderId,
-            DateTime timestamp,
             decimal margin,
             decimal volume)
         {
             OrderId = orderId;
-            Timestamp = timestamp;
             Margin = margin;
             Volume = volume;
         }

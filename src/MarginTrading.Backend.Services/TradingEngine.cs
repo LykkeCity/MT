@@ -440,13 +440,11 @@ namespace MarginTrading.Backend.Services
 
         public OrderFulfillmentPlan MatchOnExistingPositions(Order order)
         {
-            var timestamp = _dateService.Now();
-            
             if (order.ForceOpen)
-                return OrderFulfillmentPlan.Force(order, timestamp, true);
+                return OrderFulfillmentPlan.Force(order, true);
 
             if (order.PositionsToBeClosed.Any())
-                return OrderFulfillmentPlan.Force(order, timestamp, false);
+                return OrderFulfillmentPlan.Force(order, false);
 
             var oppositeDirectionPositions = _ordersCache
                 .Positions
@@ -454,7 +452,7 @@ namespace MarginTrading.Backend.Services
                 .Where(p => p.Status == PositionStatus.Active && p.Direction == order.Direction.GetClosePositionDirection())
                 .ToList();
 
-            return OrderFulfillmentPlan.Create(order, timestamp, oppositeDirectionPositions);
+            return OrderFulfillmentPlan.Create(order, oppositeDirectionPositions);
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)

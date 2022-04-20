@@ -20,8 +20,7 @@ namespace MarginTradingTests
             Assert.Throws<OrderFulfillmentPlanException>(() =>
                 OrderFulfillmentPlan.Create(
                     DumbDataGenerator.GenerateOrder(assetPairId: "1"),
-                    DateTime.UtcNow,
-                    new List<Position> { DumbDataGenerator.GeneratePosition(assetPairId: "2") }));
+                    DumbDataGenerator.GeneratePosition(assetPairId: "2")));
         }
 
         [Test]
@@ -35,7 +34,6 @@ namespace MarginTradingTests
             Assert.Throws<OrderFulfillmentPlanException>(() =>
                 OrderFulfillmentPlan.Create(
                     DumbDataGenerator.GenerateOrder(),
-                    DateTime.UtcNow,
                     new List<Position> { p1, p2 }));
         }
 
@@ -45,8 +43,7 @@ namespace MarginTradingTests
             Assert.Throws<OrderFulfillmentPlanException>(() =>
                 OrderFulfillmentPlan.Create(
                     DumbDataGenerator.GenerateOrder(volume: 100),
-                    DateTime.UtcNow,
-                    new List<Position> { DumbDataGenerator.GeneratePosition(volume: 10) }));
+                    DumbDataGenerator.GeneratePosition(volume: 10)));
         }
         
         [Test]
@@ -55,8 +52,7 @@ namespace MarginTradingTests
             Assert.Throws<OrderFulfillmentPlanException>(() =>
                 OrderFulfillmentPlan.Create(
                     DumbDataGenerator.GenerateOrder(volume: 100, accountId: "acc1"),
-                    DateTime.UtcNow,
-                    new List<Position> { DumbDataGenerator.GeneratePosition(volume: -50, accountId: "acc2") }));
+                    DumbDataGenerator.GeneratePosition(volume: -50, accountId: "acc2")));
         }
 
         [Test]
@@ -65,7 +61,6 @@ namespace MarginTradingTests
             Assert.DoesNotThrow(() => 
                 OrderFulfillmentPlan.Create(
                     DumbDataGenerator.GenerateOrder(), 
-                    DateTime.UtcNow,
                 Enumerable.Empty<Position>().ToList()));
         }
 
@@ -79,8 +74,7 @@ namespace MarginTradingTests
         {
             var fulfillmentPlan = OrderFulfillmentPlan.Create(
                 DumbDataGenerator.GenerateOrder(volume: orderVolume),
-                DateTime.UtcNow,
-                new List<Position>{DumbDataGenerator.GeneratePosition(volume: totalPositionsVolume)});
+                DumbDataGenerator.GeneratePosition(volume: totalPositionsVolume));
             
             Assert.AreEqual(requiresPositionOpening, fulfillmentPlan.RequiresPositionOpening);
         }

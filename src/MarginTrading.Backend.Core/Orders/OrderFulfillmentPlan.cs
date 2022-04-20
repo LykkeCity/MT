@@ -11,6 +11,9 @@ using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Orders
 {
+    /// <summary>
+    /// The data structure which contains details on possible order fulfillment 
+    /// </summary>
     public sealed class OrderFulfillmentPlan
     {
         /// <summary>
@@ -44,31 +47,21 @@ namespace MarginTrading.Backend.Core.Orders
         public bool RequiresPositionOpening { get; }
 
         /// <summary>
-        /// The timestamp of the plan
-        /// </summary>
-        public DateTime Timestamp { get; }
-
-        /// <summary>
         /// Opposite direction matched positions state
         /// </summary>
         [CanBeNull]
         public MatchedPositionsState OppositePositionsState { get; }
 
         private OrderFulfillmentPlan(Order order,
-            bool requiresPositionOpening,
-            DateTime timestamp)
+            bool requiresPositionOpening)
         {
             Order = order ?? throw new ArgumentNullException(nameof(order));
             RequiresPositionOpening = requiresPositionOpening;
-            Timestamp = timestamp;
         }
 
-        private OrderFulfillmentPlan(Order order,
-            DateTime timestamp,
-            MatchedPositionsState oppositePositionsState)
+        private OrderFulfillmentPlan(Order order, MatchedPositionsState oppositePositionsState)
         {
             Order = order ?? throw new ArgumentNullException(nameof(order));
-            Timestamp = timestamp;
             OppositePositionsState = oppositePositionsState;
 
             RequiresPositionOpening = Math.Abs(UnfulfilledVolume) > 0;
@@ -78,21 +71,18 @@ namespace MarginTrading.Backend.Core.Orders
         /// Creates the fulfillment plan regardless of any other conditions
         /// </summary>
         /// <param name="order">The order</param>
-        /// <param name="timestamp">The timestamp of the plan</param>
         /// <param name="requiresPositionOpening">Indicates if new position should be opened or not</param>
         /// <returns></returns>
-        public static OrderFulfillmentPlan Force(Order order, DateTime timestamp, bool requiresPositionOpening) =>
-            new OrderFulfillmentPlan(order, requiresPositionOpening, timestamp);
+        public static OrderFulfillmentPlan Force(Order order, bool requiresPositionOpening) =>
+            new OrderFulfillmentPlan(order, requiresPositionOpening);
 
         /// <summary>
         /// Creates the fulfillment plan based on already opened matched positions volume math
         /// </summary>
         /// <param name="order">The order</param>
-        /// <param name="timestamp">The timestamp of the plan</param>
         /// <param name="openedPositions">Already opened positions in opposite direction</param>
         /// <returns></returns>
         public static OrderFulfillmentPlan Create(Order order,
-            DateTime timestamp,
             ICollection<Position> openedPositions)
         {
             var sameAssetRequirement = openedPositions.All(p => p.AssetPairId == order.AssetPairId);
@@ -114,9 +104,13 @@ namespace MarginTrading.Backend.Core.Orders
 
             var summary = openedPositions.SummarizeVolume();
 
-            return new OrderFulfillmentPlan(order, 
-                timestamp,
-                new MatchedPositionsState(order.Id, timestamp, summary.Margin, summary.Volume));
+            return new OrderFulfillmentPlan(order, new MatchedPositionsState(order.Id, summary.Margin, summary.Volume));
         }
+
+        /// <summary>
+        /// Creates the fulfillment plan based on already opened matched position volume math
+        /// </summary>
+        public static OrderFulfillmentPlan Create(Order order, Position position) =>
+            Create(order, new List<Position> { position });
     }
 }
