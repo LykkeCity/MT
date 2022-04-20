@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.MatchingEngines
 {
@@ -15,8 +14,7 @@ namespace MarginTrading.Backend.Core.MatchingEngines
         
         MatchingEngineMode Mode { get; }
 
-        Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition, 
-            OrderModality modality = OrderModality.Regular);
+        Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision, OrderModality modality = OrderModality.Regular);
         
         (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume);
         

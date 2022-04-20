@@ -22,9 +22,9 @@ namespace MarginTrading.Backend.Core.Extensions
                     Margin = g.Sum(p => p.GetMarginMaintenance()),
                     Volume = g.Sum(p => Math.Abs(p.Volume))
 
-                }).Single();
+                }).SingleOrDefault();
 
-            return (result.Margin, result.Volume);
+            return (result?.Margin ?? 0, result?.Volume ?? 0);
         }
     }
 }

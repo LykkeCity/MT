@@ -288,13 +288,13 @@ namespace MarginTrading.Backend.Services
 
                 order.SetRates(equivalentRate, fxRate);
 
-                var matchingDecision = MatchOnExistingPositions(order);
+                var positionsMatchingDecision = MatchOnExistingPositions(order);
 
                 if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
                 {
                     try
                     {
-                        _orderValidator.PreTradeValidate(matchingDecision, matchingEngine);
+                        _orderValidator.PreTradeValidate(positionsMatchingDecision, matchingEngine);
                     }
                     catch (ValidateOrderException ex)
                     {
@@ -306,7 +306,7 @@ namespace MarginTrading.Backend.Services
                 MatchedOrderCollection matchedOrders;
                 try
                 {
-                    matchedOrders = await matchingEngine.MatchOrderAsync(order, matchingDecision.ShouldOpenPosition, modality);
+                    matchedOrders = await matchingEngine.MatchOrderAsync(positionsMatchingDecision, modality);
                 }
                 catch (OrderExecutionTechnicalException)
                 {
@@ -438,15 +438,15 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public OrderMatchingDecision MatchOnExistingPositions(Order order)
+        public PositionsMatchingDecision MatchOnExistingPositions(Order order)
         {
             var timestamp = _dateService.Now();
             
             if (order.ForceOpen)
-                return OrderMatchingDecision.Force(order, timestamp, true);
+                return PositionsMatchingDecision.Force(order, timestamp, true);
 
             if (order.PositionsToBeClosed.Any())
-                return OrderMatchingDecision.Force(order, timestamp, false);
+                return PositionsMatchingDecision.Force(order, timestamp, false);
 
             var oppositeDirectionPositions = _ordersCache
                 .Positions
@@ -455,7 +455,7 @@ namespace MarginTrading.Backend.Services
                             && p.Direction == order.Direction.GetClosePositionDirection())
                 .Summarize();
 
-            return OrderMatchingDecision.Create(order,
+            return PositionsMatchingDecision.Create(order,
                 timestamp,
                 new MatchedPositionsState(order.Id, 
                     timestamp, 
@@ -534,12 +534,12 @@ namespace MarginTrading.Backend.Services
             {
                 var price = quote.GetPriceForOrderDirection(order.Direction);
 
+                var positionsMatchingDecision = MatchOnExistingPositions(order);
+
                 if (order.IsSuitablePriceForPendingOrder(price) &&
-                    _orderValidator.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
-                        MatchOnExistingPositions(order).ShouldOpenPosition))
+                    _orderValidator.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType, positionsMatchingDecision.ShouldOpenPosition))
                 {
-                    // todo: probably, here we have to use final volume, taking into account positions to be closed
-                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
+                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(positionsMatchingDecision.VolumeToMatch))
                     {
                         _ordersCache.Active.Remove(order);
                         yield return order;
@@ -547,7 +547,7 @@ namespace MarginTrading.Backend.Services
                     else //let's validate one more time, considering orderbook depth
                     {
                         var me = _meRouter.GetMatchingEngineForExecution(order);
-                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, positionsMatchingDecision.VolumeToMatch);
                         
                         if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
                         {

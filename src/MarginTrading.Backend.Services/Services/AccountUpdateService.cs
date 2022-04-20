@@ -118,27 +118,27 @@ namespace MarginTrading.Backend.Services.Services
             }
         }
 
-        public void CheckBalance(OrderMatchingDecision matchingDecision, IMatchingEngineBase matchingEngine)
+        public void CheckBalance(PositionsMatchingDecision positionsMatchingDecision, IMatchingEngineBase matchingEngine)
         {
-            var account = _accountsProvider.GetAccountById(matchingDecision.Order.AccountId);
+            var account = _accountsProvider.GetAccountById(positionsMatchingDecision.Order.AccountId);
 
             if (account == null)
-                throw new InvalidOperationException($"Account with id {matchingDecision.Order.AccountId} not found");
+                throw new InvalidOperationException($"Account with id {positionsMatchingDecision.Order.AccountId} not found");
             
-            ThrowIfClientProfileSettingsInvalid(matchingDecision.Order.AssetPairId, account.TradingConditionId);
+            ThrowIfClientProfileSettingsInvalid(positionsMatchingDecision.Order.AssetPairId, account.TradingConditionId);
             
-            var (entryCost, exitCost) = CalculateCosts(matchingDecision.Order, matchingDecision.VolumeToMatch, account.TradingConditionId);
+            var (entryCost, exitCost) = CalculateCosts(positionsMatchingDecision.Order, positionsMatchingDecision.VolumeToMatch, account.TradingConditionId);
 
-            var marginAvailable = account.GetMarginAvailable() + matchingDecision.PositionsState?.Margin ?? 0;
+            var marginAvailable = account.GetMarginAvailable() + (positionsMatchingDecision.PositionsState?.Margin ?? 0);
             
-            var orderMargin = _fplService.GetInitMarginForOrder(matchingDecision.Order, matchingDecision.VolumeToMatch);
+            var orderMargin = _fplService.GetInitMarginForOrder(positionsMatchingDecision.Order, positionsMatchingDecision.VolumeToMatch);
             
-            var pnlAtExecution = CalculatePnlAtExecution(matchingDecision.Order, matchingDecision.VolumeToMatch, matchingEngine);
+            var pnlAtExecution = CalculatePnlAtExecution(positionsMatchingDecision.Order, positionsMatchingDecision.VolumeToMatch, matchingEngine);
             
             var orderBalanceAvailable = new OrderBalanceAvailable(marginAvailable, pnlAtExecution, entryCost, exitCost);
 
             _log.WriteInfo(nameof(CheckBalance),
-                new { matchingDecision.Order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
+                new { positionsMatchingDecision.Order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
                 $"Calculation made on order");
 
             if (orderBalanceAvailable < orderMargin)

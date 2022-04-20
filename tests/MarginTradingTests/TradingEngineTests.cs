@@ -759,7 +759,7 @@ namespace MarginTradingTests
             _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF",  Bid = 1.0092M, Ask = 1.0095M}));
 
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCCHF", _account,
-                MarginTradingTestsUtils.TradingConditionId, 11.0415493502M); //10000 USD (with leverage)
+                MarginTradingTestsUtils.TradingConditionId, 11); //10000 USD (with leverage), keeping in mind entry and exit costs
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
@@ -1430,12 +1430,12 @@ namespace MarginTradingTests
         [TestCase(new[] { 1, -2 }, -1, false, 0.01)]
         [TestCase(new[] { -1 }, 1, false, 0.01)]
         [TestCase(new[] { 1 }, -1, false, 0.01)]
-        [TestCase(new[] { 2 }, -1, false, 0.01)]
-        [TestCase(new[] { -3 }, 1, false, 0.01)]
+        [TestCase(new[] { 2 }, -1, false, 0.02)]
+        [TestCase(new[] { -3 }, 1, false, 0.03)]
         [TestCase(new[] { 2 }, -3, true, 0.02)]
         [TestCase(new[] { -2 }, 3, true, 0.02)]
         public void Test_That_Position_Should_Be_Opened_Is_Checked_Correctly(int[] existingVolumes, int newVolume,
-            bool willOpenPosition, decimal releasedMargin)
+            bool shouldOpenPosition, decimal releasedMargin)
         {
             foreach (var existingVolume in existingVolumes)
             {
@@ -1448,10 +1448,10 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURRUB", _account,
                 MarginTradingTestsUtils.TradingConditionId, newVolume);
 
-            var matchingDecision = _tradingEngine.MatchOnExistingPositions(order);
+            var positionsMatchingDecision = _tradingEngine.MatchOnExistingPositions(order);
             
-            Assert.AreEqual(willOpenPosition, matchingDecision.ShouldOpenPosition);
-            Assert.AreEqual(releasedMargin, matchingDecision.PositionsState?.Margin ?? 0);
+            Assert.AreEqual(shouldOpenPosition, positionsMatchingDecision.ShouldOpenPosition);
+            Assert.AreEqual(releasedMargin, positionsMatchingDecision.PositionsState?.Margin ?? 0);
             
 
             var orderWithForce = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURRUB", _account,

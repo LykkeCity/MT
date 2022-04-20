@@ -68,16 +68,18 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             Id = id;
         }
         
-        public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+        public async Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision,
             OrderModality modality = OrderModality.Regular)
         {
             List<(string source, decimal? price)> prices = null;
+
+            var order = positionsMatchingDecision.Order;
             
             if (!string.IsNullOrEmpty(_marginTradingSettings.DefaultExternalExchangeId))
             {
                 var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
-                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
+                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(positionsMatchingDecision.VolumeToMatch))
                 {
                     prices = new List<(string source, decimal? price)>
                     {
@@ -89,7 +91,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             
             if (prices == null)
             {
-                prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
+                prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, 
+                    positionsMatchingDecision.VolumeToMatch, 
+                    positionsMatchingDecision.ShouldOpenPosition);
 
                 if (prices == null || !prices.Any())
                 {
@@ -122,7 +126,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         tradeType: order.Direction.ToType<TradeType>(),
                         orderType: orderType.ToType<OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
-                        volume: (double) Math.Abs(order.Volume),
+                        volume: (double) Math.Abs(positionsMatchingDecision.VolumeToMatch),
                         dateTime: _dateService.Now(),
                         exchangeName: source,
                         instrument: externalAssetPair,

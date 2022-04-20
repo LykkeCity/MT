@@ -7,7 +7,7 @@ using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Orders
 {
-    public sealed class OrderMatchingDecision
+    public sealed class PositionsMatchingDecision
     {
         /// <summary>
         /// The order decision is linked to
@@ -17,7 +17,21 @@ namespace MarginTrading.Backend.Core.Orders
         /// <summary>
         /// The order volume left to match
         /// </summary>
-        public decimal VolumeToMatch => Math.Abs(Order.Volume) - Math.Abs(PositionsState?.Volume ?? 0);
+        public decimal VolumeToMatch {
+            get
+            {
+                var oppositeDirectionVolume = Math.Abs(PositionsState?.Volume ?? 0);
+
+                if (oppositeDirectionVolume >= Math.Abs(Order.Volume))
+                {
+                    return 0;
+                }
+                
+                return Order.Volume >= 0
+                    ? Order.Volume - oppositeDirectionVolume
+                    : Order.Volume + oppositeDirectionVolume;
+            } 
+        }
 
         /// <summary>
         /// Designates if new position will be opened optionally taking into account the possibility of closing opposite
@@ -31,29 +45,29 @@ namespace MarginTrading.Backend.Core.Orders
         public DateTime Timestamp { get; }
 
         /// <summary>
-        /// Matched positions state
+        /// Opposite direction matched positions state
         /// </summary>
         [CanBeNull]
         public MatchedPositionsState PositionsState { get; }
 
-        private OrderMatchingDecision(Order order,
+        private PositionsMatchingDecision(Order order,
             bool shouldOpenPosition,
             DateTime timestamp)
         {
-            Order = order;
+            Order = order ?? throw new ArgumentNullException(nameof(order));
             ShouldOpenPosition = shouldOpenPosition;
             Timestamp = timestamp;
         }
 
-        private OrderMatchingDecision(Order order,
+        private PositionsMatchingDecision(Order order,
             DateTime timestamp,
             MatchedPositionsState positionsState)
         {
-            Order = order;
+            Order = order ?? throw new ArgumentNullException(nameof(order));
             Timestamp = timestamp;
             PositionsState = positionsState;
 
-            ShouldOpenPosition = VolumeToMatch > 0;
+            ShouldOpenPosition = Math.Abs(VolumeToMatch) > 0;
         }
 
         /// <summary>
@@ -63,8 +77,8 @@ namespace MarginTrading.Backend.Core.Orders
         /// <param name="timestamp">The timestamp of the state</param>
         /// <param name="shouldOpenPosition">Indicates if new position should be opened or not</param>
         /// <returns></returns>
-        public static OrderMatchingDecision Force(Order order, DateTime timestamp, bool shouldOpenPosition) =>
-            new OrderMatchingDecision(order, shouldOpenPosition, timestamp);
+        public static PositionsMatchingDecision Force(Order order, DateTime timestamp, bool shouldOpenPosition) =>
+            new PositionsMatchingDecision(order, shouldOpenPosition, timestamp);
 
         /// <summary>
         /// Creates the decision to open new position based on matched volume math
@@ -73,9 +87,9 @@ namespace MarginTrading.Backend.Core.Orders
         /// <param name="timestamp">The timestamp of the state</param>
         /// <param name="positionsState">The opposite direction matched positions state</param>
         /// <returns></returns>
-        public static OrderMatchingDecision Create(Order order,
+        public static PositionsMatchingDecision Create(Order order,
             DateTime timestamp,
             MatchedPositionsState positionsState) =>
-            new OrderMatchingDecision(order, timestamp, positionsState);
+            new PositionsMatchingDecision(order, timestamp, positionsState);
     }
 }

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Orders;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
@@ -17,7 +16,7 @@ namespace MarginTrading.Backend.Services
     {
         Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndCreateOrders(OrderPlaceRequest request);
 
-        void PreTradeValidate(OrderMatchingDecision matchingDecision, IMatchingEngineBase matchingEngine);
+        void PreTradeValidate(PositionsMatchingDecision positionsMatchingDecision, IMatchingEngineBase matchingEngine);
 
         void ValidateOrderPriceChange(Order order, decimal newPrice);
 

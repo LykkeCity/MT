@@ -8,7 +8,6 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -18,7 +17,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+        public Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision,
             OrderModality modality = OrderModality.Regular)
         {
             return Task.FromResult(new MatchedOrderCollection());

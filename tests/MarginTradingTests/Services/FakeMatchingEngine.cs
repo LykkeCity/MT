@@ -36,15 +36,15 @@ namespace MarginTradingTests.Services
             _externalExecutionTime = externalExecutionTime ?? DateTime.MinValue;
         }
         
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+        public Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision,
             OrderModality modality = OrderModality.Regular)
         {
             var col = new MatchedOrderCollection(new [] {new MatchedOrder
             {
                 OrderId = _externalOrderId,
                 MarketMakerId = _marketMakerId,
-                Volume = Math.Abs(order.Volume),
-                Price = string.IsNullOrEmpty(order.ExternalProviderId) ? _openPrice : _closePrice,
+                Volume = Math.Abs(positionsMatchingDecision.VolumeToMatch),
+                Price = string.IsNullOrEmpty(positionsMatchingDecision.Order.ExternalProviderId) ? _openPrice : _closePrice,
                 MatchedDate = _externalExecutionTime,
                 IsExternal = true,
             }});
