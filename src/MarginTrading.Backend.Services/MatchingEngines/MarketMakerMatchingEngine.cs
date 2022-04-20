@@ -118,21 +118,21 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision,
+        public Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
             using (_contextFactory.GetWriteSyncContext(
                 $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchOrderAsync)}"))
             {
-                var orderBookTypeToMatch = positionsMatchingDecision.Order.Direction.GetOrderDirectionToMatchInOrderBook();
+                var orderBookTypeToMatch = orderFulfillmentPlan.Order.Direction.GetOrderDirectionToMatchInOrderBook();
                 
                 //TODO: validate opposite direction if will open new position
 
                 var matchedOrders =
-                    _orderBooks.Match(positionsMatchingDecision.Order.AssetPairId, orderBookTypeToMatch, Math.Abs(positionsMatchingDecision.VolumeToMatch));
+                    _orderBooks.Match(orderFulfillmentPlan.Order.AssetPairId, orderBookTypeToMatch, Math.Abs(orderFulfillmentPlan.UnfulfilledVolume));
 
-                _orderBooks.Update(positionsMatchingDecision.Order.AssetPairId, orderBookTypeToMatch, matchedOrders);
-                ProduceBestPrice(positionsMatchingDecision.Order.AssetPairId);
+                _orderBooks.Update(orderFulfillmentPlan.Order.AssetPairId, orderBookTypeToMatch, matchedOrders);
+                ProduceBestPrice(orderFulfillmentPlan.Order.AssetPairId);
 
                 return Task.FromResult(matchedOrders);
             }

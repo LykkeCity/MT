@@ -118,27 +118,27 @@ namespace MarginTrading.Backend.Services.Services
             }
         }
 
-        public void CheckBalance(PositionsMatchingDecision positionsMatchingDecision, IMatchingEngineBase matchingEngine)
+        public void CheckBalance(OrderFulfillmentPlan orderFulfillmentPlan, IMatchingEngineBase matchingEngine)
         {
-            var account = _accountsProvider.GetAccountById(positionsMatchingDecision.Order.AccountId);
+            var account = _accountsProvider.GetAccountById(orderFulfillmentPlan.Order.AccountId);
 
             if (account == null)
-                throw new InvalidOperationException($"Account with id {positionsMatchingDecision.Order.AccountId} not found");
+                throw new InvalidOperationException($"Account with id {orderFulfillmentPlan.Order.AccountId} not found");
             
-            ThrowIfClientProfileSettingsInvalid(positionsMatchingDecision.Order.AssetPairId, account.TradingConditionId);
+            ThrowIfClientProfileSettingsInvalid(orderFulfillmentPlan.Order.AssetPairId, account.TradingConditionId);
             
-            var (entryCost, exitCost) = CalculateCosts(positionsMatchingDecision.Order, positionsMatchingDecision.VolumeToMatch, account.TradingConditionId);
+            var (entryCost, exitCost) = CalculateCosts(orderFulfillmentPlan.Order, orderFulfillmentPlan.UnfulfilledVolume, account.TradingConditionId);
 
-            var marginAvailable = account.GetMarginAvailable() + (positionsMatchingDecision.PositionsState?.Margin ?? 0);
+            var marginAvailable = account.GetMarginAvailable() + (orderFulfillmentPlan.OppositePositionsState?.Margin ?? 0);
             
-            var orderMargin = _fplService.GetInitMarginForOrder(positionsMatchingDecision.Order, positionsMatchingDecision.VolumeToMatch);
+            var orderMargin = _fplService.GetInitMarginForOrder(orderFulfillmentPlan.Order, orderFulfillmentPlan.UnfulfilledVolume);
             
-            var pnlAtExecution = CalculatePnlAtExecution(positionsMatchingDecision.Order, positionsMatchingDecision.VolumeToMatch, matchingEngine);
+            var pnlAtExecution = CalculatePnlAtExecution(orderFulfillmentPlan.Order, orderFulfillmentPlan.UnfulfilledVolume, matchingEngine);
             
             var orderBalanceAvailable = new OrderBalanceAvailable(marginAvailable, pnlAtExecution, entryCost, exitCost);
 
             _log.WriteInfo(nameof(CheckBalance),
-                new { positionsMatchingDecision.Order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
+                new { orderFulfillmentPlan.Order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
                 $"Calculation made on order");
 
             if (orderBalanceAvailable < orderMargin)

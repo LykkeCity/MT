@@ -39,14 +39,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _externalExecutionTime = externalExecutionTime;
         }
         
-        public Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision,
+        public Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
             var col = new MatchedOrderCollection(new [] {new MatchedOrder
             {
                 OrderId = _externalOrderId,
                 MarketMakerId = _marketMakerId,
-                Volume = Math.Abs(positionsMatchingDecision.VolumeToMatch),
+                Volume = Math.Abs(orderFulfillmentPlan.UnfulfilledVolume),
                 Price = _price,
                 MatchedDate = _externalExecutionTime,
                 IsExternal = true,

@@ -288,13 +288,13 @@ namespace MarginTrading.Backend.Services
 
                 order.SetRates(equivalentRate, fxRate);
 
-                var positionsMatchingDecision = MatchOnExistingPositions(order);
+                var orderFulfillmentPlan = MatchOnExistingPositions(order);
 
                 if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
                 {
                     try
                     {
-                        _orderValidator.PreTradeValidate(positionsMatchingDecision, matchingEngine);
+                        _orderValidator.PreTradeValidate(orderFulfillmentPlan, matchingEngine);
                     }
                     catch (ValidateOrderException ex)
                     {
@@ -306,7 +306,7 @@ namespace MarginTrading.Backend.Services
                 MatchedOrderCollection matchedOrders;
                 try
                 {
-                    matchedOrders = await matchingEngine.MatchOrderAsync(positionsMatchingDecision, modality);
+                    matchedOrders = await matchingEngine.MatchOrderAsync(orderFulfillmentPlan, modality);
                 }
                 catch (OrderExecutionTechnicalException)
                 {
@@ -438,29 +438,23 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public PositionsMatchingDecision MatchOnExistingPositions(Order order)
+        public OrderFulfillmentPlan MatchOnExistingPositions(Order order)
         {
             var timestamp = _dateService.Now();
             
             if (order.ForceOpen)
-                return PositionsMatchingDecision.Force(order, timestamp, true);
+                return OrderFulfillmentPlan.Force(order, timestamp, true);
 
             if (order.PositionsToBeClosed.Any())
-                return PositionsMatchingDecision.Force(order, timestamp, false);
+                return OrderFulfillmentPlan.Force(order, timestamp, false);
 
             var oppositeDirectionPositions = _ordersCache
                 .Positions
                 .GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId)
-                .Where(p => p.Status == PositionStatus.Active 
-                            && p.Direction == order.Direction.GetClosePositionDirection())
-                .Summarize();
+                .Where(p => p.Status == PositionStatus.Active && p.Direction == order.Direction.GetClosePositionDirection())
+                .ToList();
 
-            return PositionsMatchingDecision.Create(order,
-                timestamp,
-                new MatchedPositionsState(order.Id, 
-                    timestamp, 
-                    oppositeDirectionPositions.Margin,
-                    oppositeDirectionPositions.Volume));
+            return OrderFulfillmentPlan.Create(order, timestamp, oppositeDirectionPositions);
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
@@ -534,12 +528,12 @@ namespace MarginTrading.Backend.Services
             {
                 var price = quote.GetPriceForOrderDirection(order.Direction);
 
-                var positionsMatchingDecision = MatchOnExistingPositions(order);
+                var orderFulfillmentPlan = MatchOnExistingPositions(order);
 
                 if (order.IsSuitablePriceForPendingOrder(price) &&
-                    _orderValidator.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType, positionsMatchingDecision.ShouldOpenPosition))
+                    _orderValidator.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType, orderFulfillmentPlan.RequiresPositionOpening))
                 {
-                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(positionsMatchingDecision.VolumeToMatch))
+                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(orderFulfillmentPlan.UnfulfilledVolume))
                     {
                         _ordersCache.Active.Remove(order);
                         yield return order;
@@ -547,7 +541,7 @@ namespace MarginTrading.Backend.Services
                     else //let's validate one more time, considering orderbook depth
                     {
                         var me = _meRouter.GetMatchingEngineForExecution(order);
-                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, positionsMatchingDecision.VolumeToMatch);
+                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, orderFulfillmentPlan.UnfulfilledVolume);
                         
                         if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
                         {

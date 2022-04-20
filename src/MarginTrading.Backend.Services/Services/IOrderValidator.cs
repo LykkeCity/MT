@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Services
     {
         Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndCreateOrders(OrderPlaceRequest request);
 
-        void PreTradeValidate(PositionsMatchingDecision positionsMatchingDecision, IMatchingEngineBase matchingEngine);
+        void PreTradeValidate(OrderFulfillmentPlan orderFulfillmentPlan, IMatchingEngineBase matchingEngine);
 
         void ValidateOrderPriceChange(Order order, decimal newPrice);
 

@@ -68,18 +68,18 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             Id = id;
         }
         
-        public async Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision,
+        public async Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
             List<(string source, decimal? price)> prices = null;
 
-            var order = positionsMatchingDecision.Order;
+            var order = orderFulfillmentPlan.Order;
             
             if (!string.IsNullOrEmpty(_marginTradingSettings.DefaultExternalExchangeId))
             {
                 var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
-                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(positionsMatchingDecision.VolumeToMatch))
+                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(orderFulfillmentPlan.UnfulfilledVolume))
                 {
                     prices = new List<(string source, decimal? price)>
                     {
@@ -92,8 +92,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             if (prices == null)
             {
                 prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, 
-                    positionsMatchingDecision.VolumeToMatch, 
-                    positionsMatchingDecision.ShouldOpenPosition);
+                    orderFulfillmentPlan.UnfulfilledVolume, 
+                    orderFulfillmentPlan.RequiresPositionOpening);
 
                 if (prices == null || !prices.Any())
                 {
@@ -126,7 +126,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         tradeType: order.Direction.ToType<TradeType>(),
                         orderType: orderType.ToType<OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
-                        volume: (double) Math.Abs(positionsMatchingDecision.VolumeToMatch),
+                        volume: (double) Math.Abs(orderFulfillmentPlan.UnfulfilledVolume),
                         dateTime: _dateService.Now(),
                         exchangeName: source,
                         instrument: externalAssetPair,

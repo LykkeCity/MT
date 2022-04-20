@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
@@ -69,7 +70,7 @@ namespace MarginTradingTests
                     () =>
                     {
                         var order = _orderValidator.ValidateRequestAndCreateOrders(request).Result.order;
-                        _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me);
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me);
                     });
             }
             else
@@ -78,7 +79,7 @@ namespace MarginTradingTests
                     async () =>
                     {
                         var order = (await _orderValidator.ValidateRequestAndCreateOrders(request)).order;
-                        _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me);
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me);
 
                     });
 
@@ -119,12 +120,12 @@ namespace MarginTradingTests
 
             if (isValid)
             {
-                Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
             }
             else
             {
                 var ex = Assert.Throws<ValidateOrderException>(() =>
-                    _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                    _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
 
                 Assert.That(ex.RejectReason == OrderRejectReason.MaxPositionLimit);
             }
@@ -184,7 +185,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -246,7 +247,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
             Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
@@ -330,7 +331,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -346,7 +347,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10, price: 1);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -406,7 +407,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -421,7 +422,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, false), _me));
+            Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, false), _me));
         }
 
         [Test]
@@ -491,7 +492,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
             
-            var ex = Assert.Throws<QuoteNotFoundException>(() => _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+            var ex = Assert.Throws<QuoteNotFoundException>(() => _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
 
             Assert.That(ex.InstrumentId == "EURUSD");
         }
@@ -507,7 +508,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 150000);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _orderValidator.PreTradeValidate(PositionsMatchingDecision.Force(order, DateTime.UtcNow, true), _me));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, DateTime.UtcNow, true), _me));
 
             Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
         }
@@ -520,12 +521,20 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 150000);
+                MarginTradingTestsUtils.TradingConditionId, 151000);
 
-            //account margin = 1000, margin requirement for order = 2355 => additional margin should be > 1355
+            //account margin = 1000,
+            //margin requirement for order = 2355
+            //entry cost + exit cost = 1917 => additional margin should be > 3272
+
+            var fulfillmentPlan = OrderFulfillmentPlan.Create(order,
+                DateTime.UtcNow,
+                new List<Position>
+                {
+                    DumbDataGenerator.GeneratePosition(instrument, -1000, 3273, Accounts[0].Id)
+                });
             
-            Assert.DoesNotThrow(() =>
-                _orderValidator.PreTradeValidate(PositionsMatchingDecision.Create(order, DateTime.UtcNow, new MatchedPositionsState(order.Id, DateTime.UtcNow, 1356, 150000)), _me));
+            Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(fulfillmentPlan, _me));
         }
 
 

@@ -14,7 +14,7 @@ namespace MarginTrading.Backend.Core.MatchingEngines
         
         MatchingEngineMode Mode { get; }
 
-        Task<MatchedOrderCollection> MatchOrderAsync(PositionsMatchingDecision positionsMatchingDecision, OrderModality modality = OrderModality.Regular);
+        Task<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan, OrderModality modality = OrderModality.Regular);
         
         (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume);
         

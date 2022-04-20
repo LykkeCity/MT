@@ -587,18 +587,18 @@ namespace MarginTrading.Backend.Services
         
         #region Pre-trade validations
         
-        public void PreTradeValidate(PositionsMatchingDecision positionsMatchingDecision, IMatchingEngineBase matchingEngine)
+        public void PreTradeValidate(OrderFulfillmentPlan orderFulfillmentPlan, IMatchingEngineBase matchingEngine)
         {
-            GetAssetPairIfAvailableForTrading(positionsMatchingDecision.Order.AssetPairId, 
-                positionsMatchingDecision.Order.OrderType, 
-                positionsMatchingDecision.ShouldOpenPosition, 
+            GetAssetPairIfAvailableForTrading(orderFulfillmentPlan.Order.AssetPairId, 
+                orderFulfillmentPlan.Order.OrderType, 
+                orderFulfillmentPlan.RequiresPositionOpening, 
                 true);
 
-            ValidateTradeLimits(positionsMatchingDecision);
+            ValidateTradeLimits(orderFulfillmentPlan);
 
-            if (positionsMatchingDecision.ShouldOpenPosition)
+            if (orderFulfillmentPlan.RequiresPositionOpening)
             {
-                _accountUpdateService.CheckBalance(positionsMatchingDecision, matchingEngine);
+                _accountUpdateService.CheckBalance(orderFulfillmentPlan, matchingEngine);
             }
         }
 
@@ -682,32 +682,32 @@ namespace MarginTrading.Backend.Services
             return assetPair;
         }
 
-        private void ValidateTradeLimits(PositionsMatchingDecision positionsMatchingDecision)
+        private void ValidateTradeLimits(OrderFulfillmentPlan orderFulfillmentPlan)
         {
             var tradingInstrument = _tradingInstrumentsCache.GetTradingInstrument(
-                    positionsMatchingDecision.Order.TradingConditionId,
-                    positionsMatchingDecision.Order.AssetPairId);
+                    orderFulfillmentPlan.Order.TradingConditionId,
+                    orderFulfillmentPlan.Order.AssetPairId);
 
             if (tradingInstrument.DealMaxLimit > 0 &&
-                Math.Abs(positionsMatchingDecision.VolumeToMatch) > tradingInstrument.DealMaxLimit)
+                Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.DealMaxLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxOrderSizeLimit,
                     $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}.");
             }
 
             var existingPositionsVolume = _ordersCache.Positions
-                .GetPositionsByInstrumentAndAccount(positionsMatchingDecision.Order.AssetPairId, positionsMatchingDecision.Order.AccountId)
+                .GetPositionsByInstrumentAndAccount(orderFulfillmentPlan.Order.AssetPairId, orderFulfillmentPlan.Order.AccountId)
                 .Sum(o => o.Volume);
 
             if (tradingInstrument.PositionLimit > 0 &&
-                Math.Abs(existingPositionsVolume + positionsMatchingDecision.VolumeToMatch) > tradingInstrument.PositionLimit)
+                Math.Abs(existingPositionsVolume + orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxPositionLimit,
                     $"The volume of the net open position is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
 
-            if (positionsMatchingDecision.ShouldOpenPosition &&
-                positionsMatchingDecision.Order.Direction == OrderDirection.Sell &&
+            if (orderFulfillmentPlan.RequiresPositionOpening &&
+                orderFulfillmentPlan.Order.Direction == OrderDirection.Sell &&
                 !tradingInstrument.ShortPosition)
             {
                 throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
