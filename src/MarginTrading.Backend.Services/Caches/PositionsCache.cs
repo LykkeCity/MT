@@ -222,7 +222,7 @@ namespace MarginTrading.Backend.Services
 
             try
             {
-                foreach (var accountId in accountIds)
+                foreach (var accountId in accountIds.Where(x => !string.IsNullOrWhiteSpace(x)))
                 {
                     if (!_positionIdsByAccountId.ContainsKey(accountId))
                         continue;

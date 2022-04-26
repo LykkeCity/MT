@@ -632,8 +632,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 .GetPositionsByAccountIds(executionInfo.Data.AccountId)
                 .Where(p => executionInfo.Data.PositionIds.Contains(p.Id))
                 .ToList();
-
-            await _tradingEngine.ClosePositionsGroupAsync(positions, command.OperationId, OriginatorType.System);
+            
+            if (positions.Any())
+                await _tradingEngine.ClosePositionsGroupAsync(positions, command.OperationId, OriginatorType.System);
         }
 
         private bool TryGetExchangeNameFromPositions(IEnumerable<Position> positions, out string externalProviderId)
