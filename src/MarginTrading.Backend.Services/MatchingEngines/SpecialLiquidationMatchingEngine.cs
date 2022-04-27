@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     {
                         OrderId = _externalOrderId,
                         MarketMakerId = _marketMakerId,
-                        Volume = Math.Abs(orderFulfillmentPlan.UnfulfilledVolume),
+                        Volume = Math.Abs(orderFulfillmentPlan.Order.Volume),
                         Price = _price,
                         MatchedDate = _externalExecutionTime,
                         IsExternal = true,

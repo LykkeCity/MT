@@ -129,7 +129,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 //TODO: validate opposite direction if will open new position
 
                 var matchedOrders =
-                    _orderBooks.Match(orderFulfillmentPlan.Order.AssetPairId, orderBookTypeToMatch, Math.Abs(orderFulfillmentPlan.UnfulfilledVolume));
+                    _orderBooks.Match(orderFulfillmentPlan.Order.AssetPairId, orderBookTypeToMatch, Math.Abs(orderFulfillmentPlan.Order.Volume));
 
                 _orderBooks.Update(orderFulfillmentPlan.Order.AssetPairId, orderBookTypeToMatch, matchedOrders);
                 ProduceBestPrice(orderFulfillmentPlan.Order.AssetPairId);

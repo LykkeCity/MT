@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             {
                 var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
-                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(orderFulfillmentPlan.UnfulfilledVolume))
+                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
                 {
                     prices = new List<(string source, decimal? price)>
                     {
@@ -95,7 +95,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     orderFulfillmentPlan.ToJson(), "LT3810: Before calling GetOrderedPricesForExecution");
                 
                 prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, 
-                    orderFulfillmentPlan.UnfulfilledVolume, 
+                    order.Volume, 
                     orderFulfillmentPlan.RequiresPositionOpening);
 
                 if (prices == null || !prices.Any())
@@ -129,7 +129,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         tradeType: order.Direction.ToType<TradeType>(),
                         orderType: orderType.ToType<OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
-                        volume: (double) Math.Abs(orderFulfillmentPlan.UnfulfilledVolume),
+                        volume: (double) Math.Abs(order.Volume),
                         dateTime: _dateService.Now(),
                         exchangeName: source,
                         instrument: externalAssetPair,

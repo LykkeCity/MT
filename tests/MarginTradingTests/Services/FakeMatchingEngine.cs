@@ -46,7 +46,7 @@ namespace MarginTradingTests.Services
                         {
                             OrderId = _externalOrderId,
                             MarketMakerId = _marketMakerId,
-                            Volume = Math.Abs(orderFulfillmentPlan.UnfulfilledVolume),
+                            Volume = Math.Abs(orderFulfillmentPlan.Order.Volume),
                             Price = string.IsNullOrEmpty(orderFulfillmentPlan.Order.ExternalProviderId)
                                 ? _openPrice
                                 : _closePrice,
