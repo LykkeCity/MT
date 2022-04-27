@@ -73,10 +73,6 @@ namespace MarginTrading.Backend.Services.Services
             if (account != null) return account;
 
             var deletedAccount = await _accountsApi.GetById(accountId);
-            _log.WriteInfoAsync(nameof(AccountsProvider),
-                nameof(GetActiveOrDeleted),
-                accountId,
-                $"Response from accounts api: {deletedAccount.ToJson()}");
             if (deletedAccount != null)
             {
                 return Convert(deletedAccount);
