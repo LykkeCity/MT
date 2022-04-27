@@ -27,9 +27,17 @@ namespace MarginTrading.Backend.Contracts.Account
         public decimal TodayOtherAmount { get; set; }
         public decimal TodayStartBalance { get; set; }
 
+        public bool AccountIsDeleted { get; set; }
+
         public static AccountCapitalFigures Empty = new AccountCapitalFigures()
         {
             AdditionalInfo = "{}",
+        };
+        
+        public static AccountCapitalFigures Deleted = new AccountCapitalFigures()
+        {
+            AdditionalInfo = "{}",
+            AccountIsDeleted = true,
         };
     }
 }
