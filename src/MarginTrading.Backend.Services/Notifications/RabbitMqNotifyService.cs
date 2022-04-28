@@ -105,11 +105,8 @@ namespace MarginTrading.Backend.Services.Notifications
                 _settings.RabbitMqQueues.PositionHistory.LogEventPublishing);
         }
 
-        public Task Rfq(RfqEvent rfqEvent)
-        {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.RfqChanged.ExchangeName, rfqEvent,
-                _settings.RabbitMqQueues.RfqChanged.LogEventPublishing);
-        }
+        public Task Rfq(RfqEvent rfqEvent) =>
+            TryProduceMessageAsync(_settings.RfqChangedRabbitMqSettings.ExchangeName, rfqEvent, true);
 
         private async Task TryProduceMessageAsync(string exchangeName, object message, bool logEvent)
         {
@@ -142,7 +139,6 @@ namespace MarginTrading.Backend.Services.Notifications
                 _settings.RabbitMqQueues.Trades.ExchangeName,
                 _settings.RabbitMqQueues.PositionHistory.ExchangeName,
                 _settings.RabbitMqQueues.ExternalOrder.ExchangeName,
-                _settings.RabbitMqQueues.RfqChanged.ExchangeName
             };
 
             var bytesSerializer = new BytesStringSerializer();
@@ -156,6 +152,9 @@ namespace MarginTrading.Backend.Services.Notifications
                 };
                 _publishers[exchangeName] = rabbitMqService.GetProducer(settings, bytesSerializer);
             }
+
+            _publishers[_settings.RfqChangedRabbitMqSettings.ExchangeName] =
+                rabbitMqService.GetProducer(_settings.RfqChangedRabbitMqSettings, bytesSerializer);
         }
     }
 }

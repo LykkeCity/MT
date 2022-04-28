@@ -4,7 +4,6 @@
 using System;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
-using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.Settings;
 using RabbitMqSettings = MarginTrading.Common.RabbitMq.RabbitMqSettings;
@@ -40,6 +39,8 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
 
         public RabbitMqSettings BrokerSettingsRabbitMqSettings { get; set; }
+        
+        public RabbitMqSettings RfqChangedRabbitMqSettings { get; set; }
 
         [AmqpCheck]
         public string MtRabbitMqConnString { get; set; }
