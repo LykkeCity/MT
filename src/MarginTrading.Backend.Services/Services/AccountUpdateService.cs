@@ -138,13 +138,22 @@ namespace MarginTrading.Backend.Services.Services
             var orderBalanceAvailable = new OrderBalanceAvailable(marginAvailable, pnlAtExecution, entryCost, exitCost);
 
             _log.WriteInfo(nameof(CheckBalance),
-                new { orderFulfillmentPlan.Order, entryCost, exitCost, marginAvailable, pnlAtExecution, orderMargin, orderBalanceAvailable }.ToJson(),
+                new
+                {
+                    orderFulfillmentPlan.Order, 
+                    entryCost = (decimal) entryCost, 
+                    exitCost = (decimal) exitCost,
+                    marginAvailable, 
+                    pnlAtExecution, 
+                    orderMargin, 
+                    orderBalanceAvailable = (decimal) orderBalanceAvailable
+                }.ToJson(),
                 $"Calculation made on order");
 
             if (orderBalanceAvailable < orderMargin)
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
-                    $"Account available margin: {marginAvailable}, order margin: {orderMargin}, pnl at execution: {pnlAtExecution}, entry cost: {entryCost}, exit cost: {exitCost} ");
+                    $"Account available margin: {marginAvailable}, order margin: {orderMargin}, pnl at execution: {pnlAtExecution}, entry cost: {(decimal)entryCost}, exit cost: {(decimal)exitCost} ");
         }
 
         public async ValueTask RemoveLiquidationStateIfNeeded(string accountId,
