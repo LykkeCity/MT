@@ -539,8 +539,8 @@ namespace MarginTradingTests
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 1, true)]
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 1.56, false)]
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 2, false)]
-        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Limit, 2, true)]
-        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Limit, 1, true)]
+        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Limit, 2, false)]
+        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Limit, 1, false)]
         [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Market, 2, true)]
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Market, 1, true)]
         public void Is_Order_ExpectedOpenPrice_Validated_Correctly(OrderDirectionContract direction, OrderTypeContract orderType, 
@@ -576,13 +576,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(OrderDirectionContract.Buy, null, null, null)]
         [TestCase(OrderDirectionContract.Sell, null, null, null)]
-        [TestCase(OrderDirectionContract.Buy, 0.1, null, null)]
-        [TestCase(OrderDirectionContract.Buy, null, 3, null)]
-        [TestCase(OrderDirectionContract.Buy, 0.1, 3, null)]
-        [TestCase(OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
-        [TestCase(OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
         [TestCase(OrderDirectionContract.Sell, 3, null, null)]
         [TestCase(OrderDirectionContract.Sell, null, 0.1, null)]
         [TestCase(OrderDirectionContract.Sell, 3, 0.1, null)]
@@ -691,11 +685,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(OrderDirection.Buy, 2.5, true)]
-        [TestCase(OrderDirection.Sell, 0.7, true)]
         [TestCase(OrderDirection.Buy, 0.1, false)]
-        [TestCase(OrderDirection.Sell, 0.1, false)]
-        [TestCase(OrderDirection.Buy, 4, false)]
         [TestCase(OrderDirection.Sell, 4, false)]
         
         public void Is_BaseOrder_Validated_Correctly_Against_Related_On_Change(
@@ -762,7 +752,7 @@ namespace MarginTradingTests
                 StringAssert.Contains("against related", ex1.Message);
             }
         }
-        
+
         private void SetupAssetPair(string id, bool isDiscontinued = false, bool isFrozen = false,
             bool isSuspended = false, bool tradingDisabled = false)
         {

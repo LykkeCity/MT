@@ -449,21 +449,38 @@ namespace MarginTrading.Backend.Services
 //                    "Trades for instrument are not available");
 //            }
 
-            if (order.OrderType != OrderType.Stop)
-                return;
-
-            if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice)
+            if (order.OrderType == OrderType.Limit)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                    string.Format(MtMessages.Validation_PriceBelowAsk, orderPrice, quote.Ask),
-                    $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
-            } 
+                if (order.Direction == OrderDirection.Buy && quote.Ask < orderPrice)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                        string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask),
+                        $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                } 
             
-            if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice )
+                if (order.Direction == OrderDirection.Sell && quote.Bid > orderPrice )
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
+                        string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid),
+                        $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                }
+            }
+
+            if (order.OrderType == OrderType.Stop)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
-                    string.Format(MtMessages.Validation_PriceAboveBid, orderPrice, quote.Bid),
-                    $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                        string.Format(MtMessages.Validation_PriceBelowAsk, orderPrice, quote.Ask),
+                        $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                } 
+            
+                if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice )
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
+                        string.Format(MtMessages.Validation_PriceAboveBid, orderPrice, quote.Bid),
+                        $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                }
             }
         }
 
