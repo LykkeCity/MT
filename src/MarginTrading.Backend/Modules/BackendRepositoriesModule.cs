@@ -19,6 +19,7 @@ using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Repositories;
 using MarginTrading.SqlRepositories;
+using StackExchange.Redis;
 using IdentityEntity = MarginTrading.AzureRepositories.Entities.IdentityEntity;
 using OperationLogEntity = MarginTrading.AzureRepositories.OperationLogEntity;
 
@@ -167,6 +168,10 @@ namespace MarginTrading.Backend.Modules
             }
             
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
+            
+            builder.Register(c => ConnectionMultiplexer.Connect(_settings.CurrentValue.RedisSettings.Configuration))
+                .As<IConnectionMultiplexer>()
+                .SingleInstance();
 
             builder.Register(c =>
             {

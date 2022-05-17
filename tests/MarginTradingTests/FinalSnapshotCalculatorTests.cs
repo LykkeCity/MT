@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
@@ -59,6 +60,10 @@ namespace MarginTradingTests
             _draftSnapshotKeeper
                 .Setup(k => k.Timestamp)
                 .Returns(DateTime.UtcNow);
+
+            _accountCacheServiceMock
+                .Setup(c => c.GetAllInLiquidation())
+                .Returns(AsyncEnumerable.Empty<MarginTradingAccount>());
         }
 
         [Test]

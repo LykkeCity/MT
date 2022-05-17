@@ -69,7 +69,7 @@ namespace MarginTradingTests
                 RabbitMqQueues =
                     new RabbitMqQueues
                     {
-                        MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}
+                        MarginTradingEnabledChanged = new RabbitMqQueueInfo { ExchangeName = "" }
                     },
                 BlobPersistence = new BlobPersistenceSettings()
                 {
@@ -79,8 +79,8 @@ namespace MarginTradingTests
                     OrdersDumpPeriodMilliseconds = 5000
                 },
                 ReportingEquivalentPricesSettings = new[]
-                    {new ReportingEquivalentPricesSettings {EquivalentAsset = "USD", LegalEntity = "LYKKETEST"}},
-                OvernightMargin = overnightMarginSettings,
+                    { new ReportingEquivalentPricesSettings { EquivalentAsset = "USD", LegalEntity = "LYKKETEST" } },
+                OvernightMargin = overnightMarginSettings
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
@@ -122,7 +122,7 @@ namespace MarginTradingTests
                 builder.RegisterModule(new EventModule());
             }
 
-            builder.RegisterModule(new CacheModule(marginSettings));
+            builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());
             
