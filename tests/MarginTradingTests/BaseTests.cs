@@ -122,7 +122,7 @@ namespace MarginTradingTests
                 builder.RegisterModule(new EventModule());
             }
 
-            builder.RegisterModule(new CacheModule());
+            builder.RegisterModule(new CacheModule(marginSettings));
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());
             

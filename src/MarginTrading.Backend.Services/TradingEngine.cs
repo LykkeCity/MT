@@ -351,7 +351,7 @@ namespace MarginTrading.Backend.Services
 
                     if (checkStopout)
                     {
-                        CheckStopout(order);
+                        await CheckStopout(order);
                     }
                 }
 
@@ -429,14 +429,14 @@ namespace MarginTrading.Backend.Services
             }
         }
         
-        private void CheckStopout(Order order)
+        private async Task CheckStopout(Order order)
         {
             var account = _accountsCacheService.Get(order.AccountId);
             var accountLevel = account.GetAccountLevel();
 
             if (accountLevel == AccountLevel.StopOut)
             {
-                CommitStopOut(account, null);
+                await CommitStopOut(account, null);
             }
             else if (accountLevel > AccountLevel.None)
             {
@@ -626,14 +626,14 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void ProcessPositions(InstrumentBidAskPair quote, bool allowCommitStopOut)
+        private async Task ProcessPositions(InstrumentBidAskPair quote, bool allowCommitStopOut)
         {
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote);
             
             if(allowCommitStopOut)
             {
                 foreach (var account in stopoutAccounts)
-                    CommitStopOut(account, quote);
+                    await CommitStopOut(account, quote);
             }
         }
 
@@ -710,13 +710,11 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void CommitStopOut(MarginTradingAccount account, InstrumentBidAskPair quote)
+        private async Task CommitStopOut(MarginTradingAccount account, InstrumentBidAskPair quote)
         {
-            if (account.IsInLiquidation())
-            {
+            if (await _accountsCacheService.IsInLiquidation(account.Id))
                 return;
-            }
-
+                
             var liquidationType = account.GetUsedMargin() == account.GetCurrentlyUsedMargin()
                 ? LiquidationType.Normal
                 : LiquidationType.Mco;
@@ -1174,7 +1172,7 @@ namespace MarginTrading.Backend.Services
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            ProcessPositions(ea.BidAskPair, !ea.IsEod);
+            ProcessPositions(ea.BidAskPair, !ea.IsEod).GetAwaiter().GetResult();
             ProcessOrdersWaitingForExecution(ea.BidAskPair);
         }
 

@@ -12,30 +12,60 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Services;
 using MoreLinq;
+using StackExchange.Redis;
 
 namespace MarginTrading.Backend.Services
 {
     public class AccountsCacheService : IAccountsCacheService
     {
+        private readonly struct AccountLiquidationInfo
+        {
+            public AccountLiquidationInfo(string operationId, string accountId)
+            {
+                OperationId = operationId;
+                AccountId = accountId;
+            }
+
+            public string OperationId { get; }
+            
+            public string AccountId { get; }
+        }
+        
         private Dictionary<string, MarginTradingAccount> _accounts = new Dictionary<string, MarginTradingAccount>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
-
+        private readonly IConnectionMultiplexer _redis;
         private readonly IDateService _dateService;
         private readonly ILog _log;
+        
+        private const string RedisKeyFmt = "core:account:{0}:current-liquidation";
 
         public AccountsCacheService(
             IDateService dateService,
-            ILog log)
+            ILog log,
+            IConnectionMultiplexer redis)
         {
             _dateService = dateService;
             _log = log;
+            _redis = redis;
         }
         
         public IReadOnlyList<MarginTradingAccount> GetAll()
         {
             return _accounts.Values.ToArray();
+        }
+
+        public IAsyncEnumerable<MarginTradingAccount> GetAllInLiquidation()
+        {
+            var accountIds = _accounts.Select(a => a.Value.Id);
+
+            var liquidationInfoList = GetLiquidationInfo(accountIds.ToArray());
+
+            return liquidationInfoList
+                .Select(i => _accounts.SingleOrDefault(a => a.Value.Id == i.AccountId).Value)
+                .Where(a => a != null);
         }
 
         public PaginatedResponse<MarginTradingAccount> GetAllByPages(int? skip = null, int? take = null)
@@ -55,6 +85,13 @@ namespace MarginTrading.Backend.Services
         {
             return TryGetAccount(accountId) ??
                 throw new AccountNotFoundException(accountId, string.Format(MtMessages.AccountByIdNotFound, accountId));
+        }
+
+        public async Task<string> GetLiquidationOperationId(string accountId)
+        {
+            var info = await GetLiquidationInfo(new[] { accountId }).ToListAsync();
+
+            return info.First().OperationId;
         }
 
         public MarginTradingAccount TryGet(string accountId)
@@ -110,64 +147,61 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId)
+        public async Task<(bool, string)> TryStartLiquidation(string accountId, string operationId)
         {
-            _lockSlim.EnterWriteLock();
-            try
-            {
-                if (!_accounts.TryGetValue(accountId, out var account))
-                {
-                    currentOperationId = string.Empty;
-                    return false;
-                }
+            if (!_accounts.TryGetValue(accountId, out _))
+                return (false, string.Empty);
 
-                if (!string.IsNullOrEmpty(account.LiquidationOperationId))
-                {
-                    currentOperationId = account.LiquidationOperationId;
-                    return false;
-                }
+            var liquidationInfoAdded = await AddLiquidationInfo(accountId, operationId);
 
-                account.LiquidationOperationId = operationId;
-                currentOperationId = operationId;
-                return true;
-            }
-            finally
+            if (liquidationInfoAdded)
+                return (true, operationId);
+
+            var existingLiquidationOperationId = await GetLiquidationOperationId(accountId);
+
+            if (existingLiquidationOperationId == null)
             {
-                _lockSlim.ExitWriteLock();
+                // potentially, it is possible in a highly concurrent environments
+                return (false, string.Empty);
             }
+
+            return (false, existingLiquidationOperationId);
         }
 
-        public bool TryFinishLiquidation(string accountId, string reason, 
+        public async Task<bool> TryFinishLiquidation(string accountId, string reason, 
             string liquidationOperationId = null)
         {
-            _lockSlim.EnterWriteLock();
-            
-            try
-            {
-                if (!_accounts.TryGetValue(accountId, out var account))
-                    return false;
+            if (!_accounts.TryGetValue(accountId, out var account))
+                return false;
 
-                if (string.IsNullOrEmpty(liquidationOperationId) ||
-                     liquidationOperationId == account.LiquidationOperationId)
-                {
-                    account.LiquidationOperationId = string.Empty;
-                    _log.WriteInfo(nameof(TryFinishLiquidation), account,
-                        $"Liquidation state was removed for account {accountId}. Reason: {reason}");
-                    return true;
-                }
-                else
-                {
-                    _log.WriteInfo(nameof(TryFinishLiquidation), account,
-                        $"Liquidation state was not removed for account {accountId} " +
-                        $"by liquidationOperationId {liquidationOperationId} " +
-                        $"Current LiquidationOperationId: {account.LiquidationOperationId}.");
-                    return false;
-                }
-            }
-            finally
+            var existingLiquidationOperationId = await GetLiquidationOperationId(accountId);
+            
+            if (existingLiquidationOperationId == null)
+                return false;
+
+            if (string.IsNullOrEmpty(liquidationOperationId) ||
+                liquidationOperationId == existingLiquidationOperationId)
             {
-                _lockSlim.ExitWriteLock();
+                await RemoveLiquidationInfo(accountId);
+
+                _log.WriteInfo(nameof(TryFinishLiquidation), account,
+                    $"Liquidation state was removed for account {accountId}. Reason: {reason}");
+                return true;
             }
+
+            _log.WriteInfo(nameof(TryFinishLiquidation), account,
+                $"Liquidation state was not removed for account {accountId} " +
+                $"by liquidationOperationId {liquidationOperationId} " +
+                $"Current LiquidationOperationId: {existingLiquidationOperationId}.");
+            
+            return false;
+        }
+
+        public async Task<bool> IsInLiquidation(string accountId)
+        {
+            var liquidationOperationId = await GetLiquidationOperationId(accountId);
+
+            return liquidationOperationId != null;
         }
 
         public async Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
@@ -261,21 +295,30 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public void Remove(string accountId)
+        public async Task Remove(string accountId)
         {
+            bool removedFromCache;
+            
             _lockSlim.EnterWriteLock();
             try
             {
-                _accounts.Remove(accountId);
+                removedFromCache = _accounts.Remove(accountId);
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
-            } 
+            }
+
+            if (removedFromCache)
+            {
+                await RemoveLiquidationInfo(accountId);
+            }
         }
 
-        public string Reset(string accountId, DateTime eventTime)
+        public async Task<string> Reset(string accountId, DateTime eventTime)
         {
+            string warnings;
+            
             _lockSlim.EnterWriteLock();
             try
             {
@@ -284,12 +327,55 @@ namespace MarginTrading.Backend.Services
                     throw new Exception($"Account {accountId} does not exist.");
                 }
 
-                return account.Reset(eventTime);
+                warnings = account.Reset(eventTime);
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
+
+            var liquidationInfoRemoved = await RemoveLiquidationInfo(accountId);
+            if (liquidationInfoRemoved)
+            {
+                return string.Join(", ", new[] { warnings, $"Liquidation is in progress"});
+            }
+
+            return warnings;
         }
+
+        private static string GetRedisKey(string accountId) => string.Format(RedisKeyFmt, accountId);
+        
+        private async IAsyncEnumerable<AccountLiquidationInfo> GetLiquidationInfo(string[] accounts)
+        {
+            var keys = accounts.Select(GetRedisKey);
+            
+            var results = await _redis
+                .GetDatabase()
+                .StringGetAsync(keys.Cast<RedisKey>().ToArray());
+            
+            foreach (var redisValue in results)
+            {
+                if (redisValue.HasValue)
+                    yield return ProtoBufSerializer.Deserialize<AccountLiquidationInfo>(redisValue);
+            }
+        }
+
+        private async Task<bool> AddLiquidationInfo(string accountId, string operationId)
+        {
+            var info = new AccountLiquidationInfo(operationId, accountId);
+
+            var serialized = ProtoBufSerializer.Serialize(info);
+
+            var added = await _redis
+                .GetDatabase()
+                .StringSetAsync(GetRedisKey(accountId), serialized, when: When.NotExists);
+
+            return added;
+        }
+
+        private Task<bool> RemoveLiquidationInfo(string accountId) =>
+            _redis
+                .GetDatabase()
+                .KeyDeleteAsync(GetRedisKey(accountId));
     }
 }

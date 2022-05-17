@@ -153,7 +153,7 @@ namespace MarginTrading.Backend.Services.Workflow
                         }
                     case AccountChangedEventTypeContract.Deleted:
                         //account deletion from cache is double-handled by CQRS flow
-                        _accountsCacheService.Remove(e.Account.Id);
+                        await _accountsCacheService.Remove(e.Account.Id);
                         break;
 
                     default:
@@ -192,7 +192,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 _ordersCache.InProgress.Remove(order);
             }
 
-            var warnings = _accountsCacheService.Reset(e.Account.Id, e.ChangeTimestamp);
+            var warnings = await _accountsCacheService.Reset(e.Account.Id, e.ChangeTimestamp);
             if (!string.IsNullOrEmpty(warnings))
             {
                 await _log.WriteWarningAsync(nameof(AccountChangedEvent),

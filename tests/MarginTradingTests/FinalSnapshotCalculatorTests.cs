@@ -25,6 +25,7 @@ namespace MarginTradingTests
         private Mock<ILog> _logMock;
         private Mock<IDateService> _dateServiceMock;
         private Mock<IDraftSnapshotKeeper> _draftSnapshotKeeper;
+        private Mock<IAccountsCacheService> _accountCacheServiceMock;
 
         [SetUp]
         public void SetUp()
@@ -33,6 +34,7 @@ namespace MarginTradingTests
             _logMock = new Mock<ILog>();
             _dateServiceMock = new Mock<IDateService>();
             _draftSnapshotKeeper = new Mock<IDraftSnapshotKeeper>();
+            _accountCacheServiceMock = new Mock<IAccountsCacheService>();
 
             _draftSnapshotKeeper
                 .Setup(k => k.GetAccountsAsync())
@@ -76,7 +78,8 @@ namespace MarginTradingTests
             _cfdCalculatorMock.Object,
             _logMock.Object,
             _dateServiceMock.Object,
-            _draftSnapshotKeeper.Object);
+            _draftSnapshotKeeper.Object,
+            _accountCacheServiceMock.Object);
 
         private static ClosingFxRate GetDumbFxRate() => 
             new ClosingFxRate { AssetId = "dumbAssetId", ClosePrice = 1 };

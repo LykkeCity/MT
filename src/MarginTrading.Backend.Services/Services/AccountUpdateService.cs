@@ -41,6 +41,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IOrdersProvider _ordersProvider;
         private readonly IPositionsProvider _positionsProvider;
         private readonly IAccountsProvider _accountsProvider;
+        private readonly IAccountsCacheService _accountsCacheService;
 
         public AccountUpdateService(
             IFplService fplService,
@@ -54,7 +55,8 @@ namespace MarginTrading.Backend.Services.Services
             IPositionsProvider positionsProvider,
             IOrdersProvider ordersProvider,
             IAccountsProvider accountsProvider,
-            ITradingInstrumentsCacheService tradingInstrumentsCache)
+            ITradingInstrumentsCacheService tradingInstrumentsCache,
+            IAccountsCacheService accountsCacheService)
         {
             _fplService = fplService;
             _log = log;
@@ -67,6 +69,7 @@ namespace MarginTrading.Backend.Services.Services
             _ordersProvider = ordersProvider;
             _accountsProvider = accountsProvider;
             _tradingInstrumentsCache = tradingInstrumentsCache;
+            _accountsCacheService = accountsCacheService;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -233,19 +236,22 @@ namespace MarginTrading.Backend.Services.Services
                 "Account balance is enough, validation succeeded.");
         }
 
-        public void RemoveLiquidationStateIfNeeded(string accountId, string reason,
-            string liquidationOperationId = null, LiquidationType liquidationType = LiquidationType.Normal)
+        public async ValueTask RemoveLiquidationStateIfNeeded(string accountId,
+            string reason,
+            string liquidationOperationId = null,
+            LiquidationType liquidationType = LiquidationType.Normal)
         {
             var account = _accountsProvider.GetAccountById(accountId);
 
             if (account == null)
                 return;
 
-            if (!string.IsNullOrEmpty(account.LiquidationOperationId)
-                && (liquidationType == LiquidationType.Forced
-                    || account.GetAccountLevel() != AccountLevel.StopOut))
+            var isInLiquidation = await _accountsCacheService.IsInLiquidation(accountId);
+
+            if (isInLiquidation && (liquidationType == LiquidationType.Forced
+                                    || account.GetAccountLevel() != AccountLevel.StopOut))
             {
-                _accountsProvider.TryFinishLiquidation(accountId, reason, liquidationOperationId);
+                await _accountsProvider.TryFinishLiquidation(accountId, reason, liquidationOperationId);
             }
         }
 

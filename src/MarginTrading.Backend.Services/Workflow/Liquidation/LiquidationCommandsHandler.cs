@@ -23,6 +23,7 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using LiquidationInfo = MarginTrading.Backend.Services.Workflow.Liquidation.Events.LiquidationInfo;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation
 {
@@ -141,8 +142,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             
             if (executionInfo.Data.State == LiquidationOperationState.Initiated)
             {
-                if (!_accountsCache.TryStartLiquidation(command.AccountId, command.OperationId,
-                    out var currentOperationId))
+                var (started, currentOperationId) =
+                    await _accountsCache.TryStartLiquidation(command.AccountId, command.OperationId);
+                
+                if (!started)
                 {
                     if (currentOperationId != command.OperationId)
                     {
