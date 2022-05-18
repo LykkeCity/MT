@@ -91,7 +91,7 @@ namespace MarginTrading.Backend.Services
         {
             var info = await GetLiquidationInfo(new[] { accountId }).ToListAsync();
 
-            return info.First().OperationId;
+            return info.Any() ? info.First().OperationId : null;
         }
 
         public MarginTradingAccount TryGet(string accountId)
