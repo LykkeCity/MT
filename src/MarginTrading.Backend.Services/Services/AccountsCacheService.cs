@@ -343,15 +343,15 @@ namespace MarginTrading.Backend.Services
             return warnings;
         }
 
-        private static string GetRedisKey(string accountId) => string.Format(RedisKeyFmt, accountId);
+        private static RedisKey GetRedisKey(string accountId) => string.Format(RedisKeyFmt, accountId);
         
         private async IAsyncEnumerable<AccountLiquidationInfo> GetLiquidationInfo(string[] accounts)
         {
             var keys = accounts.Select(GetRedisKey);
-            
+
             var results = await _redis
                 .GetDatabase()
-                .StringGetAsync(keys.Cast<RedisKey>().ToArray());
+                .StringGetAsync(keys.ToArray());
             
             foreach (var redisValue in results)
             {
