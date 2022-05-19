@@ -451,14 +451,14 @@ namespace MarginTrading.Backend.Services
 
             if (order.OrderType == OrderType.Limit)
             {
-                if (order.Direction == OrderDirection.Buy && quote.Ask < orderPrice)
+                if (order.Direction == OrderDirection.Buy && quote.Ask <= orderPrice)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
                         string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
                 } 
             
-                if (order.Direction == OrderDirection.Sell && quote.Bid > orderPrice )
+                if (order.Direction == OrderDirection.Sell && quote.Bid >= orderPrice)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
                         string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid),
@@ -475,7 +475,7 @@ namespace MarginTrading.Backend.Services
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
                 } 
             
-                if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice )
+                if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
                         string.Format(MtMessages.Validation_PriceAboveBid, orderPrice, quote.Bid),
