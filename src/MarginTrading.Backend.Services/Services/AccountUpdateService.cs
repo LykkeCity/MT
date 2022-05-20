@@ -124,16 +124,38 @@ namespace MarginTrading.Backend.Services.Services
 
             if (account == null)
                 throw new InvalidOperationException($"Account with id {orderFulfillmentPlan.Order.AccountId} not found");
+
+            var assetType = _assetPairsCache.GetAssetPairById(orderFulfillmentPlan.Order.AssetPairId).AssetType;
             
-            ThrowIfClientProfileSettingsInvalid(orderFulfillmentPlan.Order.AssetPairId, account.TradingConditionId);
+            if (!_clientProfileSettingsCache.TryGetValue(account.TradingConditionId, assetType, out var clientProfileSettings))
+                throw new InvalidOperationException($"Client profile settings for [{account.TradingConditionId}] and asset type [{assetType}] were not found in cache");
+
+            var (openPrice, closePrice) = GetPrices(
+                orderFulfillmentPlan.Order,
+                orderFulfillmentPlan.UnfulfilledVolume,
+                matchingEngine);
+
+            var pnlInTradingCurrency = (closePrice - openPrice) * orderFulfillmentPlan.UnfulfilledVolume;
+
+            var fxRate = GetFxRate(orderFulfillmentPlan.Order, pnlInTradingCurrency);
+
+            var entryCost = new EntryCost(new EntryCommissionCost(clientProfileSettings.ExecutionFeesFloor,
+                    new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate), 
+                    clientProfileSettings.ExecutionFeesCap, 
+                    new FxRate(fxRate), 
+                    orderFulfillmentPlan.Order.Volume));
             
-            var (entryCost, exitCost) = CalculateCosts(orderFulfillmentPlan.Order, orderFulfillmentPlan.UnfulfilledVolume, account.TradingConditionId);
+            var exitCost = new ExitCost(new ExitCommissionCost(clientProfileSettings.ExecutionFeesFloor,
+                new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate),
+                clientProfileSettings.ExecutionFeesCap,
+                new FxRate(fxRate),
+                orderFulfillmentPlan.UnfulfilledVolume));
 
             var marginAvailable = account.GetMarginAvailable() + (orderFulfillmentPlan.OppositePositionsState?.Margin ?? 0);
             
             var orderMargin = _fplService.GetInitMarginForOrder(orderFulfillmentPlan.Order, orderFulfillmentPlan.UnfulfilledVolume);
-            
-            var pnlAtExecution = CalculatePnlAtExecution(orderFulfillmentPlan.Order, orderFulfillmentPlan.UnfulfilledVolume, matchingEngine);
+
+            var pnlAtExecution = CalculatePnlAtExecution(orderFulfillmentPlan.Order, pnlInTradingCurrency);
             
             var orderBalanceAvailable = new OrderBalanceAvailable(marginAvailable, pnlAtExecution, entryCost, exitCost);
 
@@ -216,13 +238,14 @@ namespace MarginTrading.Backend.Services.Services
 
         private ICollection<Order> GetActiveOrders(string accountId) =>
             _ordersProvider.GetActiveOrdersByAccountIds(accountId);
-        
-        private decimal CalculatePnlAtExecution(Order order, decimal actualVolume, IMatchingEngineBase matchingEngine)
+
+        private (decimal, decimal) GetPrices(Order order, decimal actualVolume, IMatchingEngineBase matchingEngine)
         {
             var quote = _quoteCacheService.GetQuote(order.AssetPairId);
             
             decimal openPrice;
             decimal closePrice;
+            
             var directionForClose = order.Volume.GetClosePositionOrderDirection();
 
             if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(actualVolume) &&
@@ -246,11 +269,12 @@ namespace MarginTrading.Backend.Services.Services
                 openPrice = openPriceInfo.price.Value;
             }
 
-            var pnlInTradingCurrency = (closePrice - openPrice) * actualVolume;
-            var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
-                order.AssetPairId,
-                order.LegalEntity,
-                pnlInTradingCurrency > 0);
+            return (openPrice, closePrice);
+        }
+        
+        private decimal CalculatePnlAtExecution(Order order, decimal pnlInTradingCurrency)
+        {
+            var fxRate = GetFxRate(order, pnlInTradingCurrency);
             
             var result = pnlInTradingCurrency * fxRate;
 
@@ -266,38 +290,13 @@ namespace MarginTrading.Backend.Services.Services
             return result;
         }
 
-        private (EntryCost, ExitCost) CalculateCosts(Order order, decimal volumeToMatch, string tradingConditionId)
+        private decimal GetFxRate(Order order, decimal pnlInTradingCurrency)
         {
-            var quote = _quoteCacheService.GetQuote(order.AssetPairId).ToMathModel();
-
-            var tradingInstrument = _tradingInstrumentsCache.GetTradingInstrument(tradingConditionId, order.AssetPairId);
-
-            var executionPrice = order.Price.HasValue
-                ? new ExecutionPrice(order.Price.Value)
-                : quote.GetOrderExecutionPrice((Lykke.Snow.Common.Costs.OrderDirection)order.Direction);
-
-            var spread = quote.Spread == Spread.Zero
-                ? new Spread(tradingInstrument.Spread)
-                : quote.Spread;
-
-            return (
-                new EntryCost(executionPrice, spread, () => (
-                    new HedgeCost(tradingInstrument.HedgeCost),
-                    order.Volume,
-                    new DonationShare(_marginTradingSettings.BrokerDonationShare)
-                )),
-                new ExitCost(executionPrice, spread, () => (
-                    new HedgeCost(tradingInstrument.HedgeCost),
-                    volumeToMatch,
-                    new DonationShare(_marginTradingSettings.BrokerDonationShare))));
-        }
-
-        private void ThrowIfClientProfileSettingsInvalid(string assetPairId, string tradingConditionId)
-        {
-            var assetType = _assetPairsCache.GetAssetPairById(assetPairId).AssetType;
-            
-            if (!_clientProfileSettingsCache.TryGetValue(tradingConditionId, assetType, out _))
-                throw new InvalidOperationException($"Client profile settings for [{tradingConditionId}] and asset type [{assetType}] were not found in cache");
+            var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
+                order.AssetPairId,
+                order.LegalEntity,
+                pnlInTradingCurrency > 0);
+            return fxRate;
         }
     }
 }
