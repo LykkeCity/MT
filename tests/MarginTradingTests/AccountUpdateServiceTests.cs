@@ -102,13 +102,13 @@ namespace MarginTradingTests
             var me = new FakeMatchingEngine(10);
 
             var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 33000);
+                MarginTradingTestsUtils.TradingConditionId, 96000);
 
             Assert.DoesNotThrow(() =>
                 _accountUpdateService.CheckBalance(OrderFulfillmentPlan.Force(order1, true), me));
 
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 34000);
+                MarginTradingTestsUtils.TradingConditionId, 97000);
 
             Assert.Throws<ValidateOrderException>(() =>
                 _accountUpdateService.CheckBalance(OrderFulfillmentPlan.Force(order2, true), me));
@@ -116,7 +116,7 @@ namespace MarginTradingTests
             var meWithSpread = new FakeMatchingEngine(10, closePrice: 1);
 
             var order3 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 33000);
+                MarginTradingTestsUtils.TradingConditionId, 96000);
 
             Assert.Throws<ValidateOrderException>(
                 () => _accountUpdateService.CheckBalance(OrderFulfillmentPlan.Force(order3, true), meWithSpread));
