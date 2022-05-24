@@ -220,7 +220,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 TodayWithdrawAmount = account.TodayWithdrawAmount,
                 TodayCommissionAmount = account.TodayCommissionAmount,
                 TodayOtherAmount = account.TodayOtherAmount,
-                AdditionalInfo = account.AdditionalInfo
+                AdditionalInfo = account.AdditionalInfo,
+                AccountIsDeleted = account.IsDeleted,
             };
         }
 

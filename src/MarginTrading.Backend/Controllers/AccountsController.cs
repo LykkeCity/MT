@@ -9,6 +9,7 @@ using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -27,14 +28,17 @@ namespace MarginTrading.Backend.Controllers
     public class AccountsController : Controller, IAccountsApi
     {
         private readonly IAccountsCacheService _accountsCacheService;
+        private readonly IAccountsProvider _accountsProvider;
         private readonly IOrderReader _orderReader;
         private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(IAccountsCacheService accountsCacheService,
+            IAccountsProvider accountsProvider,
             IOrderReader orderReader,
             ICqrsSender cqrsSender)
         {
             _accountsCacheService = accountsCacheService;
+            _accountsProvider = accountsProvider;
             _orderReader = orderReader;
             _cqrsSender = cqrsSender;
         }
@@ -161,18 +165,14 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="accountId"></param>
         [HttpGet]
         [Route("capital-figures/{accountId}")]
-        public Task<AccountCapitalFigures> GetCapitalFigures(string accountId)
+        public async Task<AccountCapitalFigures> GetCapitalFigures(string accountId)
         {
-            try
-            {
-                var stats = _accountsCacheService.Get(accountId);
+            var account = await _accountsProvider.GetActiveOrDeleted(accountId);
 
-                return Task.FromResult(stats.ConvertToCapitalFiguresContract());
-            }
-            catch (AccountNotFoundException)
-            {
-                return Task.FromResult((AccountCapitalFigures)null);
-            }
+            if (account == null) return AccountCapitalFigures.Empty;
+            if(account.IsDeleted) return AccountCapitalFigures.Deleted;
+            
+            return account.ConvertToCapitalFiguresContract();
         }
 
         [HttpPost, Route("resume-liquidation/{accountId}")]
