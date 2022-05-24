@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using Common.Log;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.ErrorCodes;
@@ -88,7 +89,11 @@ namespace MarginTrading.Backend.Controllers
             return Task.FromResult(allQuotes.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()));
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Upload EOD quotes for the trading day EOD was missed for
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("missed")]
         public async Task<QuotesUploadErrorCode> UploadMissingQuotesAsync([FromBody] UploadMissingQuotesRequest request)
@@ -131,23 +136,37 @@ namespace MarginTrading.Backend.Controllers
             return QuotesUploadErrorCode.None;
         }
 
+        /// <summary>
+        /// Remove quote from internal cache 
+        /// </summary>
+        /// <param name="assetPairId"></param>
+        /// <returns></returns>
         [HttpDelete]
         [Route("best/{assetPairId}")]
         public MtBackendResponse<bool> RemoveFromBestPriceCache(string assetPairId)
         {
-            var result = _quoteCacheService.RemoveQuote(assetPairId);
+            var decodedAssetPairId = HttpUtility.UrlDecode(assetPairId);
+            
+            var result = _quoteCacheService.RemoveQuote(decodedAssetPairId);
 
             return result == RemoveQuoteErrorCode.None
                 ? MtBackendResponse<bool>.Ok(true)
                 : MtBackendResponse<bool>.Error(result.Message);
         }
 
+        /// <summary>
+        /// Remove fx quote from internal cache 
+        /// </summary>
+        /// <param name="assetPairId"></param>
+        /// <returns></returns>
         [HttpDelete]
         [Route("bestFx/{assetPairId}")]
         public MtBackendResponse<bool> RemoveFromBestFxPriceCache(string assetPairId)
         {
-            var result = _fxRateCacheService.RemoveQuote(assetPairId);
-
+            var decodedAssetPairId = HttpUtility.UrlDecode(assetPairId);
+                
+            var result = _fxRateCacheService.RemoveQuote(decodedAssetPairId);
+            
             return result == RemoveQuoteErrorCode.None
                 ? MtBackendResponse<bool>.Ok(true)
                 : MtBackendResponse<bool>.Error(result.Message);
