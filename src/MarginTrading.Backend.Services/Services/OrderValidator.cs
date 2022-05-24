@@ -692,7 +692,7 @@ namespace MarginTrading.Backend.Services
                 Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.DealMaxLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxOrderSizeLimit,
-                    $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}.");
+                    $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument} but was {orderFulfillmentPlan.UnfulfilledVolume}. Order id = [{orderFulfillmentPlan.Order.Id}]");
             }
 
             var existingPositionsVolume = _ordersCache.Positions
