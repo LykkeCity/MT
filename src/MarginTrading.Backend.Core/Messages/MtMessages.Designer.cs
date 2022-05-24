@@ -178,6 +178,18 @@ namespace MarginTrading.Backend.Core.Messages {
             }
         }
         
+        public static string Validation_PriceAboveAsk {
+            get {
+                return ResourceManager.GetString("Validation_PriceAboveAsk", resourceCulture);
+            }
+        }
+        
+        public static string Validation_PriceBelowBid {
+            get {
+                return ResourceManager.GetString("Validation_PriceBelowBid", resourceCulture);
+            }
+        }
+        
         public static string Validation_NotEnoughBalance {
             get {
                 return ResourceManager.GetString("Validation_NotEnoughBalance", resourceCulture);
