@@ -79,7 +79,7 @@ namespace MarginTradingTests
                     OrdersDumpPeriodMilliseconds = 5000
                 },
                 ReportingEquivalentPricesSettings = new[]
-                    { new ReportingEquivalentPricesSettings { EquivalentAsset = "USD", LegalEntity = "LYKKETEST" } },
+                    {new ReportingEquivalentPricesSettings {EquivalentAsset = "USD", LegalEntity = "LYKKETEST"}},
                 OvernightMargin = overnightMarginSettings
             };
 

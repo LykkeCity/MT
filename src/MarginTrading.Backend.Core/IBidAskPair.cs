@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Lykke.Snow.Common.Quotes;
 using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core
@@ -37,5 +38,8 @@ namespace MarginTrading.Backend.Core
         {
             return orderType == OrderDirection.Buy ? bidAskPair.AskFirstLevelVolume : bidAskPair.BidFirstLevelVolume;
         }
+
+        public static Quote ToMathModel(this InstrumentBidAskPair bidAskPair) =>
+            new Quote(new AskPrice(bidAskPair.Ask), new BidPrice(bidAskPair.Bid));
     }
 }

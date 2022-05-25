@@ -13,6 +13,7 @@ using JetBrains.Annotations;
 using Lykke.Common;
 using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Activities;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Extensions;
@@ -47,7 +48,7 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
         private readonly IEventChannel<OrderRejectedEventArgs> _orderRejectedEventChannel;
 
-        private readonly IValidateOrderService _validateOrderService;
+        private readonly IOrderValidator _orderValidator;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IMatchingEngineRouter _meRouter;
@@ -77,7 +78,7 @@ namespace MarginTrading.Backend.Services
             IEventChannel<OrderExecutionStartedEventArgs> orderExecutionStartedEventChannel,
             IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel, 
             IEventChannel<OrderRejectedEventArgs> orderRejectedEventChannel,
-            IValidateOrderService validateOrderService,
+            IOrderValidator orderValidator,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IMatchingEngineRouter meRouter,
@@ -104,7 +105,7 @@ namespace MarginTrading.Backend.Services
             _orderChangedEventChannel = orderChangedEventChannel;
             _orderRejectedEventChannel = orderRejectedEventChannel;
 
-            _validateOrderService = validateOrderService;
+            _orderValidator = orderValidator;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _meRouter = meRouter;
@@ -268,10 +269,8 @@ namespace MarginTrading.Backend.Services
 
             try
             {
-                var now = _dateService.Now();
-
                 //just in case )
-                if (CheckIfOrderIsExpired(order, now))
+                if (CheckIfOrderIsExpired(order, _dateService.Now()))
                 {
                     return order;
                 }
@@ -289,17 +288,13 @@ namespace MarginTrading.Backend.Services
 
                 order.SetRates(equivalentRate, fxRate);
 
-                var matchOnPositionsResult = MatchOnExistingPositions(order);
+                var orderFulfillmentPlan = MatchOnExistingPositions(order);
 
                 if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
                 {
                     try
                     {
-                        _validateOrderService.MakePreTradeValidation(
-                            order,
-                            matchOnPositionsResult.WillOpenPosition,
-                            matchingEngine, 
-                            matchOnPositionsResult.ReleasedMargin);
+                        _orderValidator.PreTradeValidate(orderFulfillmentPlan, matchingEngine);
                     }
                     catch (ValidateOrderException ex)
                     {
@@ -311,7 +306,7 @@ namespace MarginTrading.Backend.Services
                 MatchedOrderCollection matchedOrders;
                 try
                 {
-                    matchedOrders = await matchingEngine.MatchOrderAsync(order, matchOnPositionsResult.WillOpenPosition, modality);
+                    matchedOrders = await matchingEngine.MatchOrderAsync(orderFulfillmentPlan, modality);
                 }
                 catch (OrderExecutionTechnicalException)
                 {
@@ -381,51 +376,50 @@ namespace MarginTrading.Backend.Services
         
         private void ChangeOrderVolumeIfNeeded(Order order)
         {
-            if (order.PositionsToBeClosed.Any())
+            if (!order.PositionsToBeClosed.Any()) return;
+            
+            var netVolume = 0M;
+            var rejectReason = default(OrderRejectReason?);
+            foreach (var positionId in order.PositionsToBeClosed)
             {
-                var netVolume = 0M;
-                var rejectReason = default(OrderRejectReason?);
-                foreach (var positionId in order.PositionsToBeClosed)
+                if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
                 {
-                    if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
-                    {
-                        rejectReason = OrderRejectReason.ParentPositionDoesNotExist;
-                        continue;
-                    }
-
-                    if (position.Status != PositionStatus.Closing)
-                    {
-                        rejectReason = OrderRejectReason.TechnicalError;
-                        continue;
-                    }
-
-                    netVolume += position.Volume;
+                    rejectReason = OrderRejectReason.ParentPositionDoesNotExist;
+                    continue;
                 }
 
-                if (netVolume == 0M && rejectReason.HasValue)
+                if (position.Status != PositionStatus.Closing)
                 {
-                    order.Reject(rejectReason.Value,
-                        rejectReason.Value == OrderRejectReason.ParentPositionDoesNotExist
-                            ? "Related position does not exist"
-                            : "Related position is not in closing state", "", _dateService.Now());
-                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                    return;
+                    rejectReason = OrderRejectReason.TechnicalError;
+                    continue;
                 }
 
-                // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
-                // in position close process
-                // since orders, that have not empty PositionsToBeClosed should close positions and not open new ones
-                // volume of executed order should be equal to position volume, but should have opposite sign
-                if (order.Volume != -netVolume)
+                netVolume += position.Volume;
+            }
+
+            if (netVolume == 0M && rejectReason.HasValue)
+            {
+                order.Reject(rejectReason.Value,
+                    rejectReason.Value == OrderRejectReason.ParentPositionDoesNotExist
+                        ? "Related position does not exist"
+                        : "Related position is not in closing state", "", _dateService.Now());
+                _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                return;
+            }
+
+            // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
+            // in position close process
+            // since orders, that have not empty PositionsToBeClosed should close positions and not open new ones
+            // volume of executed order should be equal to position volume, but should have opposite sign
+            if (order.Volume != -netVolume)
+            {
+                var metadata = new OrderChangedMetadata
                 {
-                    var metadata = new OrderChangedMetadata
-                    {
-                        OldValue = order.Volume.ToString("F2"),
-                        UpdatedProperty = OrderChangedProperty.Volume
-                    };
-                    order.ChangeVolume(-netVolume, _dateService.Now(), order.Originator);
-                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
-                }
+                    OldValue = order.Volume.ToString("F2"),
+                    UpdatedProperty = OrderChangedProperty.Volume
+                };
+                order.ChangeVolume(-netVolume, _dateService.Now(), order.Originator);
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
             }
         }
         
@@ -444,44 +438,21 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public (bool WillOpenPosition, decimal ReleasedMargin) MatchOnExistingPositions(Order order)
+        public OrderFulfillmentPlan MatchOnExistingPositions(Order order)
         {
             if (order.ForceOpen)
-                return (true, 0);
+                return OrderFulfillmentPlan.Force(order, true);
 
-            var existingPositions =
-                _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId);
-            
             if (order.PositionsToBeClosed.Any())
-            {
-                var targetPositionsMargin = existingPositions.Where(p => order.PositionsToBeClosed.Contains(p.Id))
-                    .Sum(p => p.GetMarginMaintenance());
+                return OrderFulfillmentPlan.Force(order, false);
 
-                return (false, targetPositionsMargin);
-            }
+            var oppositeDirectionPositions = _ordersCache
+                .Positions
+                .GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId)
+                .Where(p => p.Status == PositionStatus.Active && p.Direction == order.Direction.GetClosePositionDirection())
+                .ToList();
 
-            var oppositeDirectionPositions =
-                existingPositions.Where(p =>
-                        p.Status == PositionStatus.Active && p.Direction == order.Direction.GetClosePositionDirection())
-                    .ToArray();
-            
-            var oppositeDirectionVolume = 0m;
-            var oppositeDirectionMargin = 0m;
-
-            foreach (var position in oppositeDirectionPositions)
-            {
-                oppositeDirectionVolume += position.Volume;
-                oppositeDirectionMargin += position.GetMarginMaintenance();
-            }
-
-            if (Math.Abs(oppositeDirectionVolume) < Math.Abs(order.Volume))
-            {
-                return (true, oppositeDirectionMargin);
-            }
-
-            var wightedMargin = oppositeDirectionMargin / Math.Abs(oppositeDirectionVolume) * Math.Abs(order.Volume);
-
-            return (false, wightedMargin);
+            return OrderFulfillmentPlan.Create(order, oppositeDirectionPositions);
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
@@ -555,11 +526,12 @@ namespace MarginTrading.Backend.Services
             {
                 var price = quote.GetPriceForOrderDirection(order.Direction);
 
+                var orderFulfillmentPlan = MatchOnExistingPositions(order);
+
                 if (order.IsSuitablePriceForPendingOrder(price) &&
-                    _validateOrderService.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
-                        MatchOnExistingPositions(order).WillOpenPosition))
+                    _orderValidator.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType, orderFulfillmentPlan.RequiresPositionOpening))
                 {
-                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
+                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(orderFulfillmentPlan.UnfulfilledVolume))
                     {
                         _ordersCache.Active.Remove(order);
                         yield return order;
@@ -567,7 +539,7 @@ namespace MarginTrading.Backend.Services
                     else //let's validate one more time, considering orderbook depth
                     {
                         var me = _meRouter.GetMatchingEngineForExecution(order);
-                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, orderFulfillmentPlan.UnfulfilledVolume);
                         
                         if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
                         {
@@ -701,7 +673,7 @@ namespace MarginTrading.Backend.Services
 
                     if (oldPrice != trailingOrder.Price)
                     {
-                        _log.WriteInfoAsync(nameof(TradingEngine), nameof(UpdateTrailingStops),
+                        _log.WriteInfo(nameof(TradingEngine), nameof(UpdateTrailingStops),
                             $"Price for trailing stop order {trailingOrder.Id} changed. " +
                             $"Old price: {oldPrice}. " +
                             $"New price: {trailingOrder.Price}");
@@ -737,7 +709,7 @@ namespace MarginTrading.Backend.Services
             var me = closeData.MatchingEngine ??
                      _meRouter.GetMatchingEngineForClose(closeData.OpenMatchingEngineId);
 
-            var initialParameters = await _validateOrderService.GetOrderInitialParameters(closeData.AssetPairId, 
+            var initialParameters = await _orderValidator.GetOrderInitialParameters(closeData.AssetPairId, 
                 closeData.AccountId);
 
             var account = _accountsCacheService.Get(closeData.AccountId);
@@ -1065,12 +1037,12 @@ namespace MarginTrading.Backend.Services
         {
             var order = _ordersCache.GetOrderById(orderId);
 
-            var assetPair = _validateOrderService.GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType,
+            var assetPair = _orderValidator.GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType,
                 order.ForceOpen, false, true);
             price = Math.Round(price, assetPair.Accuracy);
 
-            _validateOrderService.ValidateOrderPriceChange(order, price);
-            _validateOrderService.ValidateForceOpenChange(order, forceOpen);
+            _orderValidator.ValidateOrderPriceChange(order, price);
+            _orderValidator.ValidateForceOpenChange(order, forceOpen);
 
             if (order.Price != price)
             {
@@ -1110,7 +1082,7 @@ namespace MarginTrading.Backend.Services
         {
             var order = _ordersCache.GetOrderById(orderId);
 
-            _validateOrderService.ValidateValidity(validity, order.OrderType);
+            _orderValidator.ValidateValidity(validity, order.OrderType);
             
             if (order.Validity != validity)
             {

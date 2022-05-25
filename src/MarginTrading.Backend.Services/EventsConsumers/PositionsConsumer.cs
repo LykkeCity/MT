@@ -176,7 +176,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             var openedPositions =
                 _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId)
-                    .Where(p => p.Status != PositionStatus.Closing &&
+                    .Where(p => p.Status == PositionStatus.Active &&
                                 p.Direction == order.Direction.GetClosePositionDirection());
             
             foreach (var openedPosition in openedPositions)

@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.Backend.Contracts.ErrorCodes;
@@ -21,7 +20,6 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
@@ -31,7 +29,7 @@ using Microsoft.FeatureManagement;
 
 namespace MarginTrading.Backend.Services
 {
-    public class ValidateOrderService : IValidateOrderService
+    public class OrderValidator : IOrderValidator
     {
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
@@ -45,9 +43,8 @@ namespace MarginTrading.Backend.Services
         private readonly MarginTradingSettings _marginSettings;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IFeatureManager _featureManager;
-        private readonly CorrelationContextAccessor _correlationContextAccessor;
 
-        public ValidateOrderService(
+        public OrderValidator(
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
@@ -59,8 +56,7 @@ namespace MarginTrading.Backend.Services
             IDateService dateService,
             MarginTradingSettings marginSettings,
             ICfdCalculatorService cfdCalculatorService, 
-            IFeatureManager featureManager,
-            CorrelationContextAccessor correlationContextAccessor)
+            IFeatureManager featureManager)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -74,7 +70,6 @@ namespace MarginTrading.Backend.Services
             _marginSettings = marginSettings;
             _cfdCalculatorService = cfdCalculatorService;
             _featureManager = featureManager;
-            _correlationContextAccessor = correlationContextAccessor;
         }
         
         
@@ -592,15 +587,19 @@ namespace MarginTrading.Backend.Services
         
         #region Pre-trade validations
         
-        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition, IMatchingEngineBase 
-        matchingEngine, decimal additionalMargin)
+        public void PreTradeValidate(OrderFulfillmentPlan orderFulfillmentPlan, IMatchingEngineBase matchingEngine)
         {
-            GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, shouldOpenNewPosition, true);
+            GetAssetPairIfAvailableForTrading(orderFulfillmentPlan.Order.AssetPairId, 
+                orderFulfillmentPlan.Order.OrderType, 
+                orderFulfillmentPlan.RequiresPositionOpening, 
+                true);
 
-            ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume, shouldOpenNewPosition);
+            ValidateTradeLimits(orderFulfillmentPlan);
 
-            if (shouldOpenNewPosition)
-                _accountUpdateService.CheckIsEnoughBalance(order, matchingEngine, additionalMargin);
+            if (orderFulfillmentPlan.RequiresPositionOpening)
+            {
+                _accountUpdateService.CheckBalance(orderFulfillmentPlan, matchingEngine);
+            }
         }
 
         public bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
@@ -683,29 +682,33 @@ namespace MarginTrading.Backend.Services
             return assetPair;
         }
 
-        private void ValidateTradeLimits(string assetPairId, string tradingConditionId, string accountId,
-            decimal volume, bool shouldOpenNewPosition)
+        private void ValidateTradeLimits(OrderFulfillmentPlan orderFulfillmentPlan)
         {
-            var tradingInstrument =
-                _tradingInstrumentsCache.GetTradingInstrument(tradingConditionId, assetPairId);
+            var tradingInstrument = _tradingInstrumentsCache.GetTradingInstrument(
+                    orderFulfillmentPlan.Order.TradingConditionId,
+                    orderFulfillmentPlan.Order.AssetPairId);
 
-            if (tradingInstrument.DealMaxLimit > 0 && Math.Abs(volume) > tradingInstrument.DealMaxLimit)
+            if (tradingInstrument.DealMaxLimit > 0 &&
+                Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.DealMaxLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxOrderSizeLimit,
-                    $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}.");
+                    $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument} but was {orderFulfillmentPlan.UnfulfilledVolume}. Order id = [{orderFulfillmentPlan.Order.Id}]");
             }
 
-            var existingPositionsVolume = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(assetPairId, accountId)
+            var existingPositionsVolume = _ordersCache.Positions
+                .GetPositionsByInstrumentAndAccount(orderFulfillmentPlan.Order.AssetPairId, orderFulfillmentPlan.Order.AccountId)
                 .Sum(o => o.Volume);
 
             if (tradingInstrument.PositionLimit > 0 &&
-                Math.Abs(existingPositionsVolume + volume) > tradingInstrument.PositionLimit)
+                Math.Abs(existingPositionsVolume + orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxPositionLimit,
                     $"The volume of the net open position is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
 
-            if (shouldOpenNewPosition && volume < 0 && !tradingInstrument.ShortPosition)
+            if (orderFulfillmentPlan.RequiresPositionOpening &&
+                orderFulfillmentPlan.Order.Direction == OrderDirection.Sell &&
+                !tradingInstrument.ShortPosition)
             {
                 throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
                     $"Short positions are disabled for {tradingInstrument.Instrument}.");

@@ -60,8 +60,8 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IAccountUpdateService>()
 				.InstancePerLifetimeScope();
 
-			builder.RegisterType<ValidateOrderService>()
-				.As<IValidateOrderService>()
+			builder.RegisterType<OrderValidator>()
+				.As<IOrderValidator>()
 				.SingleInstance();
 
 			builder.RegisterType<CommissionService>()

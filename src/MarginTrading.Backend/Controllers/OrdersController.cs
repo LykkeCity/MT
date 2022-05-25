@@ -40,7 +40,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly ILog _log;
         private readonly OrdersCache _ordersCache;
         private readonly IDateService _dateService;
-        private readonly IValidateOrderService _validateOrderService;
+        private readonly IOrderValidator _orderValidator;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
 
@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Controllers
             ILog log,
             OrdersCache ordersCache,
             IDateService dateService,
-            IValidateOrderService validateOrderService,
+            IOrderValidator orderValidator,
             IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender)
         {
@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Controllers
             _log = log;
             _ordersCache = ordersCache;
             _dateService = dateService;
-            _validateOrderService = validateOrderService;
+            _orderValidator = orderValidator;
             _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
         }
@@ -196,7 +196,7 @@ namespace MarginTrading.Backend.Controllers
             var (baseOrder, relatedOrders) = (default(Order), default(List<Order>));
             try
             {
-                (baseOrder, relatedOrders) = await _validateOrderService.ValidateRequestAndCreateOrders(request);
+                (baseOrder, relatedOrders) = await _orderValidator.ValidateRequestAndCreateOrders(request);
             }
             catch (ValidateOrderException exception)
             {

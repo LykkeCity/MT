@@ -111,14 +111,14 @@ namespace MarginTrading.Backend.Services.Stp
         {
             if (!_orderbooks.TryGetValue(assetPairId, out var orderBook))
             {
-                return null;
+                return new List<(string, decimal?)>();
             }
 
             var price = MatchBestPriceForOrderExecution(orderBook, volume, validateOppositeDirectionVolume);
-
-            if (price == null)
-                return null;
             
+            if (price == null)
+                return new List<(string, decimal?)>();
+
             return new List<(string source, decimal? price)>
             {
                 (orderBook.ExchangeName, price)

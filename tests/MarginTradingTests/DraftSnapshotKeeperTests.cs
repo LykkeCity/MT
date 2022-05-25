@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
+using MarginTradingTests.Helpers;
 using Moq;
 using NUnit.Framework;
 
@@ -31,7 +32,7 @@ namespace MarginTradingTests
             new object[]
             {
                 null, 
-                ImmutableArray.Create<Order>(GetDumbOrder()),
+                ImmutableArray.Create<Order>(DumbDataGenerator.GenerateOrder()),
                 ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
                 new List<BestPriceContract>(),
                 new List<BestPriceContract>(),
@@ -47,7 +48,7 @@ namespace MarginTradingTests
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()), 
-                ImmutableArray.Create<Order>(GetDumbOrder()), 
+                ImmutableArray.Create<Order>(DumbDataGenerator.GenerateOrder()), 
                 null,
                 new List<BestPriceContract>(),
                 new List<BestPriceContract>(),
@@ -63,7 +64,7 @@ namespace MarginTradingTests
             new object[]
             {
                 ImmutableArray.Create<Position>(),
-                ImmutableArray.Create<Order>(GetDumbOrder()),
+                ImmutableArray.Create<Order>(DumbDataGenerator.GenerateOrder()),
                 ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
                 new List<BestPriceContract>(),
                 new List<BestPriceContract>(),
@@ -79,7 +80,7 @@ namespace MarginTradingTests
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()),
-                ImmutableArray.Create<Order>(GetDumbOrder()),
+                ImmutableArray.Create<Order>(DumbDataGenerator.GenerateOrder()),
                 ImmutableArray.Create<MarginTradingAccount>(),
                 new List<BestPriceContract>(),
                 new List<BestPriceContract>(),
@@ -203,34 +204,5 @@ namespace MarginTradingTests
                 string.Empty,
                 string.Empty,
                 SnapshotStatus.Draft);
-
-        public static Order GetDumbOrder() =>
-            new Order(
-                "1", 
-                default, 
-                string.Empty, 
-                default, 
-                default, 
-                default, 
-                null, 
-                string.Empty, 
-                string.Empty, 
-                string.Empty, 
-                default, 
-                string.Empty, 
-                default, 
-                string.Empty, 
-                string.Empty, 
-                default, 
-                default, 
-                string.Empty, 
-                string.Empty, 
-                default, 
-                default, 
-                default, 
-                string.Empty, 
-                default, 
-                default, 
-                string.Empty);
     }
 }

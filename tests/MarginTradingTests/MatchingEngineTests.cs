@@ -94,7 +94,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 8);
 
-            var matchedOrders = await _matchingEngine.MatchOrderAsync(order, false);
+            var matchedOrders = await _matchingEngine.MatchOrderAsync(OrderFulfillmentPlan.Force(order, false));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -111,7 +111,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, -8);
             
-            var matchedOrders = await _matchingEngine.MatchOrderAsync(order, false);
+            var matchedOrders = await _matchingEngine.MatchOrderAsync(OrderFulfillmentPlan.Force(order, false));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -129,7 +129,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 15);
             
-            var matchedOrders = await _matchingEngine.MatchOrderAsync(order, false);
+            var matchedOrders = await _matchingEngine.MatchOrderAsync(OrderFulfillmentPlan.Force(order, false));
             
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -147,7 +147,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, -13);
             
-            var matchedOrders = await _matchingEngine.MatchOrderAsync(order, false);
+            var matchedOrders = await _matchingEngine.MatchOrderAsync(OrderFulfillmentPlan.Force(order, false));
             
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -165,7 +165,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
             
-            var matchedOrders = await _matchingEngine.MatchOrderAsync(order, false);
+            var matchedOrders = await _matchingEngine.MatchOrderAsync(OrderFulfillmentPlan.Force(order, false));
             
             Assert.AreEqual(0, matchedOrders.Count);
         }

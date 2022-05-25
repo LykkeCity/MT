@@ -10,10 +10,10 @@ using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Services;
+using MarginTradingTests.Helpers;
 using Moq;
 using NUnit.Framework;
 
@@ -43,11 +43,11 @@ namespace MarginTradingTests
 
             _draftSnapshotKeeper
                 .Setup(k => k.GetPositions())
-                .Returns(ImmutableArray.Create(GetDumbPosition()));
+                .Returns(ImmutableArray.Create(DumbDataGenerator.GeneratePosition()));
 
             _draftSnapshotKeeper
                 .Setup(k => k.GetAllOrders())
-                .Returns(ImmutableArray.Create(DraftSnapshotKeeperTests.GetDumbOrder()));
+                .Returns(ImmutableArray.Create(DumbDataGenerator.GenerateOrder()));
 
             _draftSnapshotKeeper
                 .Setup(k => k.FxPrices)
@@ -98,39 +98,6 @@ namespace MarginTradingTests
 
             result.AccountFpl.ActualHash = 1;
             result.AccountFpl.CalculatedHash = 1;
-
-            return result;
-        }
-
-        private static Position GetDumbPosition()
-        {
-            var result = new Position("1",
-                1,
-                string.Empty,
-                default,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                null,
-                string.Empty,
-                default,
-                string.Empty,
-                default,
-                default,
-                default,
-                default,
-                string.Empty,
-                default,
-                new List<RelatedOrderInfo>(),
-                string.Empty,
-                default,
-                string.Empty,
-                string.Empty,
-                default,
-                string.Empty,
-                default);
-
-            result.FplData.CalculatedHash = 1;
 
             return result;
         }

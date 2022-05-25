@@ -68,10 +68,12 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             Id = id;
         }
         
-        public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+        public async ValueTask<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
             List<(string source, decimal? price)> prices = null;
+
+            var order = orderFulfillmentPlan.Order;
             
             if (!string.IsNullOrEmpty(_marginTradingSettings.DefaultExternalExchangeId))
             {
@@ -89,7 +91,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             
             if (prices == null)
             {
-                prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
+                prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, 
+                    order.Volume, 
+                    orderFulfillmentPlan.RequiresPositionOpening);
 
                 if (prices == null || !prices.Any())
                 {
