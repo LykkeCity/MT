@@ -198,7 +198,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
                 foreach (var accountId in command.AccountIds)
                 {
-                    _accountsCacheService.Remove(accountId);
+                    await _accountsCacheService.Remove(accountId);
                 }
                 
                 publisher.PublishEvent(new MtCoreDeleteAccountsFinishedEvent(command.OperationId, _dateService.Now()));

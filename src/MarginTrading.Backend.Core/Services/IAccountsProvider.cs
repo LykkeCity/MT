@@ -9,7 +9,7 @@ namespace MarginTrading.Backend.Core.Services
     {
         MarginTradingAccount GetAccountById(string accountId);
         
-        bool TryFinishLiquidation(string accountId, string reason, string liquidationOperationId = null);
+        Task<bool> TryFinishLiquidation(string accountId, string reason, string liquidationOperationId = null);
 
         Task<MarginTradingAccount> GetActiveOrDeleted(string accountId);
     }

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
@@ -25,6 +26,7 @@ namespace MarginTradingTests
         private Mock<ILog> _logMock;
         private Mock<IDateService> _dateServiceMock;
         private Mock<IDraftSnapshotKeeper> _draftSnapshotKeeper;
+        private Mock<IAccountsCacheService> _accountCacheServiceMock;
 
         [SetUp]
         public void SetUp()
@@ -33,6 +35,7 @@ namespace MarginTradingTests
             _logMock = new Mock<ILog>();
             _dateServiceMock = new Mock<IDateService>();
             _draftSnapshotKeeper = new Mock<IDraftSnapshotKeeper>();
+            _accountCacheServiceMock = new Mock<IAccountsCacheService>();
 
             _draftSnapshotKeeper
                 .Setup(k => k.GetAccountsAsync())
@@ -57,6 +60,10 @@ namespace MarginTradingTests
             _draftSnapshotKeeper
                 .Setup(k => k.Timestamp)
                 .Returns(DateTime.UtcNow);
+
+            _accountCacheServiceMock
+                .Setup(c => c.GetAllInLiquidation())
+                .Returns(AsyncEnumerable.Empty<MarginTradingAccount>());
         }
 
         [Test]
@@ -76,7 +83,8 @@ namespace MarginTradingTests
             _cfdCalculatorMock.Object,
             _logMock.Object,
             _dateServiceMock.Object,
-            _draftSnapshotKeeper.Object);
+            _draftSnapshotKeeper.Object,
+            _accountCacheServiceMock.Object);
 
         private static ClosingFxRate GetDumbFxRate() => 
             new ClosingFxRate { AssetId = "dumbAssetId", ClosePrice = 1 };

@@ -129,7 +129,10 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     $"Preparing data... {positions.Length} positions prepared.");
                 
                 var accountStats = _accountsCacheService.GetAll();
-                var accountsJson = accountStats.Select(a => a.ConvertToSnapshotContract(status)).ToJson();
+                var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
+                var accountsJson = accountStats
+                    .Select(a => a.ConvertToSnapshotContract(accountsInLiquidation.Contains(a), status))
+                    .ToJson();
                 await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Preparing data... {accountStats.Count} accounts prepared.");
                 

@@ -27,6 +27,7 @@ using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Repositories;
 using Moq;
 using NUnit.Framework;
+using StackExchange.Redis;
 
 namespace MarginTradingTests
 {
@@ -43,6 +44,7 @@ namespace MarginTradingTests
         private OrdersCache _ordersCache;
         private Mock<ILog> _logMock;
         private Mock<Position> _fakePosition;
+        private Mock<IConnectionMultiplexer> _connectionMultiplexerMock;
         
         private int _logCounter = 0;
 
@@ -341,9 +343,11 @@ namespace MarginTradingTests
                     .Callback(() => _logCounter++).Returns(Task.CompletedTask);
             }
             
-            _accountsCacheService = new AccountsCacheService(DateService, _logMock.Object);
-            _accountsCacheService.TryAddNew(Convert(Accounts[0]));
+            _connectionMultiplexerMock = new Mock<IConnectionMultiplexer>();
             
+            _accountsCacheService = new AccountsCacheService(DateService, _logMock.Object, _connectionMultiplexerMock.Object);
+            _accountsCacheService.TryAddNew(Convert(Accounts[0]));
+
             _ordersCache = new OrdersCache();
             _fakePosition = new Mock<Position>();
             _fakePosition.SetupProperty(s => s.Id, "test");
