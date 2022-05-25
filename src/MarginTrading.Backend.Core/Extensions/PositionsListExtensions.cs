@@ -10,6 +10,12 @@ namespace MarginTrading.Backend.Core.Extensions
 {
     public static class PositionsListExtensions
     {
+        private struct PositionsAccumulator
+        {
+            public decimal Margin { get; set; }
+            public decimal Volume { get; set; }
+        }
+        
         public static IOrderedEnumerable<Position> LargestPnlFirst(this IEnumerable<Position> source) =>
             source.OrderByDescending(p => p.GetUnrealisedPnl());
 
@@ -20,17 +26,14 @@ namespace MarginTrading.Backend.Core.Extensions
             if (positions.All(p => p.Volume >= 0) || 
                 positions.All(p => p.Volume <= 0))
             {
-                var result = positions
-                    .GroupBy(p => 1)
-                    .Select(g => new
-                    {
-                        Margin = g.Sum(p => p.GetMarginMaintenance()),
-                        Volume = g.Sum(p => Math.Abs(p.Volume))
+                var accumulator = positions.Aggregate(new PositionsAccumulator(), (a, nextPosition) =>
+                {
+                    a.Margin += nextPosition.GetMarginMaintenance();
+                    a.Volume += Math.Abs(nextPosition.Volume);
+                    return a;
+                });
 
-                    })
-                    .SingleOrDefault();
-
-                return (result?.Margin ?? 0, result?.Volume ?? 0);   
+                return (accumulator.Margin, accumulator.Volume);   
             }
 
             throw new InvalidOperationException("Only single direction positions volume can be summarized");

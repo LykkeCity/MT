@@ -91,9 +91,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             
             if (prices == null)
             {
-                await _log.WriteInfoAsync(nameof(StpMatchingEngine), nameof(MatchOrderAsync),
-                    orderFulfillmentPlan.ToJson(), "LT3810: Before calling GetOrderedPricesForExecution");
-                
                 prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, 
                     order.Volume, 
                     orderFulfillmentPlan.RequiresPositionOpening);

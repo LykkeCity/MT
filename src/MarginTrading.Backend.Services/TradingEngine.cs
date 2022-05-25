@@ -289,7 +289,6 @@ namespace MarginTrading.Backend.Services
                 order.SetRates(equivalentRate, fxRate);
 
                 var orderFulfillmentPlan = MatchOnExistingPositions(order);
-                await _log.WriteInfoAsync(nameof(TradingEngine), nameof(ExecuteOrderByMatchingEngineAsync), orderFulfillmentPlan.ToJson(), "LT3810: Order fulfillment plan");
 
                 if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
                 {
@@ -308,7 +307,6 @@ namespace MarginTrading.Backend.Services
                 try
                 {
                     matchedOrders = await matchingEngine.MatchOrderAsync(orderFulfillmentPlan, modality);
-                    await _log.WriteInfoAsync(nameof(TradingEngine), nameof(ExecuteOrderByMatchingEngineAsync), matchedOrders?.ToJson(), "LT3810: Matched orders");
                 }
                 catch (OrderExecutionTechnicalException)
                 {

@@ -111,16 +111,14 @@ namespace MarginTrading.Backend.Services.Stp
         {
             if (!_orderbooks.TryGetValue(assetPairId, out var orderBook))
             {
-                _log.WriteInfo(nameof(GetOrderedPricesForExecution), new {assetPairId, volume, validateOppositeDirectionVolume}.ToJson(), "LT3810: Couldn't find order book for asset pair");
-                return null;
+                return new List<(string, decimal?)>();
             }
 
             var price = MatchBestPriceForOrderExecution(orderBook, volume, validateOppositeDirectionVolume);
-            _log.WriteInfo(nameof(GetOrderedPricesForExecution), new {assetPairId, volume, validateOppositeDirectionVolume, price}.ToJson(), "LT3810: After calling MatchBestPriceForOrderExecution");
             
             if (price == null)
-                return null;
-            
+                return new List<(string, decimal?)>();
+
             return new List<(string source, decimal? price)>
             {
                 (orderBook.ExchangeName, price)
