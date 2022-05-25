@@ -152,7 +152,7 @@ namespace MarginTrading.Backend.Services
             if (!_accounts.TryGetValue(accountId, out _))
                 return (false, string.Empty);
 
-            var liquidationInfoAdded = await AddLiquidationInfo(accountId, operationId);
+            var liquidationInfoAdded = await TryAddLiquidationInfo(accountId, operationId);
 
             if (liquidationInfoAdded)
                 return (true, operationId);
@@ -360,7 +360,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private async Task<bool> AddLiquidationInfo(string accountId, string operationId)
+        private async Task<bool> TryAddLiquidationInfo(string accountId, string operationId)
         {
             var info = new AccountLiquidationInfo(operationId, accountId);
 
