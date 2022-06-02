@@ -17,4 +17,37 @@ namespace MarginTrading.Backend.Core.Exceptions
             Comment = comment;
         }
     }
+
+    public enum AccountValidationError
+    {
+        None = 0,
+        AccountDisabled,
+        AccountDoesNotExist
+    }
+
+    public enum InstrumentValidationError
+    {
+        None = 0,
+        InstrumentTradingDisabled,
+        TradesAreNoAvailable
+    }
+
+    public class ValidationException<T> : Exception where T : Enum
+    {
+        public T ErrorCode { get; private set; }
+        public ValidationException(T errorCode)
+        {
+            ErrorCode = errorCode;
+        }
+
+        public ValidationException(string message, T errorCode):base(message)
+        {
+            ErrorCode = errorCode;
+        }
+
+        public ValidationException(string message, T errorCode, Exception innerException):base(message, innerException)
+        {
+            ErrorCode = errorCode;
+        }
+    }
 }

@@ -14,6 +14,7 @@ using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -305,9 +306,13 @@ namespace MarginTrading.Backend.Controllers
                 {
                     if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
                     {
-                        throw new InvalidOperationException($"Trades for {instrument} are disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");
+                        throw new ValidationException<InstrumentValidationError>(
+                            $"Trades for {instrument} are disabled",
+                            InstrumentValidationError.InstrumentTradingDisabled);
                     }
-                    throw new InvalidOperationException($"Trades for {instrument} are not available");
+
+                    throw new ValidationException<InstrumentValidationError>(
+                        $"Trades for {instrument} are not available", InstrumentValidationError.TradesAreNoAvailable);
                 }
             }
         }

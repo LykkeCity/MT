@@ -4,16 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
-using Common.Log;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.Backend.Services.Services;
-using MarginTrading.Backend.Contracts.ErrorCodes;
+using MarginTrading.Backend.Core.Exceptions;
 
 namespace MarginTrading.Backend.Filters
 {
@@ -73,13 +71,15 @@ namespace MarginTrading.Backend.Filters
                     var isAccEnabled = _marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId);
                     if (isAccEnabled == null)
                     {
-                        throw new InvalidOperationException($"Account {accountId} does not exist");
+                        throw new ValidationException<AccountValidationError>($"Account {accountId} does not exist",
+                            AccountValidationError.AccountDoesNotExist);
                     }
 
                     if (!(bool) isAccEnabled)
                     {
-                        throw new InvalidOperationException(
-                            $"Using this type of margin trading is restricted for account {accountId}. Error Code: {CommonErrorCodes.AccountDisabled}");
+                        throw new ValidationException<AccountValidationError>(
+                            $"Using this type of margin trading is restricted for account {accountId}",
+                            AccountValidationError.AccountDisabled);
                     }
                 }
             }

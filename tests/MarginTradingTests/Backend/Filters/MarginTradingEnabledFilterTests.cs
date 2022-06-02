@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Common.Log;
 using FluentAssertions;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services.Services;
 using Microsoft.AspNetCore.Http;
@@ -120,8 +120,8 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().Throw<InvalidOperationException>()
-                .WithMessage("Using this type of margin trading is restricted for account id of account. Error Code: ACCOUNT_DISABLED");
+            invocation.Should().Throw<ValidationException<AccountValidationError>>()
+                .WithMessage("Using this type of margin trading is restricted for account id of account");
         }
 
 
@@ -199,8 +199,8 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().Throw<InvalidOperationException>()
-                .WithMessage("Using this type of margin trading is restricted for account id of account. Error Code: ACCOUNT_DISABLED");
+            invocation.Should().Throw<ValidationException<AccountValidationError>>()
+                .WithMessage("Using this type of margin trading is restricted for account id of account");
         }
 
 
