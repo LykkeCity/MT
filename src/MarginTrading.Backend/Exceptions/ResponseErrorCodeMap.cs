@@ -3,12 +3,14 @@
 
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Exceptions
 {
     public static class ResponseErrorCodeMap
     {
-        private const string UnknownError = "Unknown Error"; 
+        public const string UnknownError = "Unknown Error"; 
+        public const string UnsupportedError = "Unsupported Error"; 
         
         public static string MapAccountValidationError(AccountValidationError source) =>
             source switch
@@ -25,7 +27,16 @@ namespace MarginTrading.Backend.Exceptions
                 InstrumentValidationError.None => string.Empty,
                 InstrumentValidationError.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
                 InstrumentValidationError.TradesAreNotAvailable => ValidationErrorCodes.TradesAreNotAvailable,
+                InstrumentValidationError.NoLiquidity => ValidationErrorCodes.NoLiquidity,
                 _ => UnknownError
+            };
+
+        public static string MapOrderRejectReason(OrderRejectReason source) =>
+            source switch
+            {
+                OrderRejectReason.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
+                OrderRejectReason.NoLiquidity => ValidationErrorCodes.NoLiquidity,
+                _ => UnsupportedError
             };
     }
 }

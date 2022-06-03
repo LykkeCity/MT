@@ -104,15 +104,15 @@ namespace MarginTrading.Backend.Controllers
                 {
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
                         $"Failed to update related order for position {id}", ex);
-
-                    if (ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled)
+                    
+                    var errorCode = ResponseErrorCodeMap.MapOrderRejectReason(ex.RejectReason);
+                    if (errorCode == ResponseErrorCodeMap.UnsupportedError)
                     {
-                        var errorCode = ResponseErrorCodeMap.MapInstrumentValidationError(InstrumentValidationError.InstrumentTradingDisabled);
-                        result.Add(id, errorCode);
+                        result.Add(id, ex.Message);
                     }
                     else
                     {
-                        result.Add(id, ex.Message);    
+                        result.Add(id, errorCode);
                     }
                 }
                 catch (Exception ex)

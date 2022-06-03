@@ -9,5 +9,6 @@ namespace MarginTrading.Backend.Contracts.ErrorCodes
         public const string AccountDisabled = "ACCOUNT_DISABLED";
         public const string InstrumentTradingDisabled = "INSTRUMENT_TRADING_DISABLED";
         public const string TradesAreNotAvailable = "TRADES_ARE_NOT_AVAILABLE";
+        public const string NoLiquidity = "NO_LIQUIDITY";
     }
 }

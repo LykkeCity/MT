@@ -6,7 +6,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Core.Exceptions;
-using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Extensions;
 using MarginTrading.Common.Extensions;
@@ -50,25 +49,23 @@ namespace MarginTrading.Backend.Middleware
 
         private async Task<bool> TryHandleOrderValidationException(ValidateOrderException ex)
         {
-            if (ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled)
-            {
-                await Log(ex);
+            var responseErrorCode = ResponseErrorCodeMap.MapOrderRejectReason(ex.RejectReason);
 
-                var responseErrorCode = ResponseErrorCodeMap.MapInstrumentValidationError(
-                    InstrumentValidationError.InstrumentTradingDisabled);
-                
-                var errorMessage = $"Message: {ex.Message}.\nComment:{ex.Comment}";
-                
-                var problemDetails = ProblemDetailsFactory.Create(
-                    _httpContextAccessor.HttpContext.Request.Path,
-                    responseErrorCode,
-                    errorMessage);
-                
-                await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
-                return true;
+            if (responseErrorCode == ResponseErrorCodeMap.UnsupportedError)
+            {
+                return false;
             }
 
-            return false;
+            await Log(ex);
+                
+            var problemDetails = ProblemDetailsFactory.Create(
+                _httpContextAccessor.HttpContext.Request.Path,
+                responseErrorCode,
+                ex.Message);
+                
+            await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
+            
+            return true;
         }
 
         private async Task HandleAccountValidationException(AccountValidationException ex)

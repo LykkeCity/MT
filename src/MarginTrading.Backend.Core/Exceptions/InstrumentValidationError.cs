@@ -7,6 +7,7 @@ namespace MarginTrading.Backend.Core.Exceptions
     {
         None = 0,
         InstrumentTradingDisabled,
-        TradesAreNotAvailable
+        TradesAreNotAvailable,
+        NoLiquidity
     }
 }
