@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
-using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -626,8 +625,8 @@ namespace MarginTrading.Backend.Services
                 {
                     if (tradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
                     {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                            $"Trading for the instrument {assetPairId} is disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");
+                        throw new ValidateOrderException(OrderRejectReason.InstrumentTradingDisabled, 
+                            $"Trading for the instrument {assetPairId} is disabled.");
                     }
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Trades for instrument {assetPairId} are not available due to trading is closed");
@@ -654,8 +653,8 @@ namespace MarginTrading.Backend.Services
 
             if (assetPair.IsTradingDisabled && !validateForEdit)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                    $"Trading for the instrument {assetPairId} is disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");
+                throw new ValidateOrderException(OrderRejectReason.InstrumentTradingDisabled, 
+                    $"Trading for the instrument {assetPairId} is disabled.");
             }
 
             if (assetPair.IsSuspended && shouldOpenNewPosition)

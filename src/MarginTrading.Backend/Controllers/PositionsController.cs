@@ -10,7 +10,6 @@ using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Common;
-using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
@@ -18,6 +17,7 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -99,18 +99,14 @@ namespace MarginTrading.Backend.Controllers
             {
                 ValidateDayOff(position.AssetPairId);
             }
-            catch (Exception e)
+            catch (ValidationException<InstrumentValidationError> e)
             {
-                if (e.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled))
+                return new PositionCloseResponse
                 {
-                    return new PositionCloseResponse()
-                    {
-                        PositionId = positionId,
-                        Result = PositionCloseResultContract.FailedToClose,
-                        ErrorCode = CommonErrorCodes.InstrumentTradingDisabled,
-                    };
-                }
-                throw;
+                    PositionId = positionId,
+                    Result = PositionCloseResultContract.FailedToClose,
+                    ErrorCode = ResponseErrorCodeMap.MapInstrumentValidationError(e.ErrorCode)
+                };
             }
 
             var originator = GetOriginator(request?.Originator);
@@ -302,18 +298,15 @@ namespace MarginTrading.Backend.Controllers
             foreach (var instrument in assetPairIds)
             {
                 var instrumentTradingStatus = _assetDayOffService.IsAssetTradingDisabled(instrument);
-                if (!instrumentTradingStatus.TradingEnabled)
+                if (instrumentTradingStatus.TradingEnabled)
+                    continue;
+                
+                if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
                 {
-                    if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
-                    {
-                        throw new ValidationException<InstrumentValidationError>(
-                            $"Trades for {instrument} are disabled",
-                            InstrumentValidationError.InstrumentTradingDisabled);
-                    }
-
-                    throw new ValidationException<InstrumentValidationError>(
-                        $"Trades for {instrument} are not available", InstrumentValidationError.TradesAreNoAvailable);
+                    throw new InstrumentValidationException($"Trades for {instrument} are disabled", InstrumentValidationError.InstrumentTradingDisabled);
                 }
+
+                throw new InstrumentValidationException($"Trades for {instrument} are disabled", InstrumentValidationError.TradesAreNotAvailable);
             }
         }
     }

@@ -58,31 +58,31 @@ namespace MarginTrading.Backend.Filters
             if (!(context.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor))
                 return;
 
-            var cacheKey = CacheKeyBuilder.Create(nameof(MarginTradingEnabledFilter), nameof(GetSingleAccountIdGetter),
+            var cacheKey = CacheKeyBuilder.Create(nameof(MarginTradingEnabledFilter), 
+                nameof(GetSingleAccountIdGetter),
                 controllerActionDescriptor.DisplayName);
+            
             var accountIdGetter = _cacheProvider.Get(cacheKey,
-                () => new CachableResult<AccountIdGetter>(GetSingleAccountIdGetter(controllerActionDescriptor),
-                    CachingParameters.InfiniteCache));
-            if (accountIdGetter != null)
-            {
-                var accountId = accountIdGetter(context.ActionArguments);
-                if (!string.IsNullOrWhiteSpace(accountId))
-                {
-                    var isAccEnabled = _marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId);
-                    if (isAccEnabled == null)
-                    {
-                        throw new ValidationException<AccountValidationError>($"Account {accountId} does not exist",
-                            AccountValidationError.AccountDoesNotExist);
-                    }
+                () => new CachableResult<AccountIdGetter>(GetSingleAccountIdGetter(controllerActionDescriptor), CachingParameters.InfiniteCache));
 
-                    if (!(bool) isAccEnabled)
-                    {
-                        throw new ValidationException<AccountValidationError>(
-                            $"Using this type of margin trading is restricted for account {accountId}",
-                            AccountValidationError.AccountDisabled);
-                    }
-                }
+            if (accountIdGetter == null)
+                return;
+                
+            var accountId = accountIdGetter(context.ActionArguments);
+
+            if (string.IsNullOrWhiteSpace(accountId))
+                return;
+            
+            var isAccEnabled = _marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId);
+            if (isAccEnabled == null)
+            {
+                throw new AccountValidationException($"Account {accountId} does not exist", AccountValidationError.AccountDoesNotExist);
             }
+
+            if (isAccEnabled.Value)
+                return;
+            
+            throw new AccountValidationException($"Using this type of margin trading is restricted for account {accountId}", AccountValidationError.AccountDisabled);
         }
 
         /// <summary>
