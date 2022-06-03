@@ -18,6 +18,7 @@ using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Helpers;
@@ -81,11 +82,44 @@ namespace MarginTrading.Backend.Controllers
                 {
                     await UpdateRelatedOrderAsync(id, request.UpdateRelatedOrderRequest);
                 }
-                catch (Exception exception)
+                catch (AccountValidationException ex)
                 {
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
-                        $"Failed to update related order for position {id}", exception);
-                    result.Add(id, exception.Message);
+                        $"Failed to update related order for position {id}", ex);
+
+                    var errorCode = ResponseErrorCodeMap.MapAccountValidationError(ex.ErrorCode);
+
+                    result.Add(id, errorCode);
+                }
+                catch (InstrumentValidationException ex)
+                {
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
+                        $"Failed to update related order for position {id}", ex);
+
+                    var errorCode = ResponseErrorCodeMap.MapInstrumentValidationError(ex.ErrorCode);
+
+                    result.Add(id, errorCode);
+                }
+                catch (ValidateOrderException ex)
+                {
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
+                        $"Failed to update related order for position {id}", ex);
+
+                    if (ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled)
+                    {
+                        var errorCode = ResponseErrorCodeMap.MapInstrumentValidationError(InstrumentValidationError.InstrumentTradingDisabled);
+                        result.Add(id, errorCode);
+                    }
+                    else
+                    {
+                        result.Add(id, ex.Message);    
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
+                        $"Failed to update related order for position {id}", ex);
+                    result.Add(id, ex.Message);
                 }
             }
 
