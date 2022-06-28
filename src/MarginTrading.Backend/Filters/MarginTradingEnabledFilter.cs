@@ -4,16 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
-using Common.Log;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.Backend.Services.Services;
-using MarginTrading.Backend.Contracts.ErrorCodes;
+using MarginTrading.Backend.Core.Exceptions;
 
 namespace MarginTrading.Backend.Filters
 {
@@ -60,29 +58,31 @@ namespace MarginTrading.Backend.Filters
             if (!(context.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor))
                 return;
 
-            var cacheKey = CacheKeyBuilder.Create(nameof(MarginTradingEnabledFilter), nameof(GetSingleAccountIdGetter),
+            var cacheKey = CacheKeyBuilder.Create(nameof(MarginTradingEnabledFilter), 
+                nameof(GetSingleAccountIdGetter),
                 controllerActionDescriptor.DisplayName);
+            
             var accountIdGetter = _cacheProvider.Get(cacheKey,
-                () => new CachableResult<AccountIdGetter>(GetSingleAccountIdGetter(controllerActionDescriptor),
-                    CachingParameters.InfiniteCache));
-            if (accountIdGetter != null)
-            {
-                var accountId = accountIdGetter(context.ActionArguments);
-                if (!string.IsNullOrWhiteSpace(accountId))
-                {
-                    var isAccEnabled = _marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId);
-                    if (isAccEnabled == null)
-                    {
-                        throw new InvalidOperationException($"Account {accountId} does not exist");
-                    }
+                () => new CachableResult<AccountIdGetter>(GetSingleAccountIdGetter(controllerActionDescriptor), CachingParameters.InfiniteCache));
 
-                    if (!(bool) isAccEnabled)
-                    {
-                        throw new InvalidOperationException(
-                            $"Using this type of margin trading is restricted for account {accountId}. Error Code: {CommonErrorCodes.AccountDisabled}");
-                    }
-                }
+            if (accountIdGetter == null)
+                return;
+                
+            var accountId = accountIdGetter(context.ActionArguments);
+
+            if (string.IsNullOrWhiteSpace(accountId))
+                return;
+            
+            var isAccEnabled = _marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId);
+            if (isAccEnabled == null)
+            {
+                throw new AccountValidationException($"Account {accountId} does not exist", AccountValidationError.AccountDoesNotExist);
             }
+
+            if (isAccEnabled.Value)
+                return;
+            
+            throw new AccountValidationException($"Using this type of margin trading is restricted for account {accountId}", AccountValidationError.AccountDisabled);
         }
 
         /// <summary>

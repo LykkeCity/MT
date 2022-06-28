@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Hosting;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.EventsConsumers;
@@ -143,6 +144,10 @@ namespace MarginTrading.Backend.Modules
                 .SingleInstance();
 
             RegisterPublishers(builder, consoleWriter);
+
+            builder.RegisterType<ValidationExceptionHandler>()
+                .AsSelf()
+                .SingleInstance();
         }
 
         private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)

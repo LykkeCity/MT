@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Contracts.TradeMonitoring
         InvalidTakeProfit,
         InvalidStoploss,
         InvalidInstrument,
+        InstrumentTradingDisabled,
         InvalidAccount,
         InvalidParent,
         TradingConditionError,

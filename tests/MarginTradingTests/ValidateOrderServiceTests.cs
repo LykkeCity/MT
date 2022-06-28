@@ -209,8 +209,7 @@ namespace MarginTradingTests
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
-            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
-            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+            Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
         }
         
         [Test]
@@ -232,8 +231,7 @@ namespace MarginTradingTests
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
-            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
-            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+            Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
         }
         
         [Test]
@@ -249,8 +247,7 @@ namespace MarginTradingTests
             var ex = Assert.Throws<ValidateOrderException>(() =>
                 _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
-            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
-            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+            Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
         }
         
         [Test]

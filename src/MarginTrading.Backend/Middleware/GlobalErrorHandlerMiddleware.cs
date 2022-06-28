@@ -4,14 +4,11 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Exceptions;
-using MarginTrading.Common.Extensions;
+using MarginTrading.Backend.Extensions;
 using MarginTrading.Common.Helpers;
-using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
@@ -20,10 +17,12 @@ namespace MarginTrading.Backend.Middleware
     {
         private readonly ILog _log;
         private readonly RequestDelegate _next;
+        private readonly ValidationExceptionHandler _validationExceptionHandler;
 
-        public GlobalErrorHandlerMiddleware(RequestDelegate next, ILog log)
+        public GlobalErrorHandlerMiddleware(RequestDelegate next, ILog log, ValidationExceptionHandler validationExceptionHandler)
         {
             _log = log;
+            _validationExceptionHandler = validationExceptionHandler;
             _next = next;
         }
 
@@ -36,36 +35,17 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                if (ex is ValidateOrderException || ex is LogInfoOnlyException)
-                {
-                    await LogValidationError(context, ex);
-                }
-                else
-                {
-                    await LogError(context, ex);
-                }
+                var handled = await _validationExceptionHandler.TryHandleAsync(ex);
 
-#if DEBUG
-                await SendError(context, ex.ToString());
-#else
-                await SendError(context, ex.Message);
-#endif
+                if (handled) return;
+                
+                await Log(ex, asInfo: ex is LogInfoOnlyException);
+
+                await context.Response.WriteDefaultMtErrorAsync(ex.Message);
             }
         }
-
-        private async Task LogValidationError(HttpContext context, Exception ex)
-        {
-            string bodyPart;
-
-            using (var memoryStream = new MemoryStream())
-            {
-                bodyPart = await StreamHelpers.GetStreamPart(memoryStream, 1024);
-            }
-
-            await _log.WriteInfoAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart + ex.Message);
-        }
-
-        private async Task LogError(HttpContext context, Exception ex)
+        
+        private async Task Log(Exception ex, bool asInfo)
         {
             string bodyPart;
 
@@ -74,15 +54,13 @@ namespace MarginTrading.Backend.Middleware
                 bodyPart = await StreamHelpers.GetStreamPart(ms, 1024);
             }
 
-            await _log.WriteErrorAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart, ex);
-        }
+            if (asInfo)
+            {
+                await _log.WriteInfoAsync(nameof(GlobalErrorHandlerMiddleware), bodyPart, ex.Message);
+                return;
+            }
 
-        private async Task SendError(HttpContext ctx, string errorMessage)
-        {
-            ctx.Response.ContentType = "application/json";
-            ctx.Response.StatusCode = 500;
-            var response = new MtBackendResponse<string> {Result = "Technical problems", ErrorMessage = errorMessage};
-            await ctx.Response.WriteAsync(response.ToJson());
+            await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), bodyPart, ex);
         }
     }
 }

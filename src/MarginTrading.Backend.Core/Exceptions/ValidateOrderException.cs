@@ -8,10 +8,12 @@ namespace MarginTrading.Backend.Core.Exceptions
 {
     public class ValidateOrderException : Exception
     {
-        public OrderRejectReason RejectReason { get; private set; }
-        public string Comment { get; private set; }
+        public OrderRejectReason RejectReason { get; }
+        
+        public string Comment { get; }
 
-        public ValidateOrderException(OrderRejectReason reason, string rejectReasonText, string comment = null):base(rejectReasonText)
+        public ValidateOrderException(OrderRejectReason reason, string rejectReasonText, string comment = null) 
+            : base(rejectReasonText)
         {
             RejectReason = reason;
             Comment = comment;
