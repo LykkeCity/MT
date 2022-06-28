@@ -35,6 +35,7 @@ namespace MarginTrading.Backend.Core
         decimal TodayCommissionAmount { get; }
         decimal TodayOtherAmount { get; }
         decimal TodayStartBalance { get; }
+        string LogInfo { get; set; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -61,6 +62,8 @@ namespace MarginTrading.Backend.Core
         public decimal TodayCommissionAmount { get; set; }
         public decimal TodayOtherAmount { get; set; }
         public decimal TodayStartBalance { get; set; }
+        
+        public string LogInfo { get; set; }
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
