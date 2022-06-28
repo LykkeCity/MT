@@ -686,9 +686,15 @@ namespace MarginTrading.Backend.Services
             var tradingInstrument = _tradingInstrumentsCache.GetTradingInstrument(
                     orderFulfillmentPlan.Order.TradingConditionId,
                     orderFulfillmentPlan.Order.AssetPairId);
+
+            if (tradingInstrument == null)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                    $"The instrument is not found for the trading condition {orderFulfillmentPlan.Order.TradingConditionId} and asset pair {orderFulfillmentPlan.Order.AssetPairId}");
+            }
             
             if (tradingInstrument.DealMaxLimit > 0 &&
-                Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.DealMaxLimit && 
+                Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.DealMaxLimit &&
                 orderFulfillmentPlan.RequiresPositionOpening)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxOrderSizeLimit,

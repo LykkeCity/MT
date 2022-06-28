@@ -608,9 +608,9 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(998.71, account.Balance);
         }
-        
+
         [Test]
-        public async Task Is_Position_Stays_Active_On_StopLoss_Not_Executed()
+        public async Task Should_close_any_position_volume()
         {
             var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
                 MarginTradingTestsUtils.TradingConditionId, 14, 1.12857M);
@@ -619,7 +619,7 @@ namespace MarginTradingTests
 
             var order = TestObjectsFactory.CreateNewOrder(OrderType.StopLoss, "EURUSD", _account,
                 MarginTradingTestsUtils.TradingConditionId, -14, parentPositionId: position.Id, price: 0.98M);
-
+            
             order = _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();    
             
             var instrumentContract = new TradingInstrumentContract
@@ -634,7 +634,7 @@ namespace MarginTradingTests
                 MaintenanceLeverage = 150,
                 MarginRatePercent = 0.67M
             };
-
+            
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
                 .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
             
@@ -644,11 +644,11 @@ namespace MarginTradingTests
             {
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.9M, Volume = 20}
             }, new[] { "1", "2"});
-
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
-            Assert.AreEqual(PositionStatus.Active, position.Status);
+            
+            Assert.AreEqual(OrderStatus.Executed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, position.Status);
         }
-
+        
         [Test]
         public async Task Is_Order_Fpl_Correct_With_Commission()
         {
