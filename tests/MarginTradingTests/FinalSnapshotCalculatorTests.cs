@@ -4,15 +4,16 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Services;
+using MarginTradingTests.Helpers;
 using Moq;
 using NUnit.Framework;
 
@@ -25,6 +26,7 @@ namespace MarginTradingTests
         private Mock<ILog> _logMock;
         private Mock<IDateService> _dateServiceMock;
         private Mock<IDraftSnapshotKeeper> _draftSnapshotKeeper;
+        private Mock<IAccountsCacheService> _accountCacheServiceMock;
 
         [SetUp]
         public void SetUp()
@@ -33,6 +35,7 @@ namespace MarginTradingTests
             _logMock = new Mock<ILog>();
             _dateServiceMock = new Mock<IDateService>();
             _draftSnapshotKeeper = new Mock<IDraftSnapshotKeeper>();
+            _accountCacheServiceMock = new Mock<IAccountsCacheService>();
 
             _draftSnapshotKeeper
                 .Setup(k => k.GetAccountsAsync())
@@ -40,11 +43,11 @@ namespace MarginTradingTests
 
             _draftSnapshotKeeper
                 .Setup(k => k.GetPositions())
-                .Returns(ImmutableArray.Create(GetDumbPosition()));
+                .Returns(ImmutableArray.Create(DumbDataGenerator.GeneratePosition()));
 
             _draftSnapshotKeeper
                 .Setup(k => k.GetAllOrders())
-                .Returns(ImmutableArray.Create(DraftSnapshotKeeperTests.GetDumbOrder()));
+                .Returns(ImmutableArray.Create(DumbDataGenerator.GenerateOrder()));
 
             _draftSnapshotKeeper
                 .Setup(k => k.FxPrices)
@@ -57,6 +60,10 @@ namespace MarginTradingTests
             _draftSnapshotKeeper
                 .Setup(k => k.Timestamp)
                 .Returns(DateTime.UtcNow);
+
+            _accountCacheServiceMock
+                .Setup(c => c.GetAllInLiquidation())
+                .Returns(AsyncEnumerable.Empty<MarginTradingAccount>());
         }
 
         [Test]
@@ -76,7 +83,8 @@ namespace MarginTradingTests
             _cfdCalculatorMock.Object,
             _logMock.Object,
             _dateServiceMock.Object,
-            _draftSnapshotKeeper.Object);
+            _draftSnapshotKeeper.Object,
+            _accountCacheServiceMock.Object);
 
         private static ClosingFxRate GetDumbFxRate() => 
             new ClosingFxRate { AssetId = "dumbAssetId", ClosePrice = 1 };
@@ -90,39 +98,6 @@ namespace MarginTradingTests
 
             result.AccountFpl.ActualHash = 1;
             result.AccountFpl.CalculatedHash = 1;
-
-            return result;
-        }
-
-        private static Position GetDumbPosition()
-        {
-            var result = new Position("1",
-                1,
-                string.Empty,
-                default,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                null,
-                string.Empty,
-                default,
-                string.Empty,
-                default,
-                default,
-                default,
-                default,
-                string.Empty,
-                default,
-                new List<RelatedOrderInfo>(),
-                string.Empty,
-                default,
-                string.Empty,
-                string.Empty,
-                default,
-                string.Empty,
-                default);
-
-            result.FplData.CalculatedHash = 1;
 
             return result;
         }

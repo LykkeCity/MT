@@ -238,40 +238,41 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
 
         [UsedImplicitly]
-        public Task Handle(MarketStateChangedEvent e, ICommandSender sender)
+        public async Task Handle(MarketStateChangedEvent e, ICommandSender sender)
         {
             if(!e.IsEnabled)
-                return Task.CompletedTask;
+                return;
 
             // resuming liquidations on corresponding accounts upon market open
-            _accountsCacheService.GetAll()
-                .Where(a => a.IsInLiquidation())
-                .SelectMany(a => _ordersCache.Positions.GetPositionsByAccountIds(a.Id))
+            await _accountsCacheService
+                .GetAllInLiquidation()
+                .SelectMany(a => _ordersCache.Positions.GetPositionsByAccountIds(a.Id).ToAsyncEnumerable())
                 .GroupBy(p => p.AccountId)
-                .Where(AnyAssetRelatesToMarket)
-                .ForEach(account => SendResumeCommand(account.Key));
+                .WhereAwait(AnyAssetRelatesToMarket)
+                .ForEachAwaitAsync(account => SendResumeCommand(account.Key));
 
-            return Task.CompletedTask;
-            
             #region internal functions
-            
-            bool AnyAssetRelatesToMarket(IGrouping<string, Position> positions) =>
+
+            ValueTask<bool> AnyAssetRelatesToMarket(IAsyncGrouping<string, Position> positions) =>
                 positions
                     .Select(p => _assetPairsCache.GetAssetPairById(p.AssetPairId))
-                    .Any(assetPair => assetPair.MarketId == e.Id);
+                    .AnyAsync(assetPair => assetPair.MarketId == e.Id);
 
-            void SendResumeCommand(string accountId)
+            async Task SendResumeCommand(string accountId)
             {
-                var account = _accountsCacheService.Get(accountId);
+                var liquidationOperationId = await _accountsCacheService.GetLiquidationOperationId(accountId);
 
-                sender.SendCommand(new ResumeLiquidationInternalCommand
+                if (liquidationOperationId != null)
                 {
-                    OperationId = account.LiquidationOperationId,
-                    CreationTime = DateTime.UtcNow,
-                    IsCausedBySpecialLiquidation = false,
-                    ResumeOnlyFailed = true,
-                    Comment = "Trying to resume liquidation because market has been opened"
-                }, _cqrsContextNamesSettings.TradingEngine);
+                    sender.SendCommand(new ResumeLiquidationInternalCommand
+                    {
+                        OperationId = liquidationOperationId,
+                        CreationTime = DateTime.UtcNow,
+                        IsCausedBySpecialLiquidation = false,
+                        ResumeOnlyFailed = true,
+                        Comment = "Trying to resume liquidation because market has been opened"
+                    }, _cqrsContextNamesSettings.TradingEngine);   
+                }
             }
             
             #endregion

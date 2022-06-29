@@ -2,7 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
@@ -13,7 +13,6 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTradingTests.Helpers;
 using MarginTradingTests.Services;
 using NUnit.Framework;
@@ -24,7 +23,7 @@ namespace MarginTradingTests
     public class ValidateOrderServiceTests :BaseTests
     {
         
-        private IValidateOrderService _validateOrderService;
+        private IOrderValidator _orderValidator;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
         private OrdersCache _ordersCache;
         private IAssetPairsCache _assetPairsCache;
@@ -34,7 +33,7 @@ namespace MarginTradingTests
         public void Setup()
         {
             RegisterDependencies();
-            _validateOrderService = Container.Resolve<IValidateOrderService>();
+            _orderValidator = Container.Resolve<IOrderValidator>();
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
             _ordersCache = Container.Resolve<OrdersCache>();
             _assetPairsCache = Container.Resolve<IAssetPairsCache>();
@@ -70,9 +69,8 @@ namespace MarginTradingTests
                 Assert.DoesNotThrow(
                     () =>
                     {
-                        var order = _validateOrderService.ValidateRequestAndCreateOrders(request).Result.order;
-                        _validateOrderService.MakePreTradeValidation(order, true, _me, 0);
-
+                        var order = _orderValidator.ValidateRequestAndCreateOrders(request).Result.order;
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me);
                     });
             }
             else
@@ -80,8 +78,8 @@ namespace MarginTradingTests
                 var ex = Assert.ThrowsAsync<ValidateOrderException>(
                     async () =>
                     {
-                        var order = (await _validateOrderService.ValidateRequestAndCreateOrders(request)).order;
-                        _validateOrderService.MakePreTradeValidation(order, true, _me, 0);
+                        var order = (await _orderValidator.ValidateRequestAndCreateOrders(request)).order;
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me);
 
                     });
 
@@ -122,12 +120,12 @@ namespace MarginTradingTests
 
             if (isValid)
             {
-                Assert.DoesNotThrow(() => _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+                Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
             }
             else
             {
                 var ex = Assert.Throws<ValidateOrderException>(() =>
-                    _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+                    _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
                 Assert.That(ex.RejectReason == OrderRejectReason.MaxPositionLimit);
             }
@@ -149,7 +147,7 @@ namespace MarginTradingTests
             };
 
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -171,7 +169,7 @@ namespace MarginTradingTests
             };
 
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -187,8 +185,8 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
-            
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
+
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
         
@@ -209,10 +207,9 @@ namespace MarginTradingTests
             };
 
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
-            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
-            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+            Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
         }
         
         [Test]
@@ -232,10 +229,9 @@ namespace MarginTradingTests
             };
 
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
-            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
-            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+            Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
         }
         
         [Test]
@@ -249,10 +245,9 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
-            
-            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
-            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
         }
         
         [Test]
@@ -273,7 +268,7 @@ namespace MarginTradingTests
             };
 
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -298,7 +293,7 @@ namespace MarginTradingTests
             };
             
             Assert.DoesNotThrowAsync(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
         }
         
         [Test]
@@ -319,7 +314,7 @@ namespace MarginTradingTests
             };
 
             Assert.DoesNotThrowAsync(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
         }
         
         [Test]
@@ -333,7 +328,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -349,7 +344,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10, price: 1);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -372,7 +367,7 @@ namespace MarginTradingTests
             };
 
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -395,7 +390,7 @@ namespace MarginTradingTests
             };
 
             Assert.DoesNotThrowAsync(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
         }
         
         [Test]
@@ -409,7 +404,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
@@ -424,7 +419,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            Assert.DoesNotThrow(() => _validateOrderService.MakePreTradeValidation(order, false, _me, 0));
+            Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, false), _me));
         }
 
         [Test]
@@ -442,7 +437,7 @@ namespace MarginTradingTests
             };
             
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidAccount);
         }
@@ -462,7 +457,7 @@ namespace MarginTradingTests
             };
             
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidValidity);
         }
@@ -485,7 +480,7 @@ namespace MarginTradingTests
             };
 
             Assert.DoesNotThrowAsync(async () =>
-                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                await _orderValidator.ValidateRequestAndCreateOrders(request));
         }
 
         [Test]
@@ -494,7 +489,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
             
-            var ex = Assert.Throws<QuoteNotFoundException>(() => _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+            var ex = Assert.Throws<QuoteNotFoundException>(() => _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
             Assert.That(ex.InstrumentId == "EURUSD");
         }
@@ -510,7 +505,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 150000);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+                _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
             Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
         }
@@ -523,12 +518,16 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 150000);
+                MarginTradingTestsUtils.TradingConditionId, 151000);
 
-            //account margin = 1000, margin requirement for order = 2355 => additional margin should be > 1355
+            //account margin = 1000,
+            //margin requirement for order = 2355
+            //entry cost + exit cost = 1917 => additional margin should be > 3272
+
+            var fulfillmentPlan = OrderFulfillmentPlan.Create(order,
+                DumbDataGenerator.GeneratePosition(instrument, -1000, 3273, Accounts[0].Id));
             
-            Assert.DoesNotThrow(() =>
-                _validateOrderService.MakePreTradeValidation(order, true, _me, 1356));
+            Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(fulfillmentPlan, _me));
         }
 
 
@@ -539,8 +538,8 @@ namespace MarginTradingTests
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 1, true)]
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 1.56, false)]
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 2, false)]
-        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Limit, 2, true)]
-        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Limit, 1, true)]
+        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Limit, 2, false)]
+        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Limit, 1, false)]
         [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Market, 2, true)]
         [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Market, 1, true)]
         public void Is_Order_ExpectedOpenPrice_Validated_Correctly(OrderDirectionContract direction, OrderTypeContract orderType, 
@@ -563,12 +562,12 @@ namespace MarginTradingTests
             if (isValid)
             {
                 Assert.DoesNotThrowAsync(async () =>
-                    await _validateOrderService.ValidateRequestAndCreateOrders(request));
+                    await _orderValidator.ValidateRequestAndCreateOrders(request));
             }
             else
             {
                 var ex = Assert.ThrowsAsync<ValidateOrderException>(() =>
-                    _validateOrderService.ValidateRequestAndCreateOrders(request));
+                    _orderValidator.ValidateRequestAndCreateOrders(request));
 
                 Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
                 StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
@@ -576,13 +575,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(OrderDirectionContract.Buy, null, null, null)]
         [TestCase(OrderDirectionContract.Sell, null, null, null)]
-        [TestCase(OrderDirectionContract.Buy, 0.1, null, null)]
-        [TestCase(OrderDirectionContract.Buy, null, 3, null)]
-        [TestCase(OrderDirectionContract.Buy, 0.1, 3, null)]
-        [TestCase(OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
-        [TestCase(OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
         [TestCase(OrderDirectionContract.Sell, 3, null, null)]
         [TestCase(OrderDirectionContract.Sell, null, 0.1, null)]
         [TestCase(OrderDirectionContract.Sell, 3, 0.1, null)]
@@ -623,20 +616,20 @@ namespace MarginTradingTests
             if (!rejectReason.HasValue)
             {
                 Assert.DoesNotThrowAsync(async () =>
-                    await _validateOrderService.ValidateRequestAndCreateOrders(limitOrderRequest));
+                    await _orderValidator.ValidateRequestAndCreateOrders(limitOrderRequest));
                 
                 Assert.DoesNotThrowAsync(async () =>
-                    await _validateOrderService.ValidateRequestAndCreateOrders(stopOrderRequest));
+                    await _orderValidator.ValidateRequestAndCreateOrders(stopOrderRequest));
             }
             else
             {
                 var ex1 = Assert.ThrowsAsync<ValidateOrderException>(() =>
-                    _validateOrderService.ValidateRequestAndCreateOrders(limitOrderRequest));
+                    _orderValidator.ValidateRequestAndCreateOrders(limitOrderRequest));
 
                 Assert.That(ex1.RejectReason == rejectReason);
                 
                 var ex2 = Assert.ThrowsAsync<ValidateOrderException>(() =>
-                    _validateOrderService.ValidateRequestAndCreateOrders(stopOrderRequest));
+                    _orderValidator.ValidateRequestAndCreateOrders(stopOrderRequest));
 
                 Assert.That(ex2.RejectReason == rejectReason);
             }
@@ -679,23 +672,19 @@ namespace MarginTradingTests
             if (!rejectReason.HasValue)
             {
                 Assert.DoesNotThrowAsync(async () =>
-                    await _validateOrderService.ValidateRequestAndCreateOrders(orderRequest));
+                    await _orderValidator.ValidateRequestAndCreateOrders(orderRequest));
             }
             else
             {
                 var ex1 = Assert.ThrowsAsync<ValidateOrderException>(() =>
-                    _validateOrderService.ValidateRequestAndCreateOrders(orderRequest));
+                    _orderValidator.ValidateRequestAndCreateOrders(orderRequest));
 
                 Assert.That(ex1.RejectReason == rejectReason);
             }
         }
 
         [Test]
-        [TestCase(OrderDirection.Buy, 2.5, true)]
-        [TestCase(OrderDirection.Sell, 0.7, true)]
         [TestCase(OrderDirection.Buy, 0.1, false)]
-        [TestCase(OrderDirection.Sell, 0.1, false)]
-        [TestCase(OrderDirection.Buy, 4, false)]
         [TestCase(OrderDirection.Sell, 4, false)]
         
         public void Is_BaseOrder_Validated_Correctly_Against_Related_On_Change(
@@ -742,27 +731,27 @@ namespace MarginTradingTests
             if (isValid)
             {
                 Assert.DoesNotThrow(() =>
-                    _validateOrderService.ValidateOrderPriceChange(limitOrder, newPrice));
+                    _orderValidator.ValidateOrderPriceChange(limitOrder, newPrice));
                 
                 Assert.DoesNotThrow(() =>
-                    _validateOrderService.ValidateOrderPriceChange(stopOrder, newPrice));
+                    _orderValidator.ValidateOrderPriceChange(stopOrder, newPrice));
             }
             else
             {
                 var ex1 = Assert.Throws<ValidateOrderException>(() =>
-                    _validateOrderService.ValidateOrderPriceChange(limitOrder, newPrice));
+                    _orderValidator.ValidateOrderPriceChange(limitOrder, newPrice));
 
                 Assert.That(ex1.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
                 StringAssert.Contains("against related", ex1.Message);
                 
                 var ex2 = Assert.Throws<ValidateOrderException>(() =>
-                    _validateOrderService.ValidateOrderPriceChange(stopOrder, newPrice));
+                    _orderValidator.ValidateOrderPriceChange(stopOrder, newPrice));
 
                 Assert.That(ex2.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
                 StringAssert.Contains("against related", ex1.Message);
             }
         }
-        
+
         private void SetupAssetPair(string id, bool isDiscontinued = false, bool isFrozen = false,
             bool isSuspended = false, bool tradingDisabled = false)
         {

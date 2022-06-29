@@ -55,6 +55,7 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog.Core;
+using StackExchange.Redis;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
@@ -359,8 +360,11 @@ namespace MarginTrading.Backend
 
         private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)
         {
-            var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog,
-                marginTradingSettings);
+            var deduplicationService = new StartupDeduplicationService(Environment, 
+                LogLocator.CommonLog, 
+                marginTradingSettings, 
+                ConnectionMultiplexer.Connect(marginTradingSettings.RedisSettings.Configuration));
+            
             deduplicationService.HoldLock();
 
             new QueueValidationService(marginTradingSettings.StartupQueuesChecker.ConnectionString,

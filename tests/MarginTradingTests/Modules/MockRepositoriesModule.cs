@@ -12,9 +12,10 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.MatchingEngines;
 using Moq;
+using StackExchange.Redis;
+using Order = MarginTrading.Backend.Core.Trading.Order;
 
 namespace MarginTradingTests.Modules
 {
@@ -41,6 +42,7 @@ namespace MarginTradingTests.Modules
             var accountMarginUnconfirmedRepository = new Mock<IAccountMarginUnconfirmedRepository>();
             var operationExecutionInfoRepositoryMock = new Mock<IOperationExecutionInfoRepository>();
             var snapshotsRepository = new Mock<ITradingEngineSnapshotsRepository>();
+            var connectionMultiplexer = new Mock<IConnectionMultiplexer>();
             
             operationExecutionInfoRepositoryMock.Setup(s => s.GetOrAddAsync(It.IsIn("AccountsProjection"),
                     It.IsAny<string>(), It.IsAny<Func<IOperationExecutionInfo<OperationData>>>()))
@@ -80,6 +82,8 @@ namespace MarginTradingTests.Modules
                 .As<IOperationExecutionInfoRepository>().SingleInstance();
             builder.RegisterInstance(snapshotsRepository.Object)
                 .As<ITradingEngineSnapshotsRepository>().SingleInstance();
+            builder.RegisterInstance(connectionMultiplexer.Object)
+                .As<IConnectionMultiplexer>().SingleInstance();
         }
     }
 }

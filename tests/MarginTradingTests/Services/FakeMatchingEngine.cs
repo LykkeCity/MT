@@ -8,7 +8,6 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTradingTests.Services
 {
@@ -36,19 +35,25 @@ namespace MarginTradingTests.Services
             _externalExecutionTime = externalExecutionTime ?? DateTime.MinValue;
         }
         
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+        public ValueTask<MatchedOrderCollection> MatchOrderAsync(OrderFulfillmentPlan orderFulfillmentPlan,
             OrderModality modality = OrderModality.Regular)
         {
-            var col = new MatchedOrderCollection(new [] {new MatchedOrder
-            {
-                OrderId = _externalOrderId,
-                MarketMakerId = _marketMakerId,
-                Volume = Math.Abs(order.Volume),
-                Price = string.IsNullOrEmpty(order.ExternalProviderId) ? _openPrice : _closePrice,
-                MatchedDate = _externalExecutionTime,
-                IsExternal = true,
-            }});
-            return Task.FromResult(col);
+            return new ValueTask<MatchedOrderCollection>(
+                new MatchedOrderCollection(
+                    new[]
+                    {
+                        new MatchedOrder
+                        {
+                            OrderId = _externalOrderId,
+                            MarketMakerId = _marketMakerId,
+                            Volume = Math.Abs(orderFulfillmentPlan.Order.Volume),
+                            Price = string.IsNullOrEmpty(orderFulfillmentPlan.Order.ExternalProviderId)
+                                ? _openPrice
+                                : _closePrice,
+                            MatchedDate = _externalExecutionTime,
+                            IsExternal = true,
+                        }
+                    }));
         }
 
         public (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume)
@@ -63,7 +68,7 @@ namespace MarginTradingTests.Services
 
         public OrderBook GetOrderBook(string instrument)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

@@ -8,9 +8,9 @@ namespace MarginTrading.Backend.Core
 {
     public interface IFplService
     {
-        void UpdatePositionFpl(Position order);
+        void UpdatePositionFpl(Position position);
         
-        decimal GetInitMarginForOrder(Order order);
+        decimal GetInitMarginForOrder(Order order, decimal actualVolume);
 
         decimal CalculateOvernightMaintenanceMargin(Position position);
     }

@@ -26,15 +26,21 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IDateService _dateService;
         private readonly ILog _log;
         private readonly IDraftSnapshotKeeper _draftSnapshotKeeper;
+        private readonly IAccountsCacheService _accountsCacheService;
 
-        public FinalSnapshotCalculator(ICfdCalculatorService cfdCalculatorService, ILog log, IDateService dateService, IDraftSnapshotKeeper draftSnapshotKeeper)
+        public FinalSnapshotCalculator(ICfdCalculatorService cfdCalculatorService,
+            ILog log,
+            IDateService dateService,
+            IDraftSnapshotKeeper draftSnapshotKeeper,
+            IAccountsCacheService accountsCacheService)
         {
             _cfdCalculatorService = cfdCalculatorService;
             _log = log;
             _dateService = dateService;
             _draftSnapshotKeeper = draftSnapshotKeeper;
+            _accountsCacheService = accountsCacheService;
         }
-        
+
         /// <inheritdoc />
         public async Task<TradingEngineSnapshot> RunAsync(IEnumerable<ClosingFxRate> fxRates, IEnumerable<ClosingAssetPrice> cfdQuotes, string correlationId)
         {
@@ -75,7 +81,7 @@ namespace MarginTrading.Backend.Services.Services
                 _draftSnapshotKeeper.Timestamp,
                 MapToFinalJson(orders, _draftSnapshotKeeper),
                 MapToFinalJson(positions, _draftSnapshotKeeper),
-                MapToFinalJson(accounts),
+                await MapToFinalJson(accounts),
                 MapToJson(_draftSnapshotKeeper.FxPrices),
                 MapToJson(_draftSnapshotKeeper.CfdQuotes),
                 SnapshotStatus.Final);
@@ -180,8 +186,12 @@ namespace MarginTrading.Backend.Services.Services
         private static string MapToFinalJson(IList<Position> positions, IOrderReader reader) =>
             positions.Select(p => p.ConvertToSnapshotContract(reader)).ToJson();
 
-        private static string MapToFinalJson(IList<MarginTradingAccount> accounts) =>
-            accounts.Select(a => a.ConvertToSnapshotContract()).ToJson();
+        private async Task<string> MapToFinalJson(IList<MarginTradingAccount> accounts)
+        {
+            var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
+
+            return accounts.Select(a => a.ConvertToSnapshotContract(accountsInLiquidation.Contains(a))).ToJson();
+        }
 
         private static string MapToJson(IList<BestPriceContract> prices) =>
             prices.ToDictionary(p => p.Id, p => p).ToJson();

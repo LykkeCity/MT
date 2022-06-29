@@ -25,7 +25,6 @@ namespace MarginTrading.Backend.Core
         DateTime LastUpdateTime { get; }
         DateTime LastBalanceChangeTime { get; }
         bool IsWithdrawalDisabled { get; }
-        string LiquidationOperationId { get; }
         string AdditionalInfo { get; }
         string AccountName { get; }
         decimal TodayRealizedPnL { get; }
@@ -52,7 +51,6 @@ namespace MarginTrading.Backend.Core
         public DateTime LastUpdateTime { get; set; }
         public DateTime LastBalanceChangeTime { get; set; }
         public bool IsWithdrawalDisabled { get; set; }
-        public string LiquidationOperationId { get; set; }
         public string AdditionalInfo { get; set; }
         public string AccountName { get; set; }
         public decimal TodayRealizedPnL { get; set; }
@@ -93,11 +91,6 @@ namespace MarginTrading.Backend.Core
         {
             var warnings = new List<string>();
 
-            if (!string.IsNullOrEmpty(LiquidationOperationId))
-            {
-                warnings.Add($"Liquidation is in progress with id {LiquidationOperationId}. ");
-            }
-
             if (AccountFpl.UnconfirmedMarginData.Any())
             {
                 warnings.Add($"There is some unconfirmed margin data on account: {string.Join(",", AccountFpl.UnconfirmedMarginData)}. ");
@@ -116,7 +109,6 @@ namespace MarginTrading.Backend.Core
             TodayWithdrawAmount = 0;
             TodayCommissionAmount = 0;
             TodayOtherAmount = 0;
-            LiquidationOperationId = string.Empty;
             LastUpdateTime = LastBalanceChangeTime = eventTime;
             AccountFpl = new AccountFpl();
 
@@ -280,11 +272,6 @@ namespace MarginTrading.Backend.Core
         public static void CacheNeedsToBeUpdated(this MarginTradingAccount account)
         {
             account.AccountFpl.ActualHash++;
-        }
-        
-        public static bool IsInLiquidation(this IMarginTradingAccount account)
-        {
-            return !string.IsNullOrEmpty(account.LiquidationOperationId);
         }
     }
 }

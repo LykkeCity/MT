@@ -15,22 +15,29 @@ namespace MarginTrading.Backend.Core
         
         [NotNull]
         MarginTradingAccount Get(string accountId);
+
+        [ItemCanBeNull]
+        Task<string> GetLiquidationOperationId(string accountId);
+        
         [CanBeNull]
         MarginTradingAccount TryGet(string accountId);
         IReadOnlyList<MarginTradingAccount> GetAll();
+        IAsyncEnumerable<MarginTradingAccount> GetAllInLiquidation();
         PaginatedResponse<MarginTradingAccount> GetAllByPages(int? skip = null, int? take = null);
 
         void TryAddNew(MarginTradingAccount account);
-        void Remove(string accountId);
-        string Reset(string accountId, DateTime eventTime);
+        Task Remove(string accountId);
+        Task<string> Reset(string accountId, DateTime eventTime);
 
         Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime, string additionalInfo);
         Task<bool> HandleBalanceChange(string accountId,
             decimal accountBalance, decimal changeAmount, AccountBalanceChangeReasonType reasonType, DateTime eventTime);
         
-        bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId);
+        Task<(bool, string)> TryStartLiquidation(string accountId, string operationId);
         
-        bool TryFinishLiquidation(string accountId, string reason, string liquidationOperationId = null);
+        Task<bool> TryFinishLiquidation(string accountId, string reason, string liquidationOperationId = null);
+
+        Task<bool> IsInLiquidation(string accountId);
     }
 }

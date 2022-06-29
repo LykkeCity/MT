@@ -1,8 +1,10 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -220,11 +222,12 @@ namespace MarginTrading.Backend.Services.Mappers
                 TodayWithdrawAmount = account.TodayWithdrawAmount,
                 TodayCommissionAmount = account.TodayCommissionAmount,
                 TodayOtherAmount = account.TodayOtherAmount,
-                AdditionalInfo = account.AdditionalInfo
+                AdditionalInfo = account.AdditionalInfo,
+                AccountIsDeleted = account.IsDeleted,
             };
         }
 
-        public static AccountStatContract ConvertToContract(this IMarginTradingAccount account)
+        public static AccountStatContract ConvertToContract(this IMarginTradingAccount account, bool isInLiquidation)
         {
             return new AccountStatContract
             {
@@ -247,22 +250,23 @@ namespace MarginTrading.Backend.Services.Mappers
                 ActiveOrdersCount = account.GetActiveOrdersCount(),
                 MarginUsageLevel = account.GetMarginUsageLevel(),
                 LegalEntity = account.LegalEntity,
-                IsInLiquidation = account.IsInLiquidation(),
+                IsInLiquidation = isInLiquidation,
                 MarginNotificationLevel = account.GetAccountLevel().ToString()
             };
         }
-        
+
         /// <summary>
         /// Convert account to a model, supposed to be used for snapshot serialization
         /// </summary>
         /// <param name="account">Account domain model</param>
+        /// <param name="isInLiquidation"></param>
         /// <param name="status">Snapshot status</param>
         /// <returns></returns>
-        public static object ConvertToSnapshotContract(this IMarginTradingAccount account, SnapshotStatus status = SnapshotStatus.Final)
+        public static object ConvertToSnapshotContract(this IMarginTradingAccount account, bool isInLiquidation, SnapshotStatus status = SnapshotStatus.Final)
         {
             return status == SnapshotStatus.Draft
                 ? (object) account
-                : account.ConvertToContract();
+                : account.ConvertToContract(isInLiquidation);
         }
 
         public static BestPriceContract ConvertToContract(this InstrumentBidAskPair arg)

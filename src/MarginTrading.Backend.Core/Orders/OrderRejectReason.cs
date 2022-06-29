@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Core.Orders
         InvalidTakeProfit,
         InvalidStoploss,
         InvalidInstrument,
+        InstrumentTradingDisabled,
         InvalidAccount,
         InvalidParent,
         TradingConditionError,

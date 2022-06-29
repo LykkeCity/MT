@@ -196,8 +196,8 @@ namespace MarginTradingTests
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "CHFJPY", Accounts[1],
                 MarginTradingTestsUtils.TradingConditionId, -100);
             
-            Assert.AreEqual(10.4M, _fplService.GetInitMarginForOrder(order1));
-            Assert.AreEqual(10M, _fplService.GetInitMarginForOrder(order2));
+            Assert.AreEqual(10.4M, _fplService.GetInitMarginForOrder(order1, 1000));
+            Assert.AreEqual(10M, _fplService.GetInitMarginForOrder(order2, -100));
         }
 
         [Test]

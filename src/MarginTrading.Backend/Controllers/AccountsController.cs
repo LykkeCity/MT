@@ -9,6 +9,7 @@ using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -27,14 +28,17 @@ namespace MarginTrading.Backend.Controllers
     public class AccountsController : Controller, IAccountsApi
     {
         private readonly IAccountsCacheService _accountsCacheService;
+        private readonly IAccountsProvider _accountsProvider;
         private readonly IOrderReader _orderReader;
         private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(IAccountsCacheService accountsCacheService,
+            IAccountsProvider accountsProvider,
             IOrderReader orderReader,
             ICqrsSender cqrsSender)
         {
             _accountsCacheService = accountsCacheService;
+            _accountsProvider = accountsProvider;
             _orderReader = orderReader;
             _cqrsSender = cqrsSender;
         }
@@ -44,11 +48,17 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         [HttpGet]
         [Route("stats")]
-        public Task<List<AccountStatContract>> GetAllAccountStats()
+        public async Task<List<AccountStatContract>> GetAllAccountStats()
         {
             var stats = _accountsCacheService.GetAll();
 
-            return Task.FromResult(stats.Select(x => x.ConvertToContract()).ToList());
+            var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
+
+            return stats.Select(x =>
+            {
+                var isInLiquidation = accountsInLiquidation.Contains(x);
+                return x.ConvertToContract(isInLiquidation);
+            }).ToList();
         }
 
         /// <summary>
@@ -71,7 +81,7 @@ namespace MarginTrading.Backend.Controllers
             
             var stats = _accountsCacheService.GetAllByPages(skip, take);
 
-            return Task.FromResult(Convert(stats));
+            return Convert(stats);
         }
 
         /// <summary>
@@ -141,13 +151,15 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="accountId"></param>
         [HttpGet]
         [Route("stats/{accountId}")]
-        public Task<AccountStatContract> GetAccountStats(string accountId)
+        public async Task<AccountStatContract> GetAccountStats(string accountId)
         {
             try
             {
                 var stats = _accountsCacheService.Get(accountId);
 
-                return Task.FromResult(stats.ConvertToContract());
+                var isInLiquidation = await _accountsCacheService.IsInLiquidation(accountId);
+
+                return stats.ConvertToContract(isInLiquidation);
             }
             catch (AccountNotFoundException ex)
             {
@@ -161,27 +173,21 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="accountId"></param>
         [HttpGet]
         [Route("capital-figures/{accountId}")]
-        public Task<AccountCapitalFigures> GetCapitalFigures(string accountId)
+        public async Task<AccountCapitalFigures> GetCapitalFigures(string accountId)
         {
-            try
-            {
-                var stats = _accountsCacheService.Get(accountId);
+            var account = await _accountsProvider.GetActiveOrDeleted(accountId);
 
-                return Task.FromResult(stats.ConvertToCapitalFiguresContract());
-            }
-            catch (AccountNotFoundException)
-            {
-                return Task.FromResult((AccountCapitalFigures)null);
-            }
+            if (account == null) return AccountCapitalFigures.Empty;
+            if(account.IsDeleted) return AccountCapitalFigures.Deleted;
+            
+            return account.ConvertToCapitalFiguresContract();
         }
 
         [HttpPost, Route("resume-liquidation/{accountId}")]
-        public Task ResumeLiquidation(string accountId, string comment)
+        public async Task ResumeLiquidation(string accountId, string comment)
         {
-            var account = _accountsCacheService.Get(accountId);
+            var liquidation = await _accountsCacheService.GetLiquidationOperationId(accountId);
 
-            var liquidation = account.LiquidationOperationId;
-            
             if (string.IsNullOrEmpty(liquidation))
             {
                 throw new InvalidOperationException("Account is not in liquidation state");
@@ -194,14 +200,16 @@ namespace MarginTrading.Backend.Controllers
                 IsCausedBySpecialLiquidation = false,
                 Comment = comment
             });
-            
-            return Task.CompletedTask;
         }
 
-        private PaginatedResponseContract<AccountStatContract> Convert(PaginatedResponse<MarginTradingAccount> accounts)
+        private async Task<PaginatedResponseContract<AccountStatContract>> Convert(PaginatedResponse<MarginTradingAccount> accounts)
         {
+            var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
+            
             return new PaginatedResponseContract<AccountStatContract>(
-                contents: accounts.Contents.Select(x => x.ConvertToContract()).ToList(),
+                contents: accounts.Contents
+                    .Select(x => x.ConvertToContract(accountsInLiquidation.Contains(x)))
+                    .ToList(),
                 start: accounts.Start,
                 size: accounts.Size,
                 totalSize: accounts.TotalSize

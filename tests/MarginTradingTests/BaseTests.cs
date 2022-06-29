@@ -69,7 +69,7 @@ namespace MarginTradingTests
                 RabbitMqQueues =
                     new RabbitMqQueues
                     {
-                        MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}
+                        MarginTradingEnabledChanged = new RabbitMqQueueInfo { ExchangeName = "" }
                     },
                 BlobPersistence = new BlobPersistenceSettings()
                 {
@@ -80,7 +80,7 @@ namespace MarginTradingTests
                 },
                 ReportingEquivalentPricesSettings = new[]
                     {new ReportingEquivalentPricesSettings {EquivalentAsset = "USD", LegalEntity = "LYKKETEST"}},
-                OvernightMargin = overnightMarginSettings,
+                OvernightMargin = overnightMarginSettings
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
