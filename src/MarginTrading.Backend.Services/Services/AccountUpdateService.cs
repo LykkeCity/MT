@@ -268,7 +268,7 @@ namespace MarginTrading.Backend.Services.Services
 
             var accuracy = AssetsConstants.DefaultAssetAccuracy;
             var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
-            var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)));
+            var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => $"posId: {item.Id}, {item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)}"));
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
             var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
 
