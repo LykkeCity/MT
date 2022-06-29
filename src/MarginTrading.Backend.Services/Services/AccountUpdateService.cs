@@ -268,7 +268,6 @@ namespace MarginTrading.Backend.Services.Services
 
             var accuracy = AssetsConstants.DefaultAssetAccuracy;
             var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
-            var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => $"posId: {item.Id}, {item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)}"));
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
             var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
 
@@ -277,7 +276,13 @@ namespace MarginTrading.Backend.Services.Services
                 Math.Round(positions.Sum(x => x.GetTotalFpl() - x.ChargedPnL), accuracy);
 
             account.AccountFpl.UsedMargin = Math.Round(positionsMaintenanceMargin + pendingOrdersMargin, accuracy);
-            account.LogInfo = $"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog}";
+
+            if (_marginTradingSettings.LogBlockedMarginCalculation)
+            {
+                var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => $"posId: {item.Id}, {item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)}"));
+                account.LogInfo = $"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog}";
+            }
+            
             account.AccountFpl.MarginInit = Math.Round(positionsInitMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.InitiallyUsedMargin = positions.Sum(p => p.GetInitialMargin());
             account.AccountFpl.OpenPositionsCount = positions.Count;
