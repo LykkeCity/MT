@@ -203,7 +203,7 @@ namespace MarginTrading.Backend.Core
             var fplData = account.GetAccountFpl();
             //According to ESMA MCO rule a stop-out added at 50% of the initially invested margin
             //So if the 50% of the initially invested margin (accumulated per the account), is bigger than the recalculated 100%, than this margin requirement is the reference for the free capital determination and the liquidation level.
-            return Math.Max(fplData.UsedMargin, fplData.InitiallyUsedMargin/2);
+            return Math.Max(fplData.UsedMargin, Math.Round(fplData.InitiallyUsedMargin/2, AssetsConstants.DefaultAssetAccuracy));
         }
         
         public static decimal GetCurrentlyUsedMargin(this IMarginTradingAccount account)
