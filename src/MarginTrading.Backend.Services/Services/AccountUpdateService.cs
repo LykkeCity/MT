@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -223,6 +224,13 @@ namespace MarginTrading.Backend.Services.Services
                 Math.Round(positions.Sum(x => x.GetTotalFpl() - x.ChargedPnL), accuracy);
 
             account.AccountFpl.UsedMargin = Math.Round(positionsMaintenanceMargin + pendingOrdersMargin, accuracy);
+
+            if (_marginTradingSettings.LogBlockedMarginCalculation)
+            {
+                var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => $"posId: {item.Id}, {item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)}"));
+                account.LogInfo = $"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog}";
+            }
+            
             account.AccountFpl.MarginInit = Math.Round(positionsInitMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.InitiallyUsedMargin = positions.Sum(p => p.GetInitialMargin());
             account.AccountFpl.OpenPositionsCount = positions.Count;

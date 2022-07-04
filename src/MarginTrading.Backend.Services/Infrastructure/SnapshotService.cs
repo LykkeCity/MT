@@ -12,6 +12,7 @@ using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Mappers;
@@ -34,6 +35,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly ILog _log;
         private readonly IFinalSnapshotCalculator _finalSnapshotCalculator;
+        private readonly MarginTradingSettings _settings;
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 
@@ -49,7 +51,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             IQueueValidationService queueValidationService,
             IMarginTradingBlobRepository blobRepository,
             ILog log,
-            IFinalSnapshotCalculator finalSnapshotCalculator)
+            IFinalSnapshotCalculator finalSnapshotCalculator,
+            MarginTradingSettings settings)
         {
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _accountsCacheService = accountsCacheService;
@@ -63,6 +66,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _blobRepository = blobRepository;
             _log = log;
             _finalSnapshotCalculator = finalSnapshotCalculator;
+            _settings = settings;
         }
 
         /// <inheritdoc />
@@ -129,6 +133,18 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     $"Preparing data... {positions.Length} positions prepared.");
                 
                 var accountStats = _accountsCacheService.GetAll();
+
+                if (_settings.LogBlockedMarginCalculation)
+                {
+                    foreach (var accountStat in accountStats)
+                    {
+                        var margin = accountStat.GetUsedMargin();
+                        if (margin == 0) continue;
+                        await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                            @$"Account {accountStat.Id}, TotalBlockedMargin {margin}, {accountStat.LogInfo}");
+                    }
+                }
+
                 var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
                 var accountsJson = accountStats
                     .Select(a => a.ConvertToSnapshotContract(accountsInLiquidation.Contains(a), status))
