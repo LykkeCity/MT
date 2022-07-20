@@ -10,6 +10,7 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Helpers;
@@ -24,6 +25,7 @@ namespace MarginTrading.Backend.Services.Caches
         private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IPositionsHistoryRepository _positionsHistoryRepository;
         private readonly IAccountHistoryRepository _accountHistoryRepository;
+        private readonly ISentimentCache _sentimentCache;
         private readonly ILog _log;
         
         public static readonly string OrdersBlobName= "orders";
@@ -38,7 +40,8 @@ namespace MarginTrading.Backend.Services.Caches
             IPositionsHistoryRepository positionsHistoryRepository,
             IAccountHistoryRepository accountHistoryRepository,
             MarginTradingSettings marginTradingSettings,
-            ILog log) 
+            ILog log,
+            ISentimentCache sentimentCache) 
             : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
         {
             _orderCache = orderCache;
@@ -47,11 +50,23 @@ namespace MarginTrading.Backend.Services.Caches
             _positionsHistoryRepository = positionsHistoryRepository;
             _accountHistoryRepository = accountHistoryRepository;
             _log = log;
+            _sentimentCache = sentimentCache;
         }
 
         public override void Start()
         {
             InferInitDataFromBlobAndHistory();
+            
+            if (_orderCache.Positions == null)
+            {
+                _log.WriteWarning(nameof(Start), null,
+                    "Sentiments cache was not subscribed to positions updates since positions cache is not initialized yet");
+            }
+            else
+            {
+                _sentimentCache.Initialize(_orderCache.Positions.GetAllPositions());
+                _sentimentCache.Subscribe(_orderCache.Positions);
+            }
 
             base.Start();
         }

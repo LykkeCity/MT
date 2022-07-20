@@ -13,14 +13,33 @@ using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Services
 {
-    public class PositionsCache
+    public class PositionsCache : IObservable<Position>
     {
+        private class Unsubscriber : IDisposable
+        {
+            private readonly List<IObserver<Position>> _observers;
+            private readonly IObserver<Position> _observer;
+
+            public Unsubscriber(List<IObserver<Position>> observers, IObserver<Position> observer)
+            {
+                _observers = observers;
+                _observer = observer;
+            }
+
+            public void Dispose()
+            {
+                if (_observer != null && _observers.Contains(_observer))
+                    _observers.Remove(_observer);
+            }
+        }
+
         private readonly Dictionary<string, Position> _positionsById;
         private readonly Dictionary<string, HashSet<string>> _positionIdsByAccountId;
         private readonly Dictionary<string, HashSet<string>> _positionIdsByInstrumentId;
         private readonly Dictionary<string, HashSet<string>> _positionIdsByFxInstrumentId;
         private readonly Dictionary<(string, string), HashSet<string>> _positionIdsByAccountIdAndInstrumentId;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
+        private readonly List<IObserver<Position>> _observers;
 
         public PositionsCache(IReadOnlyCollection<Position> positions)
         {
@@ -41,6 +60,8 @@ namespace MarginTrading.Backend.Services
 
                 _positionIdsByAccountIdAndInstrumentId = positions.GroupBy(x => GetAccountInstrumentCacheKey(x.AccountId, x.AssetPairId))
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+
+                _observers = new List<IObserver<Position>>();
             }
             finally 
             {
@@ -83,31 +104,35 @@ namespace MarginTrading.Backend.Services
 
             var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(position.AccountId);
             account?.CacheNeedsToBeUpdated();
+            
+            _observers.ForEach(o => o.OnNext(position));
         }
 
-        public void Remove(Position order)
+        public void Remove(Position position)
         {
             _lockSlim.EnterWriteLock();
 
             try
             {
-                if (_positionsById.Remove(order.Id))
+                if (_positionsById.Remove(position.Id))
                 {
-                    _positionIdsByInstrumentId[order.AssetPairId].Remove(order.Id);
-                    _positionIdsByFxInstrumentId[order.FxAssetPairId].Remove(order.Id);
-                    _positionIdsByAccountId[order.AccountId].Remove(order.Id);
-                    _positionIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.AssetPairId)].Remove(order.Id);
+                    _positionIdsByInstrumentId[position.AssetPairId].Remove(position.Id);
+                    _positionIdsByFxInstrumentId[position.FxAssetPairId].Remove(position.Id);
+                    _positionIdsByAccountId[position.AccountId].Remove(position.Id);
+                    _positionIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(position.AccountId, position.AssetPairId)].Remove(position.Id);
                 }
                 else
-                    throw new Exception(string.Format(MtMessages.CantRemovePosition, order.Id));
+                    throw new Exception(string.Format(MtMessages.CantRemovePosition, position.Id));
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(order.AccountId);
+            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(position.AccountId);
             account?.CacheNeedsToBeUpdated();
+            
+            _observers.ForEach(o => o.OnNext(position));
         }
 
         #endregion
@@ -249,5 +274,13 @@ namespace MarginTrading.Backend.Services
         }
 
         #endregion
+
+        public IDisposable Subscribe(IObserver<Position> observer)
+        {
+            if (!_observers.Contains(observer))
+                _observers.Add(observer);
+            
+            return new Unsubscriber(_observers, observer);
+        }
     }
 }
