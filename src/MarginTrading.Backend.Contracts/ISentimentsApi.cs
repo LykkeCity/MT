@@ -20,14 +20,14 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         /// <param name="productId"></param>
         /// <returns></returns>
-        [Get("api/sentiments/{productId}")]
+        [Get("/api/sentiments/{productId}")]
         Task<SentimentInfoContract> GetSentimentInfoAsync(string productId);
 
         /// <summary>
         /// Get all product sentiments
         /// </summary>
         /// <returns></returns>
-        [Get("api/sentiments")]
+        [Get("/api/sentiments")]
         Task<List<SentimentInfoContract>> ListSentimentInfoAsync();
     }
 }
