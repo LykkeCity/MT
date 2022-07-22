@@ -42,6 +42,9 @@ namespace MarginTrading.Backend.Core
         private (decimal, decimal) CalculateShares()
         {
             var totalPositions = _longPositionsCounter + _shortPositionsCounter;
+            
+            if (totalPositions == 0)
+                return (0, 0);
 
             decimal longShare = Math.Round(_longPositionsCounter * 100 / (decimal)totalPositions, decimals: 2);
             
