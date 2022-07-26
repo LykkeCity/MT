@@ -127,6 +127,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     executionInfo.Data.Volume = currentVolume;
                     
                     RequestPrice(sender, executionInfo);
+
+                    //switch state back, because we requested the price again and should handle in correctly when received
+                    executionInfo.Data.State = SpecialLiquidationOperationState.PriceRequested;
                     
                     await _operationExecutionInfoRepository.Save(executionInfo);
                     
