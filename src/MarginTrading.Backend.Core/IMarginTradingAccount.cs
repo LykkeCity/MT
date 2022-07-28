@@ -35,6 +35,7 @@ namespace MarginTrading.Backend.Core
         decimal TodayOtherAmount { get; }
         decimal TodayStartBalance { get; }
         string LogInfo { get; set; }
+        decimal TemporaryCapital { get; set; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -65,6 +66,8 @@ namespace MarginTrading.Backend.Core
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
+        public decimal TemporaryCapital { get; set; }
+
         public static MarginTradingAccount Create(IMarginTradingAccount src, AccountFpl accountFpl = null)
         {
             return new MarginTradingAccount
@@ -83,7 +86,8 @@ namespace MarginTrading.Backend.Core
                 LastBalanceChangeTime = src.LastBalanceChangeTime,
                 IsWithdrawalDisabled = src.IsWithdrawalDisabled,
                 AdditionalInfo = src.AdditionalInfo,
-                AccountName = src.AccountName
+                AccountName = src.AccountName,
+                TemporaryCapital = src.TemporaryCapital,
             };
         }
 
@@ -111,6 +115,7 @@ namespace MarginTrading.Backend.Core
             TodayOtherAmount = 0;
             LastUpdateTime = LastBalanceChangeTime = eventTime;
             AccountFpl = new AccountFpl();
+            TemporaryCapital = 0;
 
             return string.Join(", ", warnings);
         }

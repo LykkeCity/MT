@@ -259,6 +259,10 @@ namespace MarginTrading.Backend.Services
                     case AccountBalanceChangeReasonType.Commission:
                         account.TodayCommissionAmount += changeAmount;
                         break;
+                    case AccountBalanceChangeReasonType.TemporaryCashAdjustment:
+                        account.TemporaryCapital += changeAmount;
+                        account.TodayOtherAmount += changeAmount; // to maintain backwards compatibility
+                        break;
                     default:
                         account.TodayOtherAmount += changeAmount;
                         break;
