@@ -14,6 +14,7 @@ using Lykke.Common;
 using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Extensions;
@@ -554,6 +555,11 @@ namespace MarginTrading.Backend.Services
 
         public void ProcessExpiredOrders(DateTime operationIntervalEnd)
         {
+            _cqrsSender.PublishEvent(new ExpirationProcessStartedEvent()
+            {
+                OperationIntervalEnd = operationIntervalEnd,
+            });
+            
             var pendingOrders = _ordersCache.Active.GetAllOrders();
             var now = _dateService.Now();
 
