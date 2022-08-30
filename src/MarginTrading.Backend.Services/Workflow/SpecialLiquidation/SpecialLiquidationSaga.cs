@@ -84,10 +84,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
             {
-                var positionsVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
-
+                executionInfo.Data.Sync(() => _ordersCache.GetPositions());
                 executionInfo.Data.Instrument = e.Instrument;
-                executionInfo.Data.Volume = positionsVolume;
                 executionInfo.Data.RequestNumber = 1;
 
                 RequestPrice(sender, executionInfo);
@@ -116,16 +114,15 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 SpecialLiquidationOperationState.PriceReceived))
             {
                 //validate that volume didn't changed to peek either to execute order or request the price again
-                var currentVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
-                if (currentVolume != 0 && currentVolume != executionInfo.Data.Volume)
+                var volumeChanged = executionInfo.Data.Sync(() => _ordersCache.GetPositions());
+                if (volumeChanged)
                 {
                     // if RFQ is paused we will not continue
                     var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(e.OperationId);
                     if (pauseAcknowledged) return;
-                    
-                    executionInfo.Data.RequestNumber++;
-                    executionInfo.Data.Volume = currentVolume;
-                    
+
+                    executionInfo.Data.NextRequestNumber();
+
                     RequestPrice(sender, executionInfo);
 
                     //switch state back, because we requested the price again and should handle in correctly when received
@@ -133,7 +130,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     
                     await _operationExecutionInfoRepository.Save(executionInfo);
                     
-                    return;//wait for the new price
+                    //wait for the new price
+                    return;
                 }
 
                 await _rfqPauseService.StopPendingAsync(e.OperationId, PauseCancellationSource.PriceReceived, nameof(SpecialLiquidationSaga));
@@ -450,7 +448,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
         }
 
-        private decimal GetNetPositionCloseVolume(ICollection<string> positionIds, string accountId)
+        private decimal GetActualNetPositionCloseVolume(ICollection<string> positionIds, string accountId)
         {
             var netPositionVolume = _ordersCache.GetPositions()
                 .Where(x => positionIds.Contains(x.Id)
@@ -459,7 +457,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             return -netPositionVolume;
         }
-        
+
         private void RequestPrice(ICommandSender sender, IOperationExecutionInfo<SpecialLiquidationOperationData> 
             executionInfo)
         {
@@ -515,7 +513,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 await Task.Delay(timeLeftBeforeRetry);
             }
 
-            executionInfo.Data.RequestNumber++;
+            executionInfo.Data.NextRequestNumber();
 
             RequestPrice(sender, executionInfo);
 
