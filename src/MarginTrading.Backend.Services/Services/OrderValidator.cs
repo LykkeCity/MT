@@ -706,6 +706,7 @@ namespace MarginTrading.Backend.Services
                 .Sum(o => Math.Abs(o.Volume));
 
             if (tradingInstrument.PositionLimit > 0 &&
+                orderFulfillmentPlan.RequiresPositionOpening &&
                 positionsAbsVolume + Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxPositionLimit,
