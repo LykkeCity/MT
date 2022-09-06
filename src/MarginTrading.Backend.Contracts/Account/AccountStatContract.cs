@@ -109,5 +109,7 @@ namespace MarginTrading.Backend.Contracts.Account
         /// Margin warning notification level
         /// </summary>
         public string MarginNotificationLevel { get; set; }
+
+        public decimal TemporaryCapital { get; set; }
     }
 }
