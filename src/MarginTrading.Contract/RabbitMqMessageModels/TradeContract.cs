@@ -19,10 +19,4 @@ namespace MarginTrading.Contract.RabbitMqMessageModels
         public decimal Price { get; set; }
         public decimal Volume { get; set; }
     }
-
-    public enum TradeType
-    {
-        Buy = 0,
-        Sell = 1
-    }
 }
