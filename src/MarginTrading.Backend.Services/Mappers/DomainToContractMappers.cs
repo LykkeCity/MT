@@ -251,7 +251,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 MarginUsageLevel = account.GetMarginUsageLevel(),
                 LegalEntity = account.LegalEntity,
                 IsInLiquidation = isInLiquidation,
-                MarginNotificationLevel = account.GetAccountLevel().ToString()
+                MarginNotificationLevel = account.GetAccountLevel().ToString(),
+                TemporaryCapital = account.TemporaryCapital,
             };
         }
 
