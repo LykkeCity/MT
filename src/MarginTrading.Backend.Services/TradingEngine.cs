@@ -739,6 +739,8 @@ namespace MarginTrading.Backend.Services
                     PositionCloseReason.Close,
                     closeData.Originator,
                     string.Empty);
+                
+                closingStarted = closingStarted || position.Value.Status == PositionStatus.Closing;
 
                 if (!closingStarted)
                 {
