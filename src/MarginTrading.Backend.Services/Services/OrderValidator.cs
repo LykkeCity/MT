@@ -701,15 +701,16 @@ namespace MarginTrading.Backend.Services
                     $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument} but was {orderFulfillmentPlan.UnfulfilledVolume}. Order id = [{orderFulfillmentPlan.Order.Id}]");
             }
 
-            var existingPositionsVolume = _ordersCache.Positions
+            var positionsAbsVolume = _ordersCache.Positions
                 .GetPositionsByInstrumentAndAccount(orderFulfillmentPlan.Order.AssetPairId, orderFulfillmentPlan.Order.AccountId)
-                .Sum(o => o.Volume);
+                .Sum(o => Math.Abs(o.Volume));
 
             if (tradingInstrument.PositionLimit > 0 &&
-                Math.Abs(existingPositionsVolume + orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
+                orderFulfillmentPlan.RequiresPositionOpening &&
+                positionsAbsVolume + Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.MaxPositionLimit,
-                    $"The volume of the net open position is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
+                    $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
 
             if (orderFulfillmentPlan.RequiresPositionOpening &&

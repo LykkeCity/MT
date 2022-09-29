@@ -92,10 +92,10 @@ namespace MarginTradingTests
         [TestCase(2, true)]
         [TestCase(-2, true)]
         [TestCase(3, false)]
-        [TestCase(-3, true)]
+        [TestCase(-3, false)]
         [TestCase(10, false)]
-        [TestCase(-10, true)]
-        public void Is_Summary_Volume_Ivalid(decimal volume, bool isValid)
+        [TestCase(-10, false)]
+        public void Is_Summary_Volume_Invalid(decimal volume, bool isValid)
         {
             const string instrument = "BTCUSD";
 
@@ -103,7 +103,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var existingLong = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 110, 1.57M);
+                MarginTradingTestsUtils.TradingConditionId, 86, 1.57M);
 
             var existingShort = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, -12, 1.55M);
