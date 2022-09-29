@@ -853,7 +853,7 @@ namespace MarginTrading.Backend.Services
 
             if (positions == null || !positions.Any())
             {
-                throw new ArgumentNullException(nameof(positions), "Positions list is empty");
+                return new Dictionary<string, (PositionCloseResult, Order)>();
             }
 
             var accountId = positions.First().AccountId;
