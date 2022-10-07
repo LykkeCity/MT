@@ -111,5 +111,12 @@ namespace MarginTrading.Backend.Controllers
         {
             return _accountUpdateService.UnfreezeUnconfirmedMargin(accountId, operationId);
         }
+
+        /// <inheritdoc />
+        [HttpPut("unconfirmed-margin")]
+        public Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount)
+        {
+            return _accountUpdateService.FreezeUnconfirmedMargin(accountId, operationId, amount);
+        }
     }
 }

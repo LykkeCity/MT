@@ -49,11 +49,21 @@ namespace MarginTrading.Backend.Contracts
         Dictionary<string, decimal> GetUnconfirmedMargin([Query] string accountId);
         
         /// <summary>
-        /// Unfreezes amount of margin attached to operationId
+        /// Unfreezes amount of margin attached to operationId and account
         /// </summary>
         /// <param name="accountId"></param>
         /// <param name="operationId"></param>
         [Post("/api/service/unconfirmed-margin")]
         Task UnfreezeUnconfirmedMargin([Query] string accountId, [Query] string operationId);
+        
+        /// <summary>
+        /// Freezes amount if margin attached to operationId and account
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="operationId"></param>
+        /// <param name="amount"></param>
+        /// <returns></returns>
+        [Put("/api/service/unconfirmed-margin")]
+        Task FreezeUnconfirmedMargin([Query] string accountId, [Query] string operationId, [Query] decimal amount);
     }
 }
