@@ -20,7 +20,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private const string LockKey = "TradingEngine:DeduplicationLock";
         private readonly string _lockValue = Environment.MachineName;
 
-        private readonly IHostingEnvironment _hostingEnvironment; 
+        private readonly IWebHostEnvironment _hostingEnvironment; 
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IConnectionMultiplexer _redis;
@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public StartupDeduplicationService(
-            IHostingEnvironment hostingEnvironment,
+            IWebHostEnvironment hostingEnvironment,
             ILog log,
             MarginTradingSettings marginTradingSettings,
             IConnectionMultiplexer redis)

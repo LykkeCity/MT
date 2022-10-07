@@ -36,13 +36,13 @@ namespace MarginTrading.Backend.Modules
     {
         private readonly MtBackendSettings _mtSettings;
         private readonly MarginTradingSettings _settings;
-        private readonly IHostingEnvironment _environment;
+        private readonly IWebHostEnvironment _environment;
         private readonly ILog _log;
 
         public BackendServicesModule(
             MtBackendSettings mtSettings,
             MarginTradingSettings settings,
-            IHostingEnvironment environment,
+            IWebHostEnvironment environment,
             ILog log)
         {
             _mtSettings = mtSettings;
