@@ -206,11 +206,15 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
              // TODO: (anokhin) FX and trading pairs should be separated and we should use only FX here. For now, knowing that we receive Trading + FX, we are hacking that by reverting the order of the items to use FX rates first
             return Calculate.Cached(() => _assetPairs, CacheChangedCondition,
-                pairs => pairs.Values.Reverse().SelectMany(p => new []
+                pairs =>
                 {
-                    (GetAssetPairKey(p.BaseAssetId, p.QuoteAssetId, p.LegalEntity), p),
-                    (GetAssetPairKey(p.QuoteAssetId, p.BaseAssetId, p.LegalEntity), p),
-                }).DistinctBy(p => p.Item1).ToDictionary());
+                    var pairsEnum = pairs.Values.Reverse().SelectMany(p => new[]
+                    {
+                        (GetAssetPairKey(p.BaseAssetId, p.QuoteAssetId, p.LegalEntity), p),
+                        (GetAssetPairKey(p.QuoteAssetId, p.BaseAssetId, p.LegalEntity), p),
+                    });
+                    return MoreEnumerable.DistinctBy(pairsEnum, p => p.Item1).ToDictionary();
+                });
         }
 
         private static AssetPairKey GetAssetPairKey(string asset1, string asset2, string legalEntity)

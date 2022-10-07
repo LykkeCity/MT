@@ -3,6 +3,7 @@
 
 using System.Threading.Tasks;
 using Lykke.Service.EmailSender;
+using Lykke.Service.EmailSender.AutorestClient.Models;
 using MarginTrading.Backend.Core;
 
 #pragma warning disable 1591
@@ -24,7 +25,7 @@ namespace MarginTrading.Backend.Email
         {
             var message =
                 _templateGenerator.Generate("MarginCall", new {BaseAssetId = baseAssetId, AccountId = accountId});
-
+            
             await _emailSender.SendAsync(
                 new EmailMessage
                 {

@@ -70,10 +70,10 @@ namespace MarginTrading.Backend
         private IReloadingManager<MtBackendSettings> _mtSettingsManager;
         
         public IConfigurationRoot Configuration { get; }
-        public IHostingEnvironment Environment { get; }
+        public IWebHostEnvironment Environment { get; }
         public ILifetimeScope ApplicationContainer { get; set; }
 
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -204,7 +204,7 @@ namespace MarginTrading.Backend
         private static void RegisterModules(
             ContainerBuilder builder,
             IReloadingManager<MtBackendSettings> mtSettings,
-            IHostingEnvironment environment)
+            IWebHostEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
 

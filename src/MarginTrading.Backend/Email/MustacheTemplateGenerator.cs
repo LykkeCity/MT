@@ -11,10 +11,10 @@ namespace MarginTrading.Backend.Email
 {
     public class MustacheTemplateGenerator : ITemplateGenerator
     {
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly string _templatesFolder;
 
-        public MustacheTemplateGenerator(IHostingEnvironment hostingEnvironment, string templatesFolder)
+        public MustacheTemplateGenerator(IWebHostEnvironment hostingEnvironment, string templatesFolder)
         {
             _hostingEnvironment = hostingEnvironment;
             _templatesFolder = templatesFolder;

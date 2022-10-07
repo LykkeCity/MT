@@ -24,7 +24,7 @@ namespace MarginTradingTests.Backend.Filters
     public class MarginTradingEnabledFilterTests
     {
         [Test]
-        public void ActionWithoutAccountId_ShouldNotThrow()
+        public async Task ActionWithoutAccountId_ShouldNotThrow()
         {
             //arrange
             var marginTradingSettingsService =
@@ -52,12 +52,12 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().NotThrow();
+            await invocation.Should().NotThrowAsync();
         }
 
 
         [Test]
-        public void ActionWithAccountIdParam_IfTradingEnabled_ShouldNotThrow()
+        public async Task ActionWithAccountIdParam_IfTradingEnabled_ShouldNotThrow()
         {
             //arrange
             var marginTradingSettingsService =
@@ -86,12 +86,12 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().NotThrow();
+            await invocation.Should().NotThrowAsync();
         }
 
 
         [Test]
-        public void ActionWithAccountIdParam_IfTradingDisabled_ShouldThrow()
+        public async Task ActionWithAccountIdParam_IfTradingDisabled_ShouldThrow()
         {
             //arrange
             var marginTradingSettingsService =
@@ -120,13 +120,13 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().Throw<ValidationException<AccountValidationError>>()
+            await invocation.Should().ThrowAsync<ValidationException<AccountValidationError>>()
                 .WithMessage("Using this type of margin trading is restricted for account id of account");
         }
 
 
         [Test]
-        public void ActionWithRequestParam_IfTradingEnabled_ShouldNotThrow()
+        public async Task ActionWithRequestParam_IfTradingEnabled_ShouldNotThrow()
         {
             //arrange
             var marginTradingSettingsService =
@@ -160,12 +160,12 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().NotThrow();
+            await invocation.Should().NotThrowAsync();
         }
 
 
         [Test]
-        public void ActionWithRequestParam_IfTradingDisabled_ShouldThrow()
+        public async Task ActionWithRequestParam_IfTradingDisabled_ShouldThrow()
         {
             //arrange
             var marginTradingSettingsService =
@@ -199,7 +199,7 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().Throw<ValidationException<AccountValidationError>>()
+            await invocation.Should().ThrowAsync<ValidationException<AccountValidationError>>()
                 .WithMessage("Using this type of margin trading is restricted for account id of account");
         }
 
