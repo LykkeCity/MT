@@ -417,7 +417,7 @@ namespace MarginTrading.Backend.Services
             
             return new OrderInitialParameters
             {
-                Id = _identityGenerator.GenerateAlphanumericId(),
+                Id = AlphanumericIdentityGenerator.GenerateAlphanumericId(),
                 Code = await _identityGenerator.GenerateIdAsync(nameof(Order)),
                 Now = _dateService.Now(),
                 EquivalentPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(equivalentSettings.EquivalentAsset,

@@ -2,12 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Common;
 using MarginTrading.Backend.Core.Repositories;
 
 namespace MarginTrading.Backend.Services.Infrastructure
@@ -15,9 +10,6 @@ namespace MarginTrading.Backend.Services.Infrastructure
     public class SimpleIdentityGenerator : IIdentityGenerator
     {
         private long _currentId;
-        private readonly Random _random = new Random();
-        private const string Pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        private readonly object _lockObject = new object();
         
         public SimpleIdentityGenerator()
         {
@@ -28,15 +20,6 @@ namespace MarginTrading.Backend.Services.Infrastructure
         {
             _currentId++;
             return Task.FromResult(_currentId);
-        }
-
-        public string GenerateAlphanumericId()
-        {
-            lock(_lockObject)
-            {
-                var chars = Enumerable.Range(0, 10).Select(x => Pool[_random.Next(0, Pool.Length)]);
-                return new string(chars.ToArray());
-            }
         }
 
         public string GenerateGuid()
