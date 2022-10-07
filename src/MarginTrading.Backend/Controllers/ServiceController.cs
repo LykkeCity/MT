@@ -23,15 +23,21 @@ namespace MarginTrading.Backend.Controllers
         private readonly IOvernightMarginParameterContainer _overnightMarginParameterContainer;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ISnapshotService _snapshotService;
+        private readonly IAccountUpdateService _accountUpdateService;
+        private readonly IAccountsProvider _accountsProvider;
 
         public ServiceController(
             IOvernightMarginParameterContainer overnightMarginParameterContainer,
             IIdentityGenerator identityGenerator,
-            ISnapshotService snapshotService)
+            ISnapshotService snapshotService,
+            IAccountUpdateService accountUpdateService,
+            IAccountsProvider accountsProvider)
         {
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
             _identityGenerator = identityGenerator;
             _snapshotService = snapshotService;
+            _accountUpdateService = accountUpdateService;
+            _accountsProvider = accountsProvider;
         }
 
         /// <summary>
@@ -82,6 +88,21 @@ namespace MarginTrading.Backend.Controllers
                 .ToDictionary(x => x.Key, x => x.ToDictionary(p => p.Key.Item1, p => p.Value));
             
             return Task.FromResult(result);
+        }
+
+        /// <inheritdoc />
+        [HttpGet("unconfirmed-margin")]
+        public Dictionary<string, decimal> GetUnconfirmedMargin([FromQuery] string accountId)
+        {
+            var account = _accountsProvider.GetAccountById(accountId);
+
+            if (account == null)
+                return new Dictionary<string, decimal>();
+
+            return account
+                .AccountFpl
+                .UnconfirmedMarginData
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
 }
