@@ -270,9 +270,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
         private MarginTradingAccount Convert(AccountContract accountContract, DateTime eventTime)
         {
-            var retVal = _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
-                o => o.ConfigureMap(MemberList.Source)
-                    .ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
+            var retVal = _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract);
             retVal.LastBalanceChangeTime = eventTime;
             return retVal;
         }

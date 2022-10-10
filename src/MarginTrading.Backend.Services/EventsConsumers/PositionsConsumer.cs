@@ -213,7 +213,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 await OpenNewPosition(order, volume);
             }
         }
-
+        
         private void ActivateRelatedOrders(Position position)
         {
             foreach (var relatedOrderInfo in position.RelatedOrders)

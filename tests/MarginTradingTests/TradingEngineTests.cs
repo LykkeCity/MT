@@ -100,10 +100,7 @@ namespace MarginTradingTests
                     var account = _accountsCacheService.Get(typedEvent?.AccountId);
                     account.Balance += typedEvent?.BalanceDelta ?? 0;
                     var accountContract =
-                        convertService.Convert<MarginTradingAccount, AccountContract>(account,
-                            o => o.Con(MemberList.Destination)
-                                .ForMember(p=>p.ModificationTimestamp,  
-                                    p => p.MapFrom(tradingAccount => DateTime.UtcNow)));
+                        convertService.Convert<MarginTradingAccount, AccountContract>(account);
                     await accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
                         AccountChangedEventTypeContract.BalanceUpdated));
                 });
