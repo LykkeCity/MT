@@ -284,8 +284,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     .GetAwaiter().GetResult();//todo consider making this async or pass to broker
             }
 
-            var positionContract = _convertService.Convert<Position, PositionContract>(position,
-                o => o.ConfigureMap(MemberList.Destination).ForMember(x => x.TotalPnL, c => c.Ignore()));
+            var positionContract = _convertService.Convert<Position, PositionContract>(position);
             positionContract.TotalPnL = position.GetFpl();
 
             var historyEvent = new PositionHistoryEvent

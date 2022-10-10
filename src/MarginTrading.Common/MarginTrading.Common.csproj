@@ -13,7 +13,7 @@
     <NoWarn>1701;1702;1705;CA2007;0612;0618;1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="7.0.1" />
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
     <PackageReference Include="Lykke.Common" Version="7.6.0" />
     <PackageReference Include="Lykke.Snow.Common" Version="2.4.0" />
