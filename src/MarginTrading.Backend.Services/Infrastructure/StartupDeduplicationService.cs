@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Core.Settings;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using StackExchange.Redis;
 
 namespace MarginTrading.Backend.Services.Infrastructure
@@ -19,7 +20,6 @@ namespace MarginTrading.Backend.Services.Infrastructure
     {
         private const string LockKey = "TradingEngine:DeduplicationLock";
         private readonly string _lockValue = Environment.MachineName;
-
         private readonly IWebHostEnvironment _hostingEnvironment; 
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
