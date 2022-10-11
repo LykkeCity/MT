@@ -22,7 +22,7 @@
     <PackageReference Include="Lykke.Snow.Common" Version="2.4.0" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
-    <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="4.6.0" />
+    <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.3.0" />
     <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />

@@ -37,8 +37,8 @@
     <PackageReference Include="Lykke.Messaging.RabbitMq" Version="2.2.2" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
-    <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="4.6.0" />
-    <PackageReference Include="Lykke.Service.EmailSender" Version="3.0.0" />
+    <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
+    <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
     <PackageReference Include="Lykke.Snow.Common" Version="2.4.0" />
