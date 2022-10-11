@@ -39,7 +39,7 @@ namespace MarginTradingTests.Modules
             var emailService = new Mock<IEmailService>();
             var realm = new Mock<IWampHostedRealm>();
             realm.Setup(x => x.Services.GetSubject<OrderBookLevel>(It.IsAny<string>()))
-                .Returns(new Subject<OrderBookLevel>());
+                .Returns(new System.Reactive.Linq.Subject<OrderBookLevel>());
             var consoleWriterMock = new Mock<IConsole>();
             var sessionServiceMock = new Mock<ISessionService>();
             var slackNotificationsMock = new Mock<ISlackNotificationsSender>();

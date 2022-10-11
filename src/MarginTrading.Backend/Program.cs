@@ -10,6 +10,7 @@ using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 
 #pragma warning disable 1591
@@ -53,6 +54,11 @@ namespace MarginTrading.Backend
 
                     AppHost = Host.CreateDefaultBuilder(args)
                         .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                        .ConfigureLogging(logging =>
+                        {
+                            logging.ClearProviders();
+                            logging.AddConsole();
+                        })
                         .ConfigureWebHostDefaults(webBuilder =>
                         {
                             webBuilder.ConfigureKestrel(serverOptions =>

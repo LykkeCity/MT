@@ -80,7 +80,7 @@ namespace MarginTrading.Backend
                 .AddSerilogJson(env)
                 .AddEnvironmentVariables()
                 .Build();
-
+            
             Environment = env;
         }
 
@@ -131,7 +131,7 @@ namespace MarginTrading.Backend
             var deduplicationService = RunHealthChecks(_mtSettingsManager.CurrentValue.MtBackend);
 
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
-
+            
             RegisterModules(builder, _mtSettingsManager, Environment);
         }
 
@@ -321,11 +321,11 @@ namespace MarginTrading.Backend
                        new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
                 }
 
-                LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                slackService, requestsLogName, consoleLogger);
-
-                LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                    slackService, logName, consoleLogger);
+                // LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
+                // slackService, requestsLogName, consoleLogger);
+                //
+                // LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
+                //     slackService, logName, consoleLogger);
             }
 
             if (slackService == null)
