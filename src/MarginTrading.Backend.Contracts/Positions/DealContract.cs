@@ -28,5 +28,10 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal PnlOfTheLastDay { get; set; }
         public string AdditionalInfo { get; set; }
         public OriginatorTypeContract Originator { get; set; }
+
+        public DealContract ShallowCopy()
+        {
+            return (DealContract) this.MemberwiseClone();
+        }
     }
 }

@@ -39,5 +39,31 @@ namespace MarginTrading.Backend.Contracts
         [Get("/api/service/overnight-margin-parameter")]
         Task<Dictionary<string, Dictionary<string, decimal>>> GetOvernightMarginParameterValues(
             [Query, CanBeNull] string[] instruments = null);
+        
+        /// <summary>
+        /// Get unconfirmed margin current state for the account
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [Get("/api/service/unconfirmed-margin")]
+        Dictionary<string, decimal> GetUnconfirmedMargin([Query] string accountId);
+        
+        /// <summary>
+        /// Freezes amount if margin attached to operationId and account
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="operationId"></param>
+        /// <param name="amount"></param>
+        /// <returns></returns>
+        [Post("/api/service/unconfirmed-margin")]
+        Task FreezeUnconfirmedMargin([Query] string accountId, [Query] string operationId, [Query] decimal amount);
+        
+        /// <summary>
+        /// Unfreezes amount of margin attached to operationId and account
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="operationId"></param>
+        [Delete("/api/service/unconfirmed-margin")]
+        Task UnfreezeUnconfirmedMargin([Query] string accountId, [Query] string operationId);
     }
 }
