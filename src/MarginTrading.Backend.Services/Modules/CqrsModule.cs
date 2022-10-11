@@ -20,6 +20,7 @@ using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
 using Lykke.Messaging.Serialization;
 using Lykke.Snow.Common.Correlation.Cqrs;
+using Lykke.Snow.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Contracts.Events;
@@ -72,29 +73,15 @@ namespace MarginTrading.Backend.Services.Modules
                 .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
-            var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
-            {
-                Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
-            };
-            var messagingEngine = new MessagingEngine(_log, new TransportResolver(
-                new Dictionary<string, TransportInfo>
-                {
-                    {
-                        "RabbitMq",
-                        new TransportInfo(rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName,
-                            rabbitMqSettings.Password, "None", "RabbitMq")
-                    }
-                }), new RabbitMqTransportFactory());
-
             // Sagas & command handlers
             builder.RegisterAssemblyTypes(GetType().Assembly).Where(t => 
                 new [] {"Saga", "CommandsHandler", "Projection"}.Any(ending=> t.Name.EndsWith(ending))).AsSelf();
 
-            builder.Register(ctx => CreateEngine(ctx, messagingEngine)).As<ICqrsEngine>().SingleInstance()
+            builder.Register(ctx => CreateEngine(ctx)).As<ICqrsEngine>().SingleInstance()
                 .AutoActivate();
         }
 
-        private CqrsEngine CreateEngine(IComponentContext ctx, IMessagingEngine messagingEngine)
+        private CqrsEngine CreateEngine(IComponentContext ctx)
         {
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
@@ -116,8 +103,13 @@ namespace MarginTrading.Backend.Services.Modules
                 registrations.Add(fakeGavel);
 
             var correlationManager = ctx.Resolve<CqrsCorrelationManager>();
-            var engine = new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
-                new DefaultEndpointProvider(), true, registrations.ToArray());
+            var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
+            {
+                Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
+            };
+            var engine = new RabbitMqCqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), new DefaultEndpointProvider(), 
+                rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName, rabbitMqSettings.Password,
+                registrations.ToArray());
             engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
             engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);
             engine.StartPublishers();

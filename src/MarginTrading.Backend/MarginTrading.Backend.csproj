@@ -45,6 +45,7 @@
     <PackageReference Include="Lykke.Logs.MsSql" Version="2.2.0" />
     <PackageReference Include="Lykke.Logs.Serilog" Version="2.3.0" />
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
+    <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="4.6.0" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="3.0.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />
