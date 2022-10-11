@@ -525,7 +525,7 @@ namespace MarginTradingTests
             //entry cost + exit cost = 1917 => additional margin should be > 3272
 
             var fulfillmentPlan = OrderFulfillmentPlan.Create(order,
-                DumbDataGenerator.GeneratePosition(instrument, -1000, 3273, Accounts[0].Id));
+                DumbDataGenerator.GeneratePosition("1", instrument, -1000, 3273, Accounts[0].Id));
             
             Assert.DoesNotThrow(() => _orderValidator.PreTradeValidate(fulfillmentPlan, _me));
         }

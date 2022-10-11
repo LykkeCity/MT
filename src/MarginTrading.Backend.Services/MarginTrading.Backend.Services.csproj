@@ -50,4 +50,9 @@
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="System.Linq.Async" Version="5.1.0" />
   </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>MarginTradingTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>
