@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Orders;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Core
 {
@@ -59,6 +60,31 @@ namespace MarginTrading.Backend.Core
         public int NextRequestNumber()
         {
             return ++RequestNumber;
+        }
+
+        /// <summary>
+        /// Moves positions to be closed into StartClosing state
+        /// </summary>
+        /// <param name="positionProvider"></param>
+        /// <param name="dateProvider"></param>
+        public void TryStartClosing(Func<string, Position> positionProvider, Func<DateTime> dateProvider)
+        {
+            PositionIds
+                .Select(positionProvider)
+                .ForEach(p =>
+                    p?.TryStartClosing(dateProvider.Invoke(), PositionCloseReason.Close, OriginatorType, string.Empty));
+        }
+
+        /// <summary>
+        /// Cancels Closing state for all positions
+        /// </summary>
+        /// <param name="positionProvider"></param>
+        /// <param name="dateProvider"></param>
+        public void CancelClosing(Func<string, Position> positionProvider, Func<DateTime> dateProvider)
+        {
+            PositionIds
+                .Select(positionProvider)
+                .ForEach(p => p?.CancelClosing(dateProvider.Invoke()));
         }
     }
 }

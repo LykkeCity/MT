@@ -87,6 +87,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 executionInfo.Data.Sync(() => _ordersCache.GetPositions());
                 executionInfo.Data.Instrument = e.Instrument;
                 executionInfo.Data.RequestNumber = 1;
+                executionInfo.Data.TryStartClosing(id => _ordersCache.Positions.GetPositionById(id), _dateService.Now);
 
                 RequestPrice(sender, executionInfo);
                 
@@ -95,14 +96,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
-        
+
         [UsedImplicitly]
         private async Task Handle(PriceForSpecialLiquidationCalculatedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
-            
+
             if (executionInfo?.Data == null)
                 return;
 
@@ -110,50 +111,51 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (pause?.State == PauseState.Active)
                 return;
 
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
-                SpecialLiquidationOperationState.PriceReceived))
+            if (!executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
+                    SpecialLiquidationOperationState.PriceReceived))
+                return;
+
+            //validate that volume didn't change to peek either to execute order or request the price again
+            var volumeChanged = executionInfo.Data.Sync(() => _ordersCache.GetPositions());
+            if (volumeChanged)
             {
-                //validate that volume didn't changed to peek either to execute order or request the price again
-                var volumeChanged = executionInfo.Data.Sync(() => _ordersCache.GetPositions());
-                if (volumeChanged)
-                {
-                    // if RFQ is paused we will not continue
-                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(e.OperationId);
-                    if (pauseAcknowledged) return;
+                // if RFQ is paused we will not continue
+                var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(e.OperationId);
+                if (pauseAcknowledged) return;
 
-                    executionInfo.Data.NextRequestNumber();
+                executionInfo.Data.NextRequestNumber();
 
-                    RequestPrice(sender, executionInfo);
+                RequestPrice(sender, executionInfo);
 
-                    //switch state back, because we requested the price again and should handle in correctly when received
-                    executionInfo.Data.State = SpecialLiquidationOperationState.PriceRequested;
-                    
-                    await _operationExecutionInfoRepository.Save(executionInfo);
-                    
-                    //wait for the new price
-                    return;
-                }
-
-                await _rfqPauseService.StopPendingAsync(e.OperationId, PauseCancellationSource.PriceReceived, nameof(SpecialLiquidationSaga));
-
-                executionInfo.Data.Price = e.Price;
-
-                //execute order in Gavel by API
-                sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
-                {
-                    OperationId = e.OperationId,
-                    CreationTime = _dateService.Now(),
-                    Instrument = executionInfo.Data.Instrument,
-                    Volume = executionInfo.Data.Volume,
-                    Price = e.Price,
-                }, _cqrsContextNamesSettings.TradingEngine);
-
-                _chaosKitty.Meow(e.OperationId);
+                //switch state back, because we requested the price again and should handle in correctly when received
+                executionInfo.Data.State = SpecialLiquidationOperationState.PriceRequested;
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
+
+                //wait for the new price
+                return;
             }
+
+            await _rfqPauseService.StopPendingAsync(e.OperationId, PauseCancellationSource.PriceReceived,
+                nameof(SpecialLiquidationSaga));
+
+            executionInfo.Data.Price = e.Price;
+
+            //execute order in Gavel by API
+            sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
+            {
+                OperationId = e.OperationId,
+                CreationTime = _dateService.Now(),
+                Instrument = executionInfo.Data.Instrument,
+                Volume = executionInfo.Data.Volume,
+                Price = e.Price,
+            }, _cqrsContextNamesSettings.TradingEngine);
+
+            _chaosKitty.Meow(e.OperationId);
+
+            await _operationExecutionInfoRepository.Save(executionInfo);
         }
-        
+
         [UsedImplicitly]
         private async Task Handle(PriceForSpecialLiquidationCalculationFailedEvent e, ICommandSender sender)
         {
@@ -385,6 +387,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     {
                         OperationId = e.OperationId
                     }, _cqrsContextNamesSettings.TradingEngine);
+                }
+                else
+                {
+                    executionInfo.Data.CancelClosing(id => _ordersCache.Positions.GetPositionById(id),
+                        _dateService.Now);
                 }
 
                 _chaosKitty.Meow(e.OperationId);
