@@ -54,5 +54,6 @@
     <PackageReference Include="StackExchange.Redis" Version="2.6.66" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="System.Reactive.Linq" Version="4.4.1" />
   </ItemGroup>
 </Project>

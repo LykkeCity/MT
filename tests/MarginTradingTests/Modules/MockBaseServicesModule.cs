@@ -37,9 +37,9 @@ namespace MarginTradingTests.Modules
             builder.RegisterType<ThreadSwitcherMock>().As<IThreadSwitcher>().SingleInstance();
 
             var emailService = new Mock<IEmailService>();
-            var realm = new Mock<IWampHostedRealm>();
-            realm.Setup(x => x.Services.GetSubject<OrderBookLevel>(It.IsAny<string>()))
-                .Returns(new System.Reactive.Linq.Subject<OrderBookLevel>());
+            var realm = new Mock<IWampHostedRealm>(MockBehavior.Loose);
+            /*realm.Setup(x => x.Services.GetSubject<OrderBookLevel>(It.IsAny<string>()))
+                .Returns((ISubject<OrderBookLevel>)new Subject<OrderBookLevel>());*/
             var consoleWriterMock = new Mock<IConsole>();
             var sessionServiceMock = new Mock<ISessionService>();
             var slackNotificationsMock = new Mock<ISlackNotificationsSender>();
