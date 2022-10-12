@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Core
         {
             if (position.FplData.ActualHash != position.FplData.CalculatedHash || position.FplData.ActualHash == 0)
             {
-                ContainerProvider.Container.Resolve<IFplService>().UpdatePositionFpl(position);
+                ContainerProvider.LifetimeScope.Resolve<IFplService>().UpdatePositionFpl(position);
             }
 
             return position.FplData;
@@ -74,7 +74,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetOvernightMarginMaintenance(this Position position)
         {
-            return ContainerProvider.Container.Resolve<IFplService>().CalculateOvernightMaintenanceMargin(position);
+            return ContainerProvider.LifetimeScope.Resolve<IFplService>().CalculateOvernightMaintenanceMargin(position);
         }
 
         public static decimal GetMarginMaintenance(this Position order)
@@ -99,7 +99,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetSwaps(this Position order)
         {
-            return ContainerProvider.Container.Resolve<ICommissionService>().GetSwaps(order);
+            return ContainerProvider.LifetimeScope.Resolve<ICommissionService>().GetSwaps(order);
         }
 
         public static decimal GetOpenCommission(this Position order)

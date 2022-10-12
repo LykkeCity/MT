@@ -207,7 +207,7 @@ namespace MarginTrading.Backend.Core.Orders
         {
             CloseFxPrice = closeFxPrice;
             FplData.ActualHash++;
-            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(AccountId);
+            var account = ContainerProvider.LifetimeScope.Resolve<IAccountsCacheService>().Get(AccountId);
             account.CacheNeedsToBeUpdated();
         }
         
@@ -228,7 +228,7 @@ namespace MarginTrading.Backend.Core.Orders
         {
             ClosePrice = closePrice;
             FplData.ActualHash++;
-            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(AccountId);
+            var account = ContainerProvider.LifetimeScope.Resolve<IAccountsCacheService>().Get(AccountId);
             account.CacheNeedsToBeUpdated();
         }
 

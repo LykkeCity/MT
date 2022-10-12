@@ -102,7 +102,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(position.AccountId);
+            var account = ContainerProvider.LifetimeScope?.Resolve<IAccountsCacheService>().Get(position.AccountId);
             account?.CacheNeedsToBeUpdated();
             
             _observers.ForEach(o => o.OnNext(position));
@@ -129,7 +129,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(position.AccountId);
+            var account = ContainerProvider.LifetimeScope?.Resolve<IAccountsCacheService>().Get(position.AccountId);
             account?.CacheNeedsToBeUpdated();
             
             _observers.ForEach(o => o.OnNext(position));

@@ -149,7 +149,7 @@ namespace MarginTrading.Backend.Core
             {
                 if (accountInstance.AccountFpl.ActualHash != accountInstance.AccountFpl.CalculatedHash)
                 {
-                    ContainerProvider.Container.Resolve<IAccountUpdateService>().UpdateAccount(account);
+                    ContainerProvider.LifetimeScope.Resolve<IAccountUpdateService>().UpdateAccount(account);
                 }
 
                 return accountInstance.AccountFpl;
