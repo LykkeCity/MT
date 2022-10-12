@@ -64,8 +64,8 @@ namespace MarginTrading.Backend.Modules
             
             if (_settings.CurrentValue.ClientAccountServiceClient != null)
             {
-                builder.RegisterClientAccountClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
-
+                builder.RegisterLykkeServiceClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
+                
                 builder.RegisterType<ClientAccountService>()
                     .As<IClientAccountService>()
                     .SingleInstance();
