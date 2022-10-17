@@ -9,6 +9,9 @@ using JetBrains.Annotations;
 using Lykke.Snow.Common;
 using Lykke.Snow.Common.Percents;
 using MarginTrading.AssetService.Contracts.TradingConditions;
+using MarginTrading.Backend.Contracts.Positions;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
@@ -32,6 +35,9 @@ namespace MarginTrading.Backend.Services
                     .ForMember(dest => dest.InitLeverage, opt => opt.MapFrom(x => new Leverage(x.InitLeverage)))
                     .ForMember(dest => dest.MaintenanceLeverage, opt => opt.MapFrom(x => new Leverage(x.MaintenanceLeverage)))
                     .ForMember(dest => dest.MarginRate, opt => opt.MapFrom(x => new MarginRate(x.MarginRatePercent)));
+                
+                cfg.CreateMap<Position, PositionContract>(MemberList.Destination)
+                    .ForMember(x => x.TotalPnL, opt => opt.MapFrom(p => p.GetFpl()));
                 
             }).CreateMapper();
         }
