@@ -277,11 +277,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 
                 var account = _accountsCacheService.Get(position.AccountId);
                 
-                _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
-                    deal.DealId, position.AssetPairId, balanceDelta));
-            
                 _accountUpdateService.FreezeUnconfirmedMargin(position.AccountId, deal.DealId, balanceDelta)
                     .GetAwaiter().GetResult();//todo consider making this async or pass to broker
+                
+                _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
+                    deal.DealId, position.AssetPairId, balanceDelta));
             }
 
             var positionContract = _convertService.Convert<Position, PositionContract>(position,
