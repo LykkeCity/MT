@@ -104,12 +104,5 @@ namespace MarginTrading.Backend.Controllers
                 .UnconfirmedMarginData
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
-
-        /// <inheritdoc />
-        [HttpPost("unconfirmed-margin")]
-        public Task UnfreezeUnconfirmedMargin([FromQuery] string accountId, [FromQuery] string operationId)
-        {
-            return _accountUpdateService.UnfreezeUnconfirmedMargin(accountId, operationId);
-        }
     }
 }
