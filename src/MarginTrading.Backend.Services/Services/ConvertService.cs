@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 using Lykke.Snow.Common;
 using Lykke.Snow.Common.Percents;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AssetService.Contracts.AssetPair;
 using MarginTrading.AssetService.Contracts.TradingConditions;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
@@ -46,6 +47,8 @@ namespace MarginTrading.Backend.Services
                         opt => opt.MapFrom(tradingAccount => DateTime.UtcNow));
                 cfg.CreateMap<Position, PositionContract>(MemberList.Destination).ForMember(x => x.TotalPnL, 
                     opt => opt.Ignore());
+
+                cfg.CreateMap<AssetPairContract, AssetPair>(MemberList.None);
             }).CreateMapper();
         }
 
