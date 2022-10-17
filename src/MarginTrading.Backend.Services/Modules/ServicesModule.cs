@@ -226,10 +226,6 @@ namespace MarginTrading.Backend.Services.Modules
 	            .InstancePerLifetimeScope();
             
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
-
-            builder.RegisterType<PositionHistoryHandler>()
-	            .As<IPositionHistoryHandler>()
-	            .SingleInstance();
 		}
 	}
 }

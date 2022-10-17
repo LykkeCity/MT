@@ -1007,6 +1007,9 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet1, deleteAll: true);
             
+            var identityGeneratorMock = new Mock<IIdentityGenerator>();
+            identityGeneratorMock.Setup(x => x.GenerateAlphanumericId()).Returns("fake");
+            
             var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[3],
                 MarginTradingTestsUtils.TradingConditionId, 8);
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[4],
