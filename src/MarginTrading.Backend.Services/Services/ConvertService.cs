@@ -84,11 +84,6 @@ namespace MarginTrading.Backend.Services
             _mapper.ConfigurationProvider.AssertConfigurationIsValid();
         }
 
-        public void AssertConfigurationIsValid()
-        {
-            _mapper.ConfigurationProvider.AssertConfigurationIsValid();
-        }
-
         /// <summary>
         /// Get the properties and values of an object using an existing opimized implementation 
         /// </summary>
