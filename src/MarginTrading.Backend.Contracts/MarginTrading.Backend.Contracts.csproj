@@ -16,7 +16,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" developmentDependency="true" />
     <PackageReference Include="MessagePack" Version="1.9.11" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Refit" Version="6.3.2" />
+    <PackageReference Include="Refit" Version="5.2.4" />
     <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1" />
