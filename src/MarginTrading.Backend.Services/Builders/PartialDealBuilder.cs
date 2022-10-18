@@ -22,10 +22,13 @@ namespace MarginTrading.Backend.Services.Builders
         /// <inheritdoc />
         public override DealBuilder AddIdentity()
         {
+            if (Order.Executed == null)
+                throw new InvalidOperationException("Order.Executed must be set to create deal from");
+            
             Deal.DealId = AlphanumericIdentityGenerator.GenerateAlphanumericId();
             Deal.PositionId = Position.Id;
             Deal.Volume = Math.Abs(Order.Volume);
-            Deal.Created = Order.Created;
+            Deal.Created = Order.Executed.Value;
             Deal.Originator = Order.Originator.ToType<OriginatorTypeContract>();
             Deal.AdditionalInfo = Order.AdditionalInfo;
 

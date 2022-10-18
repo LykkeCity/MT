@@ -34,10 +34,13 @@ namespace MarginTrading.Backend.Services.Builders
         /// <returns></returns>
         public virtual DealBuilder AddIdentity()
         {
+            if (Order.Executed == null)
+                throw new InvalidOperationException("Order.Executed must be set to create deal from");
+
             Deal.DealId = Position.Id;
             Deal.PositionId = Position.Id;
             Deal.Volume = Math.Abs(Position.Volume);
-            Deal.Created = Order.Created;
+            Deal.Created = Order.Executed.Value;
             Deal.Originator = Order.Originator.ToType<OriginatorTypeContract>();
             Deal.AdditionalInfo = Order.AdditionalInfo;
             
