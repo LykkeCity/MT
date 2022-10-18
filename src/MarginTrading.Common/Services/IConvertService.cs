@@ -20,7 +20,7 @@ namespace MarginTrading.Common.Services
         TResult ConvertWithConstructorArgs<TSource, TResult>(TSource source, object argumentsObject);
 
         TResult Convert<TResult>(object source);
-
+        
         void AssertConfigurationIsValid();
     }
 }

@@ -9,6 +9,10 @@ using JetBrains.Annotations;
 using Lykke.Snow.Common;
 using Lykke.Snow.Common.Percents;
 using MarginTrading.AssetService.Contracts.TradingConditions;
+using MarginTrading.Backend.Contracts.Orders;
+using MarginTrading.Backend.Contracts.Positions;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
@@ -33,6 +37,11 @@ namespace MarginTrading.Backend.Services
                     .ForMember(dest => dest.MaintenanceLeverage, opt => opt.MapFrom(x => new Leverage(x.MaintenanceLeverage)))
                     .ForMember(dest => dest.MarginRate, opt => opt.MapFrom(x => new MarginRate(x.MarginRatePercent)));
                 
+                cfg.CreateMap<RelatedOrderInfo, RelatedOrderInfoContract>(MemberList.Source);
+                
+                cfg.CreateMap<Position, PositionContract>(MemberList.Destination)
+                    .ForMember(x => x.TotalPnL, opt => opt.MapFrom(p => p.GetFpl()));
+
             }).CreateMapper();
         }
 
@@ -68,6 +77,11 @@ namespace MarginTrading.Backend.Services
         public TResult Convert<TResult>(object source)
         {
             return _mapper.Map<TResult>(source);
+        }
+        
+        public void AssertConfigurationIsValid()
+        {
+            _mapper.ConfigurationProvider.AssertConfigurationIsValid();
         }
 
         public void AssertConfigurationIsValid()

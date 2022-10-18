@@ -451,7 +451,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                                                               // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
                         price: (double?)command.Price,
-                        orderId: _identityGenerator.GenerateAlphanumericId(),
+                        orderId: AlphanumericIdentityGenerator.GenerateAlphanumericId(),
                         modality: executionInfo.Data.RequestedFromCorporateActions ? TradeRequestModality.Liquidation_CorporateAction : TradeRequestModality.Liquidation_MarginCall);
 
                     try
