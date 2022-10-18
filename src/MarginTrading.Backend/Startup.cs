@@ -87,6 +87,7 @@ namespace MarginTrading.Backend
         public void ConfigureServices(IServiceCollection services)
         {
             var correlationContextAccessor = new CorrelationContextAccessor();
+
             services.AddSingleton(correlationContextAccessor);
             services.AddSingleton<RabbitMqCorrelationManager>();
             services.AddSingleton<CqrsCorrelationManager>();
@@ -96,7 +97,10 @@ namespace MarginTrading.Backend
 
             services.AddSingleton(Configuration);
             services
-                .AddControllers()
+                .AddMvc(options =>
+                {
+                    options.EnableEndpointRouting = false;
+                })
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
@@ -158,13 +162,14 @@ namespace MarginTrading.Backend
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
 
-            app.UseRouting();
+            //app.UseRouting();
+            app.UseMvcWithDefaultRoute();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            // app.UseEndpoints(endpoints =>
+            // {
+            //     endpoints.MapControllers();
+            // });
 
             app.UseSwagger(c =>
             {

@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AutoMapper;
 using JetBrains.Annotations;
+using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using Lykke.Snow.Common;
 using Lykke.Snow.Common.Percents;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -13,11 +14,14 @@ using MarginTrading.AssetService.Contracts.AssetPair;
 using MarginTrading.AssetService.Contracts.TradingConditions;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using MarginTrading.OrderbookAggregator.Contracts.Messages;
 using Microsoft.AspNetCore.Routing;
+using VolumePrice = MarginTrading.Backend.Core.Orderbooks.VolumePrice;
 
 namespace MarginTrading.Backend.Services
 {
