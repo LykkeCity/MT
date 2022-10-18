@@ -23,6 +23,26 @@ namespace MarginTradingTests
         }
 
         [Test]
+        public void Order_Executed_Is_Required_When_Closing_Position()
+        {
+            var builder = new DealBuilder(new Position(), CreateOrder(1));
+
+            Assert.Throws(
+                Is.TypeOf<InvalidOperationException>().And.Message
+                    .EqualTo("Order.Executed must be set to create deal from"), () => DealDirector.Construct(builder));
+        }
+        
+        [Test]
+        public void Order_Executed_Is_Required_When_Partially_Closing_Position()
+        {
+            var builder = new PartialDealBuilder(new Position(), CreateOrder(1));
+
+            Assert.Throws(
+                Is.TypeOf<InvalidOperationException>().And.Message
+                    .EqualTo("Order.Executed must be set to create deal from"), () => DealDirector.Construct(builder));
+        }
+
+        [Test]
         [TestCase(10, 1.2, 100, 1.3, 1.0)]
         [TestCase(10, 1.2, 100, 1.1, -1.0)]
         [TestCase(-10, 1.2, 100, 1.1, 1.0)]
