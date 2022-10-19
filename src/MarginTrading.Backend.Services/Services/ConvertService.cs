@@ -48,8 +48,9 @@ namespace MarginTrading.Backend.Services
                     .ForMember(x => x.TotalPnL, opt => opt.MapFrom(p => p.GetFpl()));
 
                 cfg.CreateMap<AccountContract, MarginTradingAccount>(MemberList.Source)
-                    .ForSourceMember(x => x.ModificationTimestamp, 
-                        opt => opt.DoNotValidate());
+                        .ForSourceMember(x => x.ModificationTimestamp, opt => opt.DoNotValidate())
+                        .ForMember(d => d.LastUpdateTime, opt => opt.MapFrom(x => x.ModificationTimestamp));
+
                 cfg.CreateMap<MarginTradingAccount, AccountContract>(MemberList.Destination)
                     .ForMember(p => p.ModificationTimestamp,
                         opt => opt.MapFrom(tradingAccount => DateTime.UtcNow));
