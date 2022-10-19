@@ -269,27 +269,6 @@ namespace MarginTrading.Backend
 
             #endregion Logs settings validation
 
-            #region Slack registration
-
-            IMtSlackNotificationsSender slackService = null;
-
-            if (mtSettings.CurrentValue.SlackNotifications != null)
-            {
-                var azureQueue = new AzureQueueSettings
-                {
-                    ConnectionString = mtSettings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
-                    QueueName = mtSettings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-                };
-
-                var commonSlackService =
-                    services.UseSlackNotificationsSenderViaAzureQueue(azureQueue, consoleLogger);
-
-                slackService =
-                    new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
-            }
-
-            #endregion Slack registration
-
             if (settings.CurrentValue.UseSerilog)
             {
                 LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration, 
@@ -314,29 +293,6 @@ namespace MarginTrading.Backend
                         settings.CurrentValue.Db.LogsConnString)),
                     new LogToConsole());
             }
-            else if (settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
-            {
-                if (slackService == null)
-                {
-                    slackService =
-                       new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
-                }
-
-                // LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                // slackService, requestsLogName, consoleLogger);
-                //
-                // LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                //     slackService, logName, consoleLogger);
-            }
-
-            if (slackService == null)
-            {
-                slackService =
-                       new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, LogLocator.CommonLog);
-            }
-
-            services.AddSingleton<ISlackNotificationsSender>(slackService);
-            services.AddSingleton<IMtSlackNotificationsSender>(slackService);
 
             services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(LogLocator.CommonLog));
         }

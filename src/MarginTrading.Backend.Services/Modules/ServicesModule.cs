@@ -173,10 +173,6 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IScheduleSettingsCacheService>()
 				.SingleInstance();
 
-			builder.RegisterType<AlertSeverityLevelService>()
-				.As<IAlertSeverityLevelService>()
-				.SingleInstance();
-
 			builder.RegisterType<ReportService>()
 				.As<IReportService>()
 				.SingleInstance();
