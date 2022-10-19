@@ -9,8 +9,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BenchmarkScenarios\BenchmarkScenarios.csproj" />
-      <ProjectReference Include="..\src\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj" />
-      <ProjectReference Include="..\src\MarginTrading.Common\MarginTrading.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
