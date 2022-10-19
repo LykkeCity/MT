@@ -7,6 +7,6 @@ namespace MarginTrading.Backend.Core
 {
     public static class ContainerProvider
     {
-        public static ILifetimeScope LifetimeScope { get; set; }
+        public static ILifetimeScope Container { get; set; }
     }
 }
