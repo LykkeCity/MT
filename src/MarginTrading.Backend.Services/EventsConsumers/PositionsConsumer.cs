@@ -285,7 +285,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
 
             var positionContract = _convertService.Convert<Position, PositionContract>(position);
-            positionContract.TotalPnL = position.GetFpl();
 
             var historyEvent = new PositionHistoryEvent
             {
