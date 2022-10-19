@@ -44,8 +44,8 @@ namespace MarginTrading.Backend.Services
                     .ForMember(dest => dest.MarginRate, opt => opt.MapFrom(x => new MarginRate(x.MarginRatePercent)));
 
                 cfg.CreateMap<AccountContract, MarginTradingAccount>(MemberList.Source)
-                    .ForSourceMember(x => x.ModificationTimestamp, 
-                        opt => opt.DoNotValidate());
+                    .ForSourceMember(x => x.ModificationTimestamp, opt => opt.DoNotValidate())
+                    .ForMember(d => d.LastUpdateTime, opt => opt.MapFrom(x => x.ModificationTimestamp));
 
                 cfg.CreateMap<MarginTradingAccount, AccountContract>(MemberList.Destination)
                     .ForMember(p => p.ModificationTimestamp,

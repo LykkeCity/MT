@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Common;
-using Common.Log;
 using Dapper;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
@@ -20,7 +19,6 @@ using Lykke.Snow.Common;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Rfq;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.ApplicationInsights;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
