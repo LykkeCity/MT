@@ -97,10 +97,7 @@ namespace MarginTrading.Backend
 
             services.AddSingleton(Configuration);
             services
-                .AddMvc(options =>
-                {
-                    options.EnableEndpointRouting = false;
-                })
+                .AddControllers()
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
@@ -162,14 +159,13 @@ namespace MarginTrading.Backend
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
 
-            //app.UseRouting();
-            app.UseMvcWithDefaultRoute();
+            app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            // app.UseEndpoints(endpoints =>
-            // {
-            //     endpoints.MapControllers();
-            // });
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
 
             app.UseSwagger(c =>
             {
