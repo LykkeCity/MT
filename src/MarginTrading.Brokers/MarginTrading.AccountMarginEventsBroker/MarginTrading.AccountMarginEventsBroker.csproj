@@ -28,7 +28,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj" />
     <ProjectReference Include="..\..\MarginTrading.Common\MarginTrading.Common.csproj" />
-    <ProjectReference Include="..\..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Dockerfile">
