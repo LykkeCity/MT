@@ -3,7 +3,6 @@
 
 using System.Threading.Tasks;
 using Lykke.Service.EmailSender;
-using Lykke.Service.EmailSender.AutorestClient.Models;
 using MarginTrading.Backend.Core;
 
 #pragma warning disable 1591
