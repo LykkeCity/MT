@@ -241,7 +241,7 @@ namespace MarginTrading.Backend
                         $"{typeof(T)} is started");
                 }
 
-                ContainerProvider.LifetimeScope = c;
+                ContainerProvider.Container = c;
 
                 // note the order here is important!
                 StartService<TradingInstrumentsManager>();

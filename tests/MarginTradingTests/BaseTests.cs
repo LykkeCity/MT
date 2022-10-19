@@ -197,7 +197,7 @@ namespace MarginTradingTests
                     c.Resolve<T>().Start();
                 }
 
-                ContainerProvider.LifetimeScope = c;
+                ContainerProvider.Container = c;
 
                 // note the order here is important!
                 StartService<TradingInstrumentsManager>();
