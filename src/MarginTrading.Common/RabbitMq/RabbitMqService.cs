@@ -7,17 +7,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
-using JetBrains.Annotations;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Publisher.Serializers;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.RabbitMqBroker.Subscriber.Deserializers;
 using Lykke.RabbitMqBroker.Subscriber.Middleware.ErrorHandling;
-using Lykke.SettingsReader;
 using Lykke.Snow.Common.Correlation.RabbitMq;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
 
 namespace MarginTrading.Common.RabbitMq
 {
@@ -27,7 +26,6 @@ namespace MarginTrading.Common.RabbitMq
         private readonly ILog _logger;
         private readonly string _env;
         private readonly IPublishingQueueRepository _publishingQueueRepository;
-        private readonly IConsole _consoleWriter;
         private readonly RabbitMqCorrelationManager _correlationManager;
 
         private readonly ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStartStop> _subscribers =
@@ -37,13 +35,11 @@ namespace MarginTrading.Common.RabbitMq
             new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStartStop>>(
                 new SubscriptionSettingsEqualityComparer());
 
-        //[ItemCanBeNull] private readonly Lazy<MessagePackBlobPublishingQueueRepository> _queueRepository;
+        private const short QueueNotFoundErrorCode = 404;
 
         public RabbitMqService(
             ILoggerFactory loggerFactory,
-            ILog logger, 
-            IConsole consoleWriter, 
-            [CanBeNull] IReloadingManager<string> queueRepositoryConnectionString, 
+            ILog logger,
             string env,
             IPublishingQueueRepository publishingQueueRepository,
             RabbitMqCorrelationManager correlationManager)
@@ -52,7 +48,6 @@ namespace MarginTrading.Common.RabbitMq
             _logger = logger;
             _env = env;
             _publishingQueueRepository = publishingQueueRepository;
-            _consoleWriter = consoleWriter;
             _correlationManager = correlationManager;
         }
 
@@ -63,11 +58,16 @@ namespace MarginTrading.Common.RabbitMq
         public static uint GetMessageCount(string connectionString, string queueName)
         {
             var factory = new ConnectionFactory { Uri = new Uri(connectionString, UriKind.Absolute) };
-            
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+
+            using var connection = factory.CreateConnection();
+            using var channel = connection.CreateModel();
+            try
             {
-                return channel.MessageCount(queueName);
+                return channel.QueueDeclarePassive(queueName).MessageCount;
+            }
+            catch (OperationInterruptedException e) when (e.ShutdownReason.ReplyCode == QueueNotFoundErrorCode)
+            {
+                return 0;
             }
         }
 
@@ -133,7 +133,6 @@ namespace MarginTrading.Common.RabbitMq
                 });
             }
         }
-
         
         public void Subscribe<TMessage>(RabbitMqSettings settings, bool isDurable,
             Func<TMessage, Task> handler, IMessageDeserializer<TMessage> deserializer)

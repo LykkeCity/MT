@@ -160,8 +160,6 @@ namespace MarginTrading.Backend.Services.Modules
 					return new RabbitMqService(
 						c.Resolve<ILoggerFactory>(),
 						c.Resolve<ILog>(),
-						c.Resolve<IConsole>(),
-						settings.Nested(s => s.Db.StateConnString),
 						settings.CurrentValue.Env,
 						c.Resolve<IPublishingQueueRepository>(),
 						c.Resolve<RabbitMqCorrelationManager>());

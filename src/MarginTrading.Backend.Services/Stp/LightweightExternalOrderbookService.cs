@@ -182,7 +182,8 @@ namespace MarginTrading.Backend.Services.Stp
 
             if (!isEodOrderbook &&
                 !instrumentTradingStatus.TradingEnabled &&
-                instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
+                (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled ||
+                 instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentNotFound))
             {
                 return;
             }
