@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -15,9 +14,7 @@ using Lykke.Service.Session.AutorestClient;
 using Lykke.Service.Session.AutorestClient.Models;
 using Microsoft.Rest;
 using Moq;
-using WampSharp.V2.Realm;
 using Lykke.Service.Session;
-using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Services;
@@ -37,12 +34,8 @@ namespace MarginTradingTests.Modules
             builder.RegisterType<ThreadSwitcherMock>().As<IThreadSwitcher>().SingleInstance();
 
             var emailService = new Mock<IEmailService>();
-            var realm = new Mock<IWampHostedRealm>();
-            realm.Setup(x => x.Services.GetSubject<OrderBookLevel>(It.IsAny<string>()))
-                .Returns(new Subject<OrderBookLevel>());
             var consoleWriterMock = new Mock<IConsole>();
             var sessionServiceMock = new Mock<ISessionService>();
-            var slackNotificationsMock = new Mock<ISlackNotificationsSender>();
 
             sessionServiceMock
                 .Setup(item => item.ApiSessionGetPostWithHttpMessagesAsync(It.IsAny<ClientSessionGetRequest>(), null,
@@ -66,12 +59,10 @@ namespace MarginTradingTests.Modules
             clientAccountMock.Setup(s => s.IsPushEnabled(It.IsAny<string>())).ReturnsAsync(true);
 
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
-            builder.RegisterInstance(realm.Object).As<IWampHostedRealm>();
             builder.RegisterType<PositionHistoryNotifications>().As<IRabbitMqNotifyService>();
             builder.RegisterInstance(consoleWriterMock.Object).As<IConsole>();
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
-            builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
             builder.RegisterInstance(volumeEquivalentService.Object).As<IEquivalentPricesService>();
             builder.RegisterInstance(clientAccountMock.Object).As<IClientAccountService>();
 

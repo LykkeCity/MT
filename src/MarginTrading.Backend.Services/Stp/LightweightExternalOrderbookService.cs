@@ -88,7 +88,7 @@ namespace MarginTrading.Backend.Services.Stp
                 var orderBooks = _orderBookProviderApi.GetOrderBooks().GetAwaiter().GetResult()
                     .GroupBy(x => x.AssetPairId)
                     .Select(x => _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(
-                        x.MaxBy(o => o.ReceiveTimestamp)))
+                        MoreEnumerable.MaxBy(x, o => o.ReceiveTimestamp).First()))
                     .ToList();
 
                 foreach (var externalOrderBook in orderBooks)
@@ -182,7 +182,8 @@ namespace MarginTrading.Backend.Services.Stp
 
             if (!isEodOrderbook &&
                 !instrumentTradingStatus.TradingEnabled &&
-                instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
+                (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled ||
+                 instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentNotFound))
             {
                 return;
             }

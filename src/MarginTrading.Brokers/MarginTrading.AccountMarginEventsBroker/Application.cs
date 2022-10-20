@@ -2,9 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using Common.Log;
 using Lykke.MarginTrading.BrokerBase.Settings;
-using Lykke.SlackNotifications;
 using Lykke.MarginTrading.BrokerBase;
 using Lykke.Snow.Common.Correlation.RabbitMq;
 using MarginTrading.AccountMarginEventsBroker.Repositories;
@@ -22,12 +20,11 @@ namespace MarginTrading.AccountMarginEventsBroker
         public Application(
             RabbitMqCorrelationManager correlationManager,
             ILoggerFactory loggerFactory,
-            ILog logger,
+            ILogger<Application> logger,
             Settings settings,
             CurrentApplicationInfo applicationInfo,
-            IAccountMarginEventsRepository accountMarginEventsRepository,
-            ISlackNotificationsSender slackNotificationsSender)
-            : base(correlationManager, loggerFactory, logger, slackNotificationsSender, applicationInfo)
+            IAccountMarginEventsRepository accountMarginEventsRepository)
+            : base(correlationManager, loggerFactory, logger, applicationInfo)
         {
             _settings = settings;
             _accountMarginEventsRepository = accountMarginEventsRepository;

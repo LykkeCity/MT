@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Email
         {
             var message =
                 _templateGenerator.Generate("MarginCall", new {BaseAssetId = baseAssetId, AccountId = accountId});
-
+            
             await _emailSender.SendAsync(
                 new EmailMessage
                 {

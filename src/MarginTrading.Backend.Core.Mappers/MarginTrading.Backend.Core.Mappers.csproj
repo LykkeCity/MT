@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>2.20.4</Version>
-    <LangVersion>latest</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <Version>2.6.1</Version>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>1701;1702;1705;CA2007;0612;0618;1591</NoWarn>
@@ -10,9 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj" />
     <ProjectReference Include="..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
-    <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj">
-      <Project>{08346EF4-8525-4CE0-93C4-CCE510D27D88}</Project>
-      <Name>MarginTrading.Contract</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
   </ItemGroup>
 </Project>

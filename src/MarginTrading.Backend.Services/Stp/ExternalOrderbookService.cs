@@ -87,7 +87,7 @@ namespace MarginTrading.Backend.Services.Stp
                 var orderBooks = _orderBookProviderApi.GetOrderBooks().GetAwaiter().GetResult()
                     .GroupBy(x => x.AssetPairId)
                     .Select(x => _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(
-                        x.MaxBy(o => o.ReceiveTimestamp)))
+                        MoreEnumerable.MaxBy(x,o => o.ReceiveTimestamp).First()))
                     .ToList();
 
                 foreach (var externalOrderBook in orderBooks)
@@ -171,7 +171,7 @@ namespace MarginTrading.Backend.Services.Stp
         public List<ExternalOrderBook> GetOrderBooks()
         {
             return _orderbooks
-                .Select(x => x.Value.Values.MaxBy(o => o.Timestamp))
+                .Select(x => MoreEnumerable.MaxBy(x.Value.Values, o => o.Timestamp).First())
                 .ToList();
         }
 

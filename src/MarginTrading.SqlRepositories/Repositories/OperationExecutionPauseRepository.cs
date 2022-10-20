@@ -14,6 +14,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.SqlRepositories.Entities;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -41,7 +42,7 @@ BEGIN
     );
 END";
         
-        private readonly ILog _log;
+        private readonly ILogger<OperationExecutionPauseRepository> _logger;
         
         public const string TableName = "MarginTradingExecutionPause";
 
@@ -52,9 +53,9 @@ END";
 
         public OperationExecutionPauseRepository(
             string connectionString,
-            ILog log) : base(connectionString)
+            ILogger<OperationExecutionPauseRepository> logger) : base(connectionString, logger)
         {
-            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             
             using (var conn = new SqlConnection(connectionString))
             {
@@ -64,7 +65,17 @@ END";
                 }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), $"Executing {nameof(CreateTableScript)}", null, ex);
+                    _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(CreateTableScript)}\r\n " +
+                                      $"Exception Message: {ex.Message}\r\n" +
+                                      $"Stack Trace: {ex.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                    if (ex.InnerException != null)
+                    {
+                        _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(CreateTableScript)}\r\n " +
+                                          $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                          $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                          $"Timestamp UTC: {DateTime.UtcNow}");
+                    }
                     throw;
                 }
             }
@@ -83,12 +94,22 @@ values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)",
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), nameof(AddAsync), ex);
+                _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(AddAsync)}\r\n " +
+                                  $"Exception Message: {ex.Message}\r\n" +
+                                  $"Stack Trace: {ex.StackTrace}\r\n" +
+                                  $"Timestamp UTC: {DateTime.UtcNow}");
+                if (ex.InnerException != null)
+                {
+                    _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(AddAsync)}\r\n " +
+                                      $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                      $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                }
                 throw;
             }
 
-            await _log.WriteInfoAsync(nameof(OperationExecutionPauseRepository), nameof(AddAsync),
-                $"Pause for operation with id [{pause.OperationId}] and name [{pause.OperationName}] has been successfully persisted");
+            _logger.LogInformation($"{nameof(OperationExecutionPauseRepository)}, {nameof(AddAsync)}\r\n " +
+                                   $"Pause for operation with id [{pause.OperationId}] and name [{pause.OperationName}] has been successfully persisted");
         }
 
         public async Task<bool> UpdateAsync(long oid,
@@ -127,28 +148,37 @@ where Oid = @Oid", new
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), nameof(UpdateAsync), ex);
+                _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(UpdateAsync)}\r\n " +
+                                  $"Exception Message: {ex.Message}\r\n" +
+                                  $"Stack Trace: {ex.StackTrace}\r\n" +
+                                  $"Timestamp UTC: {DateTime.UtcNow}");
+                if (ex.InnerException != null)
+                {
+                    _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(UpdateAsync)}\r\n " +
+                                      $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                      $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                }
                 throw;
             }
 
             if (affectedRows == 0)
             {
-                await _log.WriteWarningAsync(nameof(OperationExecutionPauseRepository), nameof(UpdateAsync), null,
-                    $"Pause with oid [{oid}] has not been updated. Probably, it was not found");
+                _logger?.LogWarning($"{nameof(OperationExecutionPauseRepository)}, {nameof(UpdateAsync)}: Pause with oid [{oid}] has not been updated. Probably, it was not found");
                 return false;
             }
 
-            await _log.WriteInfoAsync(nameof(OperationExecutionPauseRepository), nameof(UpdateAsync),
-                new
-                {
-                    effectiveSince, 
-                    state, 
-                    cancelledAt, 
-                    cancellationEffectiveSince, 
-                    cancellationInitiator,
-                    cancellationSource
-                }.ToJson(),
-                $"Pause with oid [{oid}] has been successfully updated");
+            var json = new
+            {
+                effectiveSince,
+                state,
+                cancelledAt,
+                cancellationEffectiveSince,
+                cancellationInitiator,
+                cancellationSource
+            }.ToJson();
+            _logger?.LogInformation($"{nameof(OperationExecutionPauseRepository)}, {nameof(UpdateAsync)}:\r\n" +
+                json + $" Pause with oid [{oid}] has been successfully updated");
             return true;
         }
 
@@ -172,7 +202,17 @@ where OperationId = @OperationId AND OperationName = @OperationName", new {Opera
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), nameof(FindAsync), ex);
+                _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(FindAsync)}\r\n " +
+                                  $"Exception Message: {ex.Message}\r\n" +
+                                  $"Stack Trace: {ex.StackTrace}\r\n" +
+                                  $"Timestamp UTC: {DateTime.UtcNow}");
+                if (ex.InnerException != null)
+                {
+                    _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(FindAsync)}\r\n " +
+                                      $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                      $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                }
                 throw;
             }
         }
@@ -192,7 +232,17 @@ where Oid = @oid", new { oid });
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), nameof(FindAsync), ex);
+                _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(FindAsync)}\r\n " +
+                                  $"Exception Message: {ex.Message}\r\n" +
+                                  $"Stack Trace: {ex.StackTrace}\r\n" +
+                                  $"Timestamp UTC: {DateTime.UtcNow}");
+                if (ex.InnerException != null)
+                {
+                    _logger?.LogError($"{nameof(OperationExecutionPauseRepository)}, {nameof(FindAsync)}\r\n " +
+                                      $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                      $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                }
                 throw;
             }
         }

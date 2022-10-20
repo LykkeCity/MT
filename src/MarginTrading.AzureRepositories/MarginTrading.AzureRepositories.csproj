@@ -1,23 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>MarginTrading.AzureRepositories</AssemblyName>
     <PackageId>MarginTrading.AzureRepositories</PackageId>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>2.20.4</Version>
-    <LangVersion>latest</LangVersion>
+    <Version>2.6.1</Version>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>1701;1702;1705;CA2007;0612;0618;1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
-    <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj">
-      <Project>{08346EF4-8525-4CE0-93C4-CCE510D27D88}</Project>
-      <Name>MarginTrading.Contract</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Lykke.AzureStorage" Version="8.13.4" />

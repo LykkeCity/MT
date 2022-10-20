@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Common;
-using Common.Log;
 using Dapper;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
@@ -19,6 +18,7 @@ using System.Threading.Tasks;
 using Lykke.Snow.Common;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Rfq;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -41,17 +41,17 @@ namespace MarginTrading.SqlRepositories.Repositories
         private static readonly string GetUpdateClause = string.Join(",",
             DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
-        private readonly ILog _log;
+        private readonly ILogger<OperationExecutionInfoRepository> _logger;
         private readonly IDateService _dateService;
         private readonly StoredProcedure _getPositionsInSpecialLiquidation = new StoredProcedure("getPositionsInSpecialLiquidation", "dbo");
         private readonly StoredProcedure _getRfqExecutionInfoWithPause = new StoredProcedure("getRfqExecutionInfoWithPause", "dbo");
 
         public OperationExecutionInfoRepository(
             string connectionString,
-            ILog log,
-            IDateService dateService) : base(connectionString)
+            ILogger<OperationExecutionInfoRepository> logger,
+            IDateService dateService) : base(connectionString, logger)
         {
-            _log = log;
+            _logger = logger;
             _dateService = dateService;
 
             using (var conn = new SqlConnection(connectionString))
@@ -62,7 +62,17 @@ namespace MarginTrading.SqlRepositories.Repositories
                 }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(OperationExecutionInfoRepository), "CreateTableIfDoesntExists", null, ex);
+                    _logger?.LogError($"{nameof(OperationExecutionInfoRepository)}, CreateTableIfDoesntExists\r\n " +
+                                      $"Exception Message: {ex.Message}\r\n" +
+                                      $"Stack Trace: {ex.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                    if (ex.InnerException != null)
+                    {
+                        _logger?.LogError($"{nameof(OperationExecutionInfoRepository)}, CreateTableIfDoesntExists\r\n " +
+                                          $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                          $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                          $"Timestamp UTC: {DateTime.UtcNow}");
+                    }
                     throw;
                 }
             }
@@ -97,7 +107,17 @@ namespace MarginTrading.SqlRepositories.Repositories
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(OperationExecutionInfoRepository), nameof(GetOrAddAsync), ex);
+                _logger?.LogError($"{nameof(OperationExecutionInfoRepository)}, {nameof(GetOrAddAsync)}\r\n " +
+                                  $"Exception Message: {ex.Message}\r\n" +
+                                  $"Stack Trace: {ex.StackTrace}\r\n" +
+                                  $"Timestamp UTC: {DateTime.UtcNow}");
+                if (ex.InnerException != null)
+                {
+                    _logger?.LogError($"{nameof(OperationExecutionInfoRepository)}, {nameof(GetOrAddAsync)}\r\n " +
+                                      $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                      $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                }
                 throw;
             }
         }
@@ -244,7 +264,17 @@ namespace MarginTrading.SqlRepositories.Repositories
                 }
                 catch (Exception ex)
                 {
-                    await _log.WriteErrorAsync(nameof(OperationExecutionInfoRepository), nameof(GetOrAddAsync), ex);
+                    _logger?.LogError($"{nameof(OperationExecutionInfoRepository)}, {nameof(GetOrAddAsync)}\r\n " +
+                                      $"Exception Message: {ex.Message}\r\n" +
+                                      $"Stack Trace: {ex.StackTrace}\r\n" +
+                                      $"Timestamp UTC: {DateTime.UtcNow}");
+                    if (ex.InnerException != null)
+                    {
+                        _logger?.LogError($"{nameof(OperationExecutionInfoRepository)}, {nameof(GetOrAddAsync)}\r\n " +
+                                          $"Exception Message: {ex.InnerException.Message}\r\n" +
+                                          $"Stack Trace: {ex.InnerException.StackTrace}\r\n" +
+                                          $"Timestamp UTC: {DateTime.UtcNow}");
+                    }
                     throw;
                 }
             }
