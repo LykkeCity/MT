@@ -8,7 +8,6 @@ using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
-using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Cqrs;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
@@ -38,7 +37,6 @@ using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
-using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
@@ -105,7 +103,9 @@ namespace MarginTrading.Backend
 
             services.AddSwaggerGen(options =>
             {
-                options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
+                options.SwaggerDoc("v1",
+                    new OpenApiInfo
+                        { Title = $"MarginTradingEngine_Api_{Configuration.ServerType()}", Version = "v1" });
                 options.AddApiKeyAwareness();
             }).AddSwaggerGenNewtonsoftSupport();
 
