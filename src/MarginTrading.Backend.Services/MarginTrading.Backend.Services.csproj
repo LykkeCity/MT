@@ -35,11 +35,8 @@
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
-    <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
     <PackageReference Include="Lykke.Snow.Common" Version="1.51.0" />
     <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="3.30.1" />
-    <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="1.0.2" />
-    <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="1.0.2" />
     <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="1.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
@@ -47,7 +44,6 @@
     <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.66" />
-    <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Reactive.Linq" Version="4.4.1" />
   </ItemGroup>
