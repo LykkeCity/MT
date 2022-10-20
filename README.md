@@ -41,6 +41,11 @@ Example for running docker on macOS with Apple Silicon processor:
 ```bash
 docker run -d --hostname nova.lykke --name rabbit-nova -p 5672:5672 -p 15672:15672 -e RABBITMQ_DEFAULT_USER=margintrading -e RABBITMQ_DEFAULT_PASS=margintrading arm64v8/rabbitmq:3-management
 ```
+Stop rabbit mq:
+```bash
+docker stop rabbit-nova
+docker rm rabbit-nova
+```
 
 ## Startup process ##
 
