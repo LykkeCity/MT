@@ -56,6 +56,9 @@ namespace MarginTrading.Backend.Services
                         opt => opt.MapFrom(tradingAccount => DateTime.UtcNow));
 
                 cfg.CreateMap<AssetPairContract, AssetPair>(MemberList.None);
+
+                cfg.CreateMap<VolumePriceContract, VolumePrice>();
+                cfg.CreateMap<ExternalOrderBookContract, ExternalOrderBook>();
             }).CreateMapper();
         }
 
