@@ -32,6 +32,19 @@ namespace MarginTradingTests
             Assert.AreEqual("4", cache.FindAssetPair("EUR", "USD", "Default").Id);
         }
 
+        [Theory]
+        [TestCase("")]
+        [TestCase("  ")]
+        [TestCase(null)]
+        public void GetAssetPairByIdOrDefault_When_InvalidParameters_ReturnsDefault(string assetPair)
+        {
+            var cache = new AssetPairsCache();
+
+            var result = cache.GetAssetPairByIdOrDefault(assetPair);
+            
+            Assert.AreEqual(default(IAssetPair), result);
+        }
+
         private IAssetPair CreateAssetPair(string id, string baseAsset, string quoteAsset)
         {
             return new AssetPair(

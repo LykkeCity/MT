@@ -63,7 +63,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                return _assetPairs.GetValueOrDefault(assetPairId);
+                return string.IsNullOrWhiteSpace(assetPairId) 
+                    ? default 
+                    : _assetPairs.GetValueOrDefault(assetPairId);
             }
             finally
             {
