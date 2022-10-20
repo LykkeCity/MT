@@ -60,6 +60,7 @@ namespace MarginTrading.Backend.Services
 
                 cfg.CreateMap<VolumePriceContract, VolumePrice>();
                 cfg.CreateMap<ExternalOrderBookContract, ExternalOrderBook>();
+                cfg.CreateMap<MarginTrading.OrderbookAggregator.Contracts.Messages.VolumePrice, VolumePrice>();
                 cfg.CreateMap<ExternalExchangeOrderbookMessage, ExternalOrderBook>();
             }).CreateMapper();
         }
