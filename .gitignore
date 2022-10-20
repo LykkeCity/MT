@@ -60,6 +60,8 @@ BenchmarkDotNet.Artifacts/
 # .NET Core
 project.lock.json
 project.fragment.lock.json
+appsettings.json
+appsettings.*.json
 artifacts/
 
 # Tye
