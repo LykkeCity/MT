@@ -57,6 +57,9 @@ namespace MarginTrading.Backend.Services
                     .ForMember(x => x.TotalPnL, opt => opt.MapFrom(p => p.GetFpl()));
 
                 cfg.CreateMap<AssetPairContract, AssetPair>(MemberList.None);
+
+                cfg.CreateMap<VolumePriceContract, VolumePrice>();
+                cfg.CreateMap<ExternalOrderBookContract, ExternalOrderBook>();
             }).CreateMapper();
         }
 
