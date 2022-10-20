@@ -42,13 +42,10 @@
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
     <PackageReference Include="LykkeBiz.Common.ApiLibrary" Version="4.2.4" />
-    <PackageReference Include="LykkeBiz.Logs" Version="9.1.0" />
     <PackageReference Include="LykkeBiz.Logs.MsSql" Version="3.0.0" />
     <PackageReference Include="LykkeBiz.Logs.Serilog" Version="3.3.0" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
-    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />
-    <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
     <PackageReference Include="Lykke.Snow.Common" Version="1.51.0" />
     <PackageReference Include="Lykke.Snow.Common.Startup" Version="3.0.1" />
     <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="7.6.1" />
@@ -69,7 +66,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.4.0" />
-    <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>
