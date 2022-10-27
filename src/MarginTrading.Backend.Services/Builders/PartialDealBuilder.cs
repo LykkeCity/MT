@@ -2,11 +2,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services.Builders
 {
@@ -18,20 +16,15 @@ namespace MarginTrading.Backend.Services.Builders
         public PartialDealBuilder(Position position, Order order) : base(position, order)
         {
         }
-        
+
         /// <inheritdoc />
         public override DealBuilder AddIdentity()
         {
-            if (Order.Executed == null)
-                throw new InvalidOperationException("Order.Executed must be set to create deal from");
+            base.AddIdentity();
             
             Deal.DealId = AlphanumericIdentityGenerator.GenerateAlphanumericId();
-            Deal.PositionId = Position.Id;
             Deal.Volume = Math.Abs(Order.Volume);
-            Deal.Created = Order.Executed.Value;
-            Deal.Originator = Order.Originator.ToType<OriginatorTypeContract>();
-            Deal.AdditionalInfo = Order.AdditionalInfo;
-
+        
             return this;
         }
 

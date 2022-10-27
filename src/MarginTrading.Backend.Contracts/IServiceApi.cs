@@ -49,7 +49,7 @@ namespace MarginTrading.Backend.Contracts
         Dictionary<string, decimal> GetUnconfirmedMargin([Query] string accountId);
         
         /// <summary>
-        /// Freezes amount if margin attached to operationId and account
+        /// Freezes amount of margin attached to operationId and account
         /// </summary>
         /// <param name="accountId"></param>
         /// <param name="operationId"></param>
