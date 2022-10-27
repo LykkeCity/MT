@@ -18,7 +18,6 @@ using MarginTrading.Common.Services.Client;
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
     public class MarginCallConsumer : IEventConsumer<MarginCallEventArgs>
-        //IEventConsumer<OrderPlacedEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
@@ -95,15 +94,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 lastNotifications.AddOrUpdate(account.Id, eventTime, (s, times) => eventTime);
             });
         }
-
-//todo uncomment here, at class registration and in module when MTC-155 task is done 
-        /// <summary>
-        /// That's for limit orders margin
-        /// </summary>
-//        public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
-//        {
-//            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
-//        }
 
         private (MarginEventTypeContract, ConcurrentDictionary<string, DateTime>) LevelAndNotificationsCache(AccountLevel level)
         {
