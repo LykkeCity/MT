@@ -2,12 +2,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using Common;
 using Common.Log;
 using Lykke.Common.Chaos;
@@ -18,13 +16,11 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Workflow;
 using MarginTrading.Common.Services;
-using MarginTrading.SqlRepositories.Repositories;
 using Moq;
 using NUnit.Framework;
 using StackExchange.Redis;
