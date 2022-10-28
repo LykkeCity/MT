@@ -9,7 +9,6 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Quotes
@@ -17,33 +16,26 @@ namespace MarginTrading.Backend.Services.Quotes
     public class QuotesMonitor : TimerPeriod
     {
         private readonly ILog _log;
-        private readonly IMtSlackNotificationsSender _slackNotificationsSender;
         private readonly MarginTradingSettings _marginSettings;
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly IDateService _dateService;
         private readonly IAssetPairDayOffService _dayOffService;
-        private readonly IAlertSeverityLevelService _alertSeverityLevelService;
-
         private const int NotificationRepeatTimeoutCoef = 5;
         
         private readonly Dictionary<string, OutdatedQuoteInfo> _outdatedQuotes;
 
         public QuotesMonitor(ILog log, 
-            IMtSlackNotificationsSender slackNotificationsSender,
             MarginTradingSettings marginSettings,
             IQuoteCacheService quoteCacheService,
             IDateService dateService,
-            IAssetPairDayOffService dayOffService,
-            IAlertSeverityLevelService alertSeverityLevelService) 
+            IAssetPairDayOffService dayOffService) 
             : base("QuotesMonitor", 60000, log)
         {
             _log = log;
-            _slackNotificationsSender = slackNotificationsSender;
             _marginSettings = marginSettings;
             _quoteCacheService = quoteCacheService;
             _dateService = dateService;
             _dayOffService = dayOffService;
-            _alertSeverityLevelService = alertSeverityLevelService;
             _outdatedQuotes = new Dictionary<string, OutdatedQuoteInfo>();
         }
 
@@ -114,9 +106,6 @@ namespace MarginTrading.Backend.Services.Quotes
         private void WriteMessage(InstrumentBidAskPair quote, string message, EventTypeEnum eventType)
         {
             _log.WriteInfoAsync(nameof(QuotesMonitor), quote.ToJson(), message);
-            var slackChannelType = _alertSeverityLevelService.GetSlackChannelType(eventType);
-            if (!string.IsNullOrWhiteSpace(slackChannelType))
-                _slackNotificationsSender.SendRawAsync(slackChannelType, nameof(QuotesMonitor), message);
         }
 
         private class OutdatedQuoteInfo

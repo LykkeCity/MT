@@ -8,16 +8,11 @@ using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
-using Lykke.AzureQueueIntegration;
-using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Cqrs;
-using Lykke.Logs;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
-using Lykke.SlackNotification.AzureQueue;
-using Lykke.SlackNotifications;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Cqrs;
 using Lykke.Snow.Common.Correlation.Http;
@@ -42,7 +37,6 @@ using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
-using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
@@ -70,23 +64,24 @@ namespace MarginTrading.Backend
         private IReloadingManager<MtBackendSettings> _mtSettingsManager;
         
         public IConfigurationRoot Configuration { get; }
-        public IHostingEnvironment Environment { get; }
+        public IWebHostEnvironment Environment { get; }
         public ILifetimeScope ApplicationContainer { get; set; }
 
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddSerilogJson(env)
                 .AddEnvironmentVariables()
                 .Build();
-
+            
             Environment = env;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
             var correlationContextAccessor = new CorrelationContextAccessor();
+
             services.AddSingleton(correlationContextAccessor);
             services.AddSingleton<RabbitMqCorrelationManager>();
             services.AddSingleton<CqrsCorrelationManager>();
@@ -108,7 +103,9 @@ namespace MarginTrading.Backend
 
             services.AddSwaggerGen(options =>
             {
-                options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
+                options.SwaggerDoc("v1",
+                    new OpenApiInfo
+                        { Title = $"MarginTradingEngine_Api_{Configuration.ServerType()}", Version = "v1" });
                 options.AddApiKeyAwareness();
             }).AddSwaggerGenNewtonsoftSupport();
 
@@ -131,7 +128,7 @@ namespace MarginTrading.Backend
             var deduplicationService = RunHealthChecks(_mtSettingsManager.CurrentValue.MtBackend);
 
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
-
+            
             RegisterModules(builder, _mtSettingsManager, Environment);
         }
 
@@ -204,7 +201,7 @@ namespace MarginTrading.Backend
         private static void RegisterModules(
             ContainerBuilder builder,
             IReloadingManager<MtBackendSettings> mtSettings,
-            IHostingEnvironment environment)
+            IWebHostEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
 
@@ -268,27 +265,6 @@ namespace MarginTrading.Backend
 
             #endregion Logs settings validation
 
-            #region Slack registration
-
-            IMtSlackNotificationsSender slackService = null;
-
-            if (mtSettings.CurrentValue.SlackNotifications != null)
-            {
-                var azureQueue = new AzureQueueSettings
-                {
-                    ConnectionString = mtSettings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
-                    QueueName = mtSettings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-                };
-
-                var commonSlackService =
-                    services.UseSlackNotificationsSenderViaAzureQueue(azureQueue, consoleLogger);
-
-                slackService =
-                    new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
-            }
-
-            #endregion Slack registration
-
             if (settings.CurrentValue.UseSerilog)
             {
                 LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration, 
@@ -313,29 +289,6 @@ namespace MarginTrading.Backend
                         settings.CurrentValue.Db.LogsConnString)),
                     new LogToConsole());
             }
-            else if (settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
-            {
-                if (slackService == null)
-                {
-                    slackService =
-                       new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
-                }
-
-                LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                slackService, requestsLogName, consoleLogger);
-
-                LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                    slackService, logName, consoleLogger);
-            }
-
-            if (slackService == null)
-            {
-                slackService =
-                       new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, LogLocator.CommonLog);
-            }
-
-            services.AddSingleton<ISlackNotificationsSender>(slackService);
-            services.AddSingleton<IMtSlackNotificationsSender>(slackService);
 
             services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(LogLocator.CommonLog));
         }

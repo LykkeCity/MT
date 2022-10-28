@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Common;
-using Common.Log;
 using Dapper;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using System;
@@ -10,6 +9,7 @@ using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Logs.MsSql.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
 {
@@ -41,7 +41,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
             ");";
 
         private readonly Settings _settings;
-        private readonly ILog _log;
+        private readonly ILogger _logger;
 
         private static readonly string GetColumns =
             string.Join(",", typeof(IAccountMarginEvent).GetProperties().Select(x => x.Name));
@@ -49,20 +49,20 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
         private static readonly string GetFields =
             string.Join(",", typeof(IAccountMarginEvent).GetProperties().Select(x => "@" + x.Name));
 
-        public AccountMarginEventsSqlRepository(Settings settings, ILog log)
+        public AccountMarginEventsSqlRepository(Settings settings, ILogger<AccountMarginEventsSqlRepository> logger)
         {
-            _log = log;
+            _logger = logger;
             _settings = settings;
             using (var conn = new SqlConnection(_settings.Db.ConnString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(AccountMarginEventsSqlRepository), "CreateTableIfDoesntExists", null, ex);
+                    _logger?.LogError(ex, "CreateTableIfDoesntExists failed");
                     throw;
                 }
             }
-         }
+        }
 
         public async Task InsertOrReplaceAsync(IAccountMarginEvent report)
         {   
@@ -78,10 +78,9 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 catch (Exception ex)
                 {
                     var msg = $"Error {ex.Message} \n" +
-                           $"Entity <{nameof(IAccountMarginEvent)}>: \n" +
-                           report.ToJson();
-                    await _log?.WriteWarningAsync(nameof(AccountMarginEventsSqlRepository), "InsertOrReplaceAsync",
-                        null, msg);
+                              $"Entity <{nameof(IAccountMarginEvent)}>: \n" +
+                              report.ToJson();
+                    _logger.LogWarning(ex, msg);
                     throw new Exception(msg);
                 }
             }

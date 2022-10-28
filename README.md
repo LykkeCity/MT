@@ -20,7 +20,7 @@ Below is the API description.
     }
 }
 ```
-4. Initialize all dependencies.
+4. Initialize all dependencies. 
 5. Run.
 
 ## How to run for debug? ##
@@ -28,8 +28,24 @@ Below is the API description.
 1. Clone repo to some directory.
 2. In MarginTrading.Backend root create a appsettings.dev.json with settings.
 3. Add environment variable "SettingsUrl": "appsettings.dev.json".
-4. VPN to a corresponding env must be connected and all dependencies must be initialized.
-5. Run.
+4. VPN to a corresponding env must be connected and all dependencies must be initialized. 
+5. Optionally, external dependencies can be replaced with docker images 
+6. Run.
+
+## Running Rabbit MQ in docker ##
+Example:
+```bash
+docker run -d --hostname nova.lykke --name rabbit-nova -p 5672:5672 -p 15672:15672 -e RABBITMQ_DEFAULT_USER=margintrading -e RABBITMQ_DEFAULT_PASS=margintrading rabbitmq:3-management
+```
+Example for running docker on macOS with Apple Silicon processor:
+```bash
+docker run -d --hostname nova.lykke --name rabbit-nova -p 5672:5672 -p 15672:15672 -e RABBITMQ_DEFAULT_USER=margintrading -e RABBITMQ_DEFAULT_PASS=margintrading arm64v8/rabbitmq:3-management
+```
+Stop rabbit mq:
+```bash
+docker stop rabbit-nova
+docker rm rabbit-nova
+```
 
 ## Startup process ##
 

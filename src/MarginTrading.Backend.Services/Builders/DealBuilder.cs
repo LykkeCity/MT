@@ -86,8 +86,8 @@ namespace MarginTrading.Backend.Services.Builders
         public DealBuilder AddPnl()
         {
             PnlBase pnl = Position.Volume > 0 ?
-                new PnlLong(Position.OpenPrice, Order.ExecutionPrice.Value, Deal.Volume, Order.FxRate) :
-                new PnlShort(Position.OpenPrice, Order.ExecutionPrice.Value, Deal.Volume, Order.FxRate);
+                (PnlBase) new PnlLong(Position.OpenPrice, Order.ExecutionPrice.Value, Deal.Volume, Order.FxRate) :
+                (PnlBase) new PnlShort(Position.OpenPrice, Order.ExecutionPrice.Value, Deal.Volume, Order.FxRate);
             Deal.Fpl = pnl.Value.WithDefaultAccuracy();
 
             return this;

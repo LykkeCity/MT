@@ -366,11 +366,7 @@ namespace MarginTradingTests
         
         private static MarginTradingAccount Convert(AccountContract accountContract)
         {
-            return ConvertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
-                o => o.ConfigureMap(MemberList.Source)
-                    .ForMember(d => d.LastUpdateTime,
-                        a => a.MapFrom(x =>
-                            x.ModificationTimestamp)));
+            return ConvertService.Convert<AccountContract, MarginTradingAccount>(accountContract);
         }
     }
 }

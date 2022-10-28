@@ -10,6 +10,7 @@ using Lykke.Snow.Common;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Repositories;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -18,7 +19,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         private readonly StoredProcedure _getSwapTotalPerPosition =
             new StoredProcedure("getSwapTotalPerPosition", "dbo");
 
-        public AccountHistoryRepository(string connectionString) : base(connectionString)
+        public AccountHistoryRepository(string connectionString, ILogger<AccountHistoryRepository> logger) : base(connectionString, logger)
         {
             ExecCreateOrAlter(_getSwapTotalPerPosition.FileName);
         }

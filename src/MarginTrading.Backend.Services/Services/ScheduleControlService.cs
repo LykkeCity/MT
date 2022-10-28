@@ -92,9 +92,9 @@ namespace MarginTrading.Backend.Services.Services
                 DateTime.MinValue, DateTime.MaxValue));
 
             //find current active interval
-            var currentActiveInterval = compiledScheduleTimeIntervals
-                .Where(x => x.Start <= currentDateTime && x.End > currentDateTime)
-                .MaxBy(x => x.Schedule.Rank);
+            var currentActiveInterval = MoreEnumerable.MaxBy(compiledScheduleTimeIntervals
+                .Where(x => x.Start <= currentDateTime && x.End > currentDateTime),
+                x => x.Schedule.Rank).First();
 
             //find changing time: MIN(end of current, start of next with higher Rank)
             //if the same state => continue

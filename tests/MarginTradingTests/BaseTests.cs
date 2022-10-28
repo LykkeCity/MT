@@ -187,7 +187,6 @@ namespace MarginTradingTests
 
             var exchangeConnector = Mock.Of<IExchangeConnectorClient>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorClient>();
-            builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
             
             builder.RegisterBuildCallback(c =>
