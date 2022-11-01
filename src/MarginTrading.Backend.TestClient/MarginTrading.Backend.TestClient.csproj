@@ -14,7 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="6.4.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Lykke.Snow.Common" Version="1.51.0" />
+    <PackageReference Include="Lykke.Snow.Common" Version="1.52.0" />
     <PackageReference Include="LykkeBiz.HttpClientGenerator" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
