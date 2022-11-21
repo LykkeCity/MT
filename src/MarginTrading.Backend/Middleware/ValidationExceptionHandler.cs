@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Core.Exceptions;
@@ -10,6 +9,7 @@ using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Extensions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
+using MarginTrading.Common.Settings;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
@@ -18,11 +18,15 @@ namespace MarginTrading.Backend.Middleware
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILog _log;
+        private readonly RequestLoggerSettings _settings;
 
-        public ValidationExceptionHandler(IHttpContextAccessor httpContextAccessor, ILog log)
+        public ValidationExceptionHandler(IHttpContextAccessor httpContextAccessor,
+            ILog log,
+            RequestLoggerSettings settings)
         {
             _httpContextAccessor = httpContextAccessor;
             _log = log;
+            _settings = settings;
         }
 
         public async Task<bool> TryHandleAsync(Exception ex)
@@ -98,12 +102,8 @@ namespace MarginTrading.Backend.Middleware
         
         private async Task Log(Exception ex)
         {
-            string bodyPart;
-
-            using (var memoryStream = new MemoryStream())
-            {
-                bodyPart = await StreamHelpers.GetStreamPart(memoryStream, 1024);
-            }
+            var bytes = await _httpContextAccessor.HttpContext.Request.Body.ReadBytes(_settings.MaxPartSize);
+            string bodyPart = bytes == null ? null : System.Text.Encoding.UTF8.GetString(bytes);
 
             var requestUri = _httpContextAccessor.HttpContext.Request.GetUri().AbsoluteUri;
 
