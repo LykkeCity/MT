@@ -57,16 +57,18 @@ namespace MarginTrading.Backend.Middleware
 
             if (asInfo)
             {
-                await _log.WriteInfoAsync(nameof(GlobalErrorHandlerMiddleware), bodyPart, ex.Message);
+                await _log.WriteInfoAsync(nameof(GlobalErrorHandlerMiddleware), $"Body: {bodyPart}", ex.Message);
                 return;
             }
             
             if (ex.InnerException != null)
             {
-                await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), bodyPart, ex.InnerException);
+                await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), 
+                    $"Body: {bodyPart}", 
+                    ex.InnerException);
             }
 
-            await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), bodyPart, ex);
+            await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), $"Body: {bodyPart}", ex);
         }
     }
 }
