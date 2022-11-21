@@ -55,7 +55,8 @@ namespace MarginTrading.Common.Middleware
 
                     using (originalRequestBody)
                     {
-                        var body = await StreamHelpers.GetStreamPart(originalRequestBody, _settings.MaxPartSize);
+                        var bytes = await originalRequestBody.ReadBytes(_settings.MaxPartSize);
+                        var body = bytes == null ? null : System.Text.Encoding.UTF8.GetString(bytes);
                         var headers = context.Request.Headers.Where(h => !_personalDataHeaders.Contains(h.Key)).ToJson();
                         var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                         var info =

@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -12,6 +11,7 @@ using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Extensions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
+using MarginTrading.Common.Settings;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
@@ -33,11 +33,15 @@ namespace MarginTrading.Backend.Middleware
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILog _log;
-        
-        public ValidationExceptionHandler(IHttpContextAccessor httpContextAccessor, ILog log)
+        private readonly RequestLoggerSettings _settings;
+
+        public ValidationExceptionHandler(IHttpContextAccessor httpContextAccessor,
+            ILog log,
+            RequestLoggerSettings settings)
         {
             _httpContextAccessor = httpContextAccessor;
             _log = log;
+            _settings = settings;
         }
         
         public static bool CanHandleException(Exception ex)
