@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -10,6 +11,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.Extensions;
+using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
 {
@@ -18,12 +20,17 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly ISnapshotService _snapshotService;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ILog _log;
+        private readonly IDateService _dateService;
 
-        public PlatformClosureProjection(ISnapshotService snapshotService, ILog log, IIdentityGenerator identityGenerator)
+        public PlatformClosureProjection(ISnapshotService snapshotService,
+            ILog log,
+            IIdentityGenerator identityGenerator,
+            IDateService dateService)
         {
             _snapshotService = snapshotService;
             _log = log;
             _identityGenerator = identityGenerator;
+            _dateService = dateService;
         }
 
         [UsedImplicitly]
@@ -32,19 +39,41 @@ namespace MarginTrading.Backend.Services.Workflow
             if (!e.IsPlatformClosureEvent())
                 return;
             
-            var tradingDay = e.EventTimestamp.Date;
+            var tradingDay = DateOnly.FromDateTime(e.EventTimestamp);
 
-            await _log.WriteInfoAsync(nameof(PlatformClosureProjection), nameof(Handle), e.ToJson(),
-                $"Platform is being closed. Starting trading snapshot backup for [{tradingDay}]");
+            string result; 
+            try
+            {
+                result = await _snapshotService.MakeTradingDataSnapshot(e.EventTimestamp.Date,
+                    _identityGenerator.GenerateGuid(),
+                    SnapshotStatus.Draft);
+            }
+            catch (Exception ex)
+            {
+                await _log.WriteWarningAsync(nameof(PlatformClosureProjection),
+                    nameof(Handle),
+                    e.ToJson(),
+                    $"Failed to make trading data draft snapshot for [{tradingDay}]", ex);
+                
+                if (tradingDay < _dateService.NowDateOnly())
+                {
+                    await _log.WriteWarningAsync(nameof(PlatformClosureProjection),
+                        nameof(Handle),
+                        e.ToJson(),
+                        "The event is for the past date, so the snapshot draft will not be created.", ex);
+                    return;
+                }
 
-            var result = await _snapshotService.MakeTradingDataSnapshot(e.EventTimestamp.Date,
-                _identityGenerator.GenerateGuid(),
-                SnapshotStatus.Draft);
+                throw;
+            }
 
-            await _log.WriteInfoAsync(nameof(PlatformClosureProjection),
-                nameof(Handle),
-                e.ToJson(),
-                result);
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                await _log.WriteInfoAsync(nameof(PlatformClosureProjection),
+                    nameof(Handle),
+                    e.ToJson(),
+                    result);
+            }
         }
     }   
 }

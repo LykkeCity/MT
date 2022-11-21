@@ -11,5 +11,10 @@ namespace MarginTrading.Common.Services
         {
             return DateTime.UtcNow;
         }
+
+        public DateOnly NowDateOnly()
+        {
+            return DateOnly.FromDateTime(DateTime.UtcNow);
+        }
     }
 }
