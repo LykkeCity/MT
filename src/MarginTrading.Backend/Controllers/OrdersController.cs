@@ -87,7 +87,7 @@ namespace MarginTrading.Backend.Controllers
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
                         $"Failed to update related order for position {id}", ex);
 
-                    var errorCode = ResponseErrorCodeMap.MapAccountValidationError(ex.ErrorCode);
+                    var errorCode = PublicErrorCodeMap.Map(ex.ErrorCode);
 
                     result.Add(id, errorCode);
                 }
@@ -96,7 +96,7 @@ namespace MarginTrading.Backend.Controllers
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
                         $"Failed to update related order for position {id}", ex);
 
-                    var errorCode = ResponseErrorCodeMap.MapInstrumentValidationError(ex.ErrorCode);
+                    var errorCode = PublicErrorCodeMap.Map(ex.ErrorCode);
 
                     result.Add(id, errorCode);
                 }
@@ -105,8 +105,8 @@ namespace MarginTrading.Backend.Controllers
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
                         $"Failed to update related order for position {id}", ex);
                     
-                    var errorCode = ResponseErrorCodeMap.MapOrderRejectReason(ex.RejectReason);
-                    if (errorCode == ResponseErrorCodeMap.UnsupportedError)
+                    var errorCode = PublicErrorCodeMap.Map(ex.RejectReason);
+                    if (errorCode == PublicErrorCodeMap.UnsupportedError)
                     {
                         result.Add(id, ex.Message);
                     }

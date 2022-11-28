@@ -105,7 +105,7 @@ namespace MarginTrading.Backend.Controllers
                 {
                     PositionId = positionId,
                     Result = PositionCloseResultContract.FailedToClose,
-                    ErrorCode = ResponseErrorCodeMap.MapInstrumentValidationError(e.ErrorCode)
+                    ErrorCode = PublicErrorCodeMap.Map(e.ErrorCode)
                 };
             }
 

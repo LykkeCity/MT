@@ -19,7 +19,9 @@ namespace MarginTrading.Backend.Middleware
         private readonly RequestDelegate _next;
         private readonly ValidationExceptionHandler _validationExceptionHandler;
 
-        public GlobalErrorHandlerMiddleware(RequestDelegate next, ILog log, ValidationExceptionHandler validationExceptionHandler)
+        public GlobalErrorHandlerMiddleware(RequestDelegate next,
+            ILog log,
+            ValidationExceptionHandler validationExceptionHandler)
         {
             _log = log;
             _validationExceptionHandler = validationExceptionHandler;
@@ -35,10 +37,12 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                var handled = await _validationExceptionHandler.TryHandleAsync(ex);
+                if (ValidationExceptionHandler.CanHandle(ex))
+                {
+                    await _validationExceptionHandler.WriteProblemDetails(ex);
+                    return;
+                }
 
-                if (handled) return;
-                
                 await Log(ex, asInfo: ex is LogInfoOnlyException);
 
                 await context.Response.WriteDefaultMtErrorAsync(ex.Message);
