@@ -92,4 +92,9 @@
   <ItemGroup>
     <None Include="..\MarginTrading.SqlRepositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
   </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+        <_Parameter1>MarginTradingTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

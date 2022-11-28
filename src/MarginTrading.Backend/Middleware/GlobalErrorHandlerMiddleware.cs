@@ -40,9 +40,11 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                var handled = await _validationExceptionHandler.TryHandleAsync(ex);
-
-                if (handled) return;
+                if (ValidationExceptionHandler.CanHandle(ex))
+                {
+                    await _validationExceptionHandler.WriteProblemDetails(ex);
+                    return;
+                }
 
                 await LogWithRequest(context.Request, ex, ex is LogInfoOnlyException);
 

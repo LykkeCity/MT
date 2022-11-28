@@ -22,10 +22,6 @@ namespace MarginTrading.Backend.Services.Helpers
 
         public static void ValidateAccountId(Position position, string accountId)
         {
-            if (string.IsNullOrEmpty(accountId))
-                // TODO: Ensures backwards compatibility with Donut. Remove when Donut is updated
-                return;
-
             if (position.AccountId != accountId)
                 throw new InvalidOperationException(
                     $"Position {position.Id} was created by {position.AccountId}, but is being modified by {accountId}");

@@ -7,12 +7,17 @@ using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Exceptions
 {
-    public static class ResponseErrorCodeMap
+    public static class PublicErrorCodeMap
     {
         public const string UnknownError = "Unknown Error"; 
         public const string UnsupportedError = "Unsupported Error"; 
         
-        public static string MapAccountValidationError(AccountValidationError source) =>
+        /// <summary>
+        /// Maps <see cref="AccountValidationError"/> to public error code.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>Public error code or <see cref="UnknownError" /> if mapping is not possible.</returns>
+        public static string Map(AccountValidationError source) =>
             source switch
             {
                 AccountValidationError.None => string.Empty,
@@ -21,7 +26,12 @@ namespace MarginTrading.Backend.Exceptions
                 _ => UnknownError
             };
 
-        public static string MapInstrumentValidationError(InstrumentValidationError source) =>
+        /// <summary>
+        /// Maps <see cref="InstrumentValidationError"/> to public error code.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>Public error code or <see cref="UnknownError" /> if mapping is not possible.</returns>
+        public static string Map(InstrumentValidationError source) =>
             source switch
             {
                 InstrumentValidationError.None => string.Empty,
@@ -31,7 +41,14 @@ namespace MarginTrading.Backend.Exceptions
                 _ => UnknownError
             };
 
-        public static string MapOrderRejectReason(OrderRejectReason source) =>
+        /// <summary>
+        /// Maps <see cref="OrderRejectReason"/> to public error code.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>
+        /// Public error code or <see cref="UnsupportedError" /> if mapping is not possible.
+        /// </returns>
+        public static string Map(OrderRejectReason source) =>
             source switch
             {
                 OrderRejectReason.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
