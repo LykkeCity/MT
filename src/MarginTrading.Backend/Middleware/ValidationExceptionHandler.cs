@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Core.Exceptions;
@@ -121,13 +120,9 @@ namespace MarginTrading.Backend.Middleware
             {
                 return;
             }
-            
-            string bodyPart;
 
-            using (var memoryStream = new MemoryStream())
-            {
-                bodyPart = await StreamHelpers.GetStreamPart(memoryStream, 1024);
-            }
+            var bytes = await _httpContextAccessor.HttpContext.Request.Body.ReadBytes(_settings.MaxPartSize);
+            var bodyPart = bytes == null ? null : System.Text.Encoding.UTF8.GetString(bytes);
 
             var requestUri = _httpContextAccessor.HttpContext.Request.GetUri().AbsoluteUri;
 
