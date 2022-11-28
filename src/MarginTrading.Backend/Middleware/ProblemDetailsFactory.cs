@@ -26,13 +26,13 @@ namespace MarginTrading.Backend.Middleware
             };
         }
 
-        public static ProblemDetails Create500(string requestPath, string errorCode, string errorMessage)
+        public static ProblemDetails Create422(string requestPath, string errorCode, string errorMessage)
         {
-            return Create("Internal Server Error",
+            return Create("Unprocessable Entity",
                 string.Empty,
                 "https://tools.ietf.org/html/rfc7231#section-6.6.1",
                 requestPath,
-                500,
+                422,
                 new Dictionary<string, string[]> { { errorCode, new[] { errorMessage } } });
         }
     }

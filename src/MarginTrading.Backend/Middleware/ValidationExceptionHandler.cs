@@ -64,7 +64,7 @@ namespace MarginTrading.Backend.Middleware
             
             await Log(ex);
             
-            var problemDetails = ProblemDetailsFactory.Create500(
+            var problemDetails = ProblemDetailsFactory.Create422(
                 _httpContextAccessor.HttpContext.Request.Path,
                 publicErrorCode,
                 ex.Message);
@@ -83,7 +83,7 @@ namespace MarginTrading.Backend.Middleware
 
             var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode); 
 
-            var problemDetails = ProblemDetailsFactory.Create500(
+            var problemDetails = ProblemDetailsFactory.Create422(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
                 ex.Message);
@@ -102,7 +102,7 @@ namespace MarginTrading.Backend.Middleware
 
             var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode);
 
-            var problemDetails = ProblemDetailsFactory.Create500(
+            var problemDetails = ProblemDetailsFactory.Create422(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
                 ex.Message);
