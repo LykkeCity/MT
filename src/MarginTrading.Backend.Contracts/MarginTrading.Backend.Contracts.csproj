@@ -18,5 +18,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Refit" Version="5.2.4" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="Lykke.Snow.Contracts" Version="1.48.0" />
   </ItemGroup>
 </Project>
