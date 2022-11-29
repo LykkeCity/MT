@@ -13,9 +13,11 @@ using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Extensions;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
@@ -130,26 +132,61 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task<PositionsGroupCloseResponse> CloseGroupAsync([FromQuery] string assetPairId = null, 
-        [FromQuery] string accountId = null, [FromQuery] PositionDirectionContract? direction = null, [FromBody] PositionCloseRequest request = null)
+        public async Task<PositionsGroupCloseResponse> CloseGroupAsync([FromQuery] string assetPairId = null,
+            [FromQuery] string accountId = null,
+            [FromQuery] PositionDirectionContract? direction = null,
+            [FromBody] PositionCloseRequest request = null)
         {
             var originator = GetOriginator(request?.Originator);
 
-            var closeResult = await _tradingEngine.ClosePositionsGroupAsync(accountId, assetPairId, direction?.ToType<PositionDirection>(), originator, request?.AdditionalInfo);
-            
-            _operationsLogService.AddLog("Position liquidation started", string.Empty, 
-                $"instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
-                closeResult?.ToJson());
-
-            return new PositionsGroupCloseResponse
+            Dictionary<string, (PositionCloseResult, Order)> result;
+            try
             {
-                Responses = closeResult.Select(r => new PositionCloseResponse
-                {
-                    PositionId = r.Key,
-                    Result = r.Value.Item1.ToType<PositionCloseResultContract>(),
-                    OrderId = r.Value.Item2?.Id
-                }).ToArray()
-            };
+                result = await _tradingEngine.ClosePositionsGroupAsync(accountId, 
+                    assetPairId,
+                    direction?.ToType<PositionDirection>(), 
+                    originator, 
+                    request?.AdditionalInfo);
+            }
+            catch (ArgumentNullException e)
+            {
+                await _log.WriteWarningAsync(nameof(PositionsController),
+                    nameof(CloseGroupAsync),
+                    "Invalid input parameters",
+                    e);
+
+                return PositionsGroupCloseResponse.Fail(PositionGroupCloseError.InvalidInput);
+            }
+            catch (SpecialLiquidationPositionStatusException e)
+            {
+                await _log.WriteWarningAsync(nameof(PositionsController),
+                    nameof(CloseGroupAsync),
+                    $"Invalid position status for special liquidation: {e.PositionId} - {e.PositionStatus}",
+                    e);
+                
+                return PositionsGroupCloseResponse.Fail(PositionGroupCloseError.InvalidPositionStatus);
+            }
+            catch (ClosePositionGroupException e)
+            {
+                await _log.WriteWarningAsync(nameof(PositionsController),
+                    nameof(CloseGroupAsync),
+                    $"Positions group closure validation error: {e.ErrorCode}",
+                    e);
+                
+                return PositionsGroupCloseResponse.Fail(e.ErrorCode);
+            }
+
+            _operationsLogService.AddLog("Position liquidation started",
+                accountId,
+                $"instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
+                result.ToJson());
+
+            return PositionsGroupCloseResponse.Ok(result.Select(r => new PositionCloseResponse
+            {
+                PositionId = r.Key,
+                Result = r.Value.Item1.ToType<PositionCloseResultContract>(),
+                OrderId = r.Value.Item2?.Id
+            }).ToArray());
         }
 
         /// <summary>

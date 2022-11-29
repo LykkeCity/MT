@@ -13,6 +13,7 @@ using JetBrains.Annotations;
 using Lykke.Common;
 using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Activities;
+using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
@@ -859,8 +860,8 @@ namespace MarginTrading.Backend.Services
             var accountId = positions.First().AccountId;
             if (positions.Any(p => p.AccountId != accountId))
             {
-                throw new ArgumentOutOfRangeException(nameof(positions),
-                    "Positions list contains elements of different accounts");
+                throw new ClosePositionGroupException("Positions list contains elements of multiple accounts",
+                    PositionGroupCloseError.MultipleAccounts);
             }
 
             // if direction was not passed in we have to ensure all the positions in the list are of single direction
@@ -869,16 +870,17 @@ namespace MarginTrading.Backend.Services
                 direction = positions.First().Direction;
                 if (positions.Any(p => p.Direction != direction))
                 {
-                    throw new ArgumentOutOfRangeException(nameof(positions),
-                        "Direction was not specified explicitly and positions list contains elements of different direction");
+                    throw new ClosePositionGroupException(
+                        "Direction was not explicitly specified and positions list contains elements of both directions",
+                        PositionGroupCloseError.BothDirections);
                 }
             }
 
             var assetPairId = positions.First().AssetPairId;
             if (positions.Any(p => p.AssetPairId != assetPairId))
             {
-                throw new ArgumentOutOfRangeException(nameof(positions),
-                    "Positions list contains elements of different instruments");
+                throw new ClosePositionGroupException("Positions list contains elements of multiple instruments",
+                    PositionGroupCloseError.MultipleAssets);
             }
             
             #endregion
