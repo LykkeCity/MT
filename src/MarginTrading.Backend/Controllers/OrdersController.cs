@@ -9,6 +9,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Common;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
@@ -225,23 +226,27 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPost]
-        public async Task<string> PlaceAsync([FromBody] OrderPlaceRequest request)
+        public async Task<OrderPlaceResponse> PlaceAsync([FromBody] OrderPlaceRequest request)
         {
             var (baseOrder, relatedOrders) = (default(Order), default(List<Order>));
             try
             {
                 (baseOrder, relatedOrders) = await _orderValidator.ValidateRequestAndCreateOrders(request);
             }
-            catch (ValidateOrderException exception)
+            catch (ValidateOrderException ex)
             {
                 _cqrsSender.PublishEvent(new OrderPlacementRejectedEvent
                 {
                     EventTimestamp = _dateService.Now(),
                     OrderPlaceRequest = request,
-                    RejectReason = exception.RejectReason.ToType<OrderRejectReasonContract>(),
-                    RejectReasonText = exception.Message,
+                    RejectReason = ex.RejectReason.ToType<OrderRejectReasonContract>(),
+                    RejectReasonText = ex.Message,
                 });
-                throw;
+
+                await _log.WriteWarningAsync(nameof(OrdersController), nameof(PlaceAsync),
+                    $"Order validation error: {ex.RejectReason}", ex);
+
+                return new OrderPlaceResponse { ErrorCode = PlaceOrderError.Validation };
             }
 
             var placedOrder = await _tradingEngine.PlaceOrderAsync(baseOrder);
@@ -252,7 +257,8 @@ namespace MarginTrading.Backend.Controllers
             if (placedOrder.Status == OrderStatus.Rejected)
             {
                 var message = $"Order {placedOrder.Id} from account {placedOrder.AccountId} for instrument {placedOrder.AssetPairId} is rejected: {placedOrder.RejectReason} ({placedOrder.RejectReasonText}). Comment: {placedOrder.Comment}.";
-                throw new ValidateOrderException(placedOrder.RejectReason, placedOrder.RejectReasonText, message);
+                await _log.WriteWarningAsync(nameof(OrdersController), nameof(PlaceAsync), message);
+                return new OrderPlaceResponse { OrderId = placedOrder.Id, ErrorCode = PlaceOrderError.Rejected };
             }
 
             foreach (var order in relatedOrders)
@@ -263,7 +269,7 @@ namespace MarginTrading.Backend.Controllers
                     placedRelatedOrder.ToJson());
             }
 
-            return placedOrder.Id;
+            return new OrderPlaceResponse { OrderId = placedOrder.Id, ErrorCode = PlaceOrderError.None };
         }
 
         /// <summary>
