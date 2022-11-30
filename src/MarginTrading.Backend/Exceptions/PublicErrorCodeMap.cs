@@ -23,6 +23,7 @@ namespace MarginTrading.Backend.Exceptions
                 AccountValidationError.None => string.Empty,
                 AccountValidationError.AccountDoesNotExist => ValidationErrorCodes.AccountDoesNotExist,
                 AccountValidationError.AccountDisabled => ValidationErrorCodes.AccountDisabled,
+                AccountValidationError.AccountMismatch => ValidationErrorCodes.AccountMismatch,
                 _ => UnknownError
             };
 
@@ -54,6 +55,19 @@ namespace MarginTrading.Backend.Exceptions
                 OrderRejectReason.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
                 OrderRejectReason.NoLiquidity => ValidationErrorCodes.NoLiquidity,
                 _ => UnsupportedError
+            };
+
+        /// <summary>
+        /// Maps <see cref="PositionValidationError"/> to public error code.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>Public error code or <see cref="UnknownError" /> if mapping is not possible.</returns>
+        public static string Map(PositionValidationError source) =>
+            source switch
+            {
+                PositionValidationError.None => string.Empty,
+                PositionValidationError.PositionNotFound => ValidationErrorCodes.PositionNotFound,
+                _ => UnknownError
             };
     }
 }

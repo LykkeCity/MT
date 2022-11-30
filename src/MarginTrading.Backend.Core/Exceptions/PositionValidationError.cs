@@ -1,12 +1,11 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-namespace MarginTrading.Backend.Contracts.ErrorCodes
+namespace MarginTrading.Backend.Core.Exceptions
 {
-    public enum PlaceOrderError
+    public enum PositionValidationError
     {
         None,
-        Validation,
-        Rejected
+        PositionNotFound,
     }
 }

@@ -33,7 +33,8 @@ namespace MarginTrading.Backend.Middleware
         {
             return (ex is ValidateOrderException orderException && orderException.IsPublic()) ||
                    ex is AccountValidationException ||
-                   ex is InstrumentValidationException;
+                   ex is InstrumentValidationException ||
+                   ex is PositionValidationException;
         }
 
         /// <summary>
@@ -54,11 +55,32 @@ namespace MarginTrading.Backend.Middleware
                     return HandleAccountValidationException(e);
                 case InstrumentValidationException e:
                     return HandleInstrumentValidationException(e);
+                case PositionValidationException e:
+                    return HandlePositionValidationException(e);
             }
             
             return Task.CompletedTask;
         }
-        
+
+        private async Task HandlePositionValidationException(PositionValidationException ex)
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return;
+            }
+            
+            await Log(ex);
+
+            var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode); 
+
+            var problemDetails = ProblemDetailsFactory.Create422(
+                _httpContextAccessor.HttpContext.Request.Path,
+                responseErrorCode,
+                ex.Message);
+            
+            await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
+        }
+
         private async Task HandleOrderValidationException(ValidateOrderException ex, string publicErrorCode)
         {
             if (_httpContextAccessor.HttpContext == null)

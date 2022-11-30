@@ -35,7 +35,7 @@ namespace MarginTrading.Backend.Contracts
         /// <param name="request">Order model</param>
         /// <returns>Order Id</returns>
         [Post("/api/orders")]
-        Task<OrderPlaceResponse> PlaceAsync([Body] [NotNull] OrderPlaceRequest request);
+        Task<string> PlaceAsync([Body] [NotNull] OrderPlaceRequest request);
 
         /// <summary>
         /// Change existing order

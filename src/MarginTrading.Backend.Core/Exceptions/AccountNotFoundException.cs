@@ -7,9 +7,9 @@ namespace MarginTrading.Backend.Core.Exceptions
 {
     public class AccountNotFoundException : Exception
     {
-        public string AccountId { get; private set; }
+        public string AccountId { get; }
 
-        public AccountNotFoundException(string accountId, string message):base(message)
+        public AccountNotFoundException(string accountId, string message) : base(message)
         {
             AccountId = accountId;
         }
