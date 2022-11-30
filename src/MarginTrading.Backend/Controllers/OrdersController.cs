@@ -16,7 +16,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Filters;
@@ -42,7 +41,6 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrdersCache _ordersCache;
         private readonly IDateService _dateService;
         private readonly IOrderValidator _orderValidator;
-        private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
 
         public OrdersController(
@@ -52,7 +50,6 @@ namespace MarginTrading.Backend.Controllers
             OrdersCache ordersCache,
             IDateService dateService,
             IOrderValidator orderValidator,
-            IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender)
         {
             _tradingEngine = tradingEngine;
@@ -61,7 +58,6 @@ namespace MarginTrading.Backend.Controllers
             _ordersCache = ordersCache;
             _dateService = dateService;
             _orderValidator = orderValidator;
-            _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
         }
 
@@ -72,7 +68,8 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPatch]
-        public async Task<Dictionary<string, string>> UpdateRelatedOrderBulkAsync([FromBody] UpdateRelatedOrderBulkRequest request)
+        public async Task<Dictionary<string, string>> UpdateRelatedOrderBulkAsync(
+            [FromBody] UpdateRelatedOrderBulkRequest request)
         {
             var result = new Dictionary<string, string>();
 
@@ -136,7 +133,11 @@ namespace MarginTrading.Backend.Controllers
         public async Task UpdateRelatedOrderAsync(string positionId, [FromBody] UpdateRelatedOrderRequest request)
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
-                throw new InvalidOperationException($"Position {positionId} not found");
+            {
+                throw new PositionValidationException(
+                    $"Position {positionId} not found",
+                    PositionValidationError.PositionNotFound);
+            }
 
             ValidationHelper.ValidateAccountId(position, request.AccountId); 
 
