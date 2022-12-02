@@ -111,7 +111,9 @@ namespace MarginTrading.Backend.Services.Helpers
                         result.Add(position.Id, (PositionCloseResult.Closed, null));
                         break;
                     default:
-                        throw new SpecialLiquidationPositionStatusException(position.Id, position.Status);
+                        throw new PositionValidationException(
+                            $"Position [{position.Id}] status [{position.Status}] is not expected for special liquidation",
+                            PositionValidationError.InvalidStatusWhenRunSpecialLiquidation);
                 }
             }
 

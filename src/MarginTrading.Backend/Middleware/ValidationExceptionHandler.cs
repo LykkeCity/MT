@@ -31,7 +31,8 @@ namespace MarginTrading.Backend.Middleware
                    ex is AccountValidationException ||
                    ex is InstrumentValidationException ||
                    ex is PositionValidationException ||
-                   ex is OrderValidationException;
+                   ex is OrderValidationException ||
+                   ex is PositionGroupValidationException;
         }
 
         /// <summary>
@@ -54,6 +55,8 @@ namespace MarginTrading.Backend.Middleware
                 case PositionValidationException e:
                     return HandleValidationException(e, PublicErrorCodeMap.Map);
                 case OrderValidationException e:
+                    return HandleValidationException(e, PublicErrorCodeMap.Map);
+                case PositionGroupValidationException e:
                     return HandleValidationException(e, PublicErrorCodeMap.Map);
             }
             

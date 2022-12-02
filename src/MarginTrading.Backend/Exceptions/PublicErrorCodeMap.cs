@@ -24,6 +24,7 @@ namespace MarginTrading.Backend.Exceptions
                 AccountValidationError.AccountDoesNotExist => ValidationErrorCodes.AccountDoesNotExist,
                 AccountValidationError.AccountDisabled => ValidationErrorCodes.AccountDisabled,
                 AccountValidationError.AccountMismatch => ValidationErrorCodes.AccountMismatch,
+                AccountValidationError.AccountEmpty => ValidationErrorCodes.AccountEmpty,
                 _ => UnknownError
             };
 
@@ -38,7 +39,7 @@ namespace MarginTrading.Backend.Exceptions
                 InstrumentValidationError.None => string.Empty,
                 InstrumentValidationError.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
                 InstrumentValidationError.TradesAreNotAvailable => ValidationErrorCodes.TradesAreNotAvailable,
-                InstrumentValidationError.NoLiquidity => ValidationErrorCodes.NoLiquidity,
+                InstrumentValidationError.NoLiquidity => ValidationErrorCodes.InstrumentNoLiquidity,
                 _ => UnknownError
             };
 
@@ -53,7 +54,7 @@ namespace MarginTrading.Backend.Exceptions
             source switch
             {
                 OrderRejectReason.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
-                OrderRejectReason.NoLiquidity => ValidationErrorCodes.NoLiquidity,
+                OrderRejectReason.NoLiquidity => ValidationErrorCodes.InstrumentNoLiquidity,
                 _ => UnsupportedError
             };
 
@@ -67,6 +68,8 @@ namespace MarginTrading.Backend.Exceptions
             {
                 PositionValidationError.None => string.Empty,
                 PositionValidationError.PositionNotFound => ValidationErrorCodes.PositionNotFound,
+                PositionValidationError.InvalidStatusWhenRunSpecialLiquidation => 
+                    ValidationErrorCodes.PositionInvalidStatusSpecialLiquidation,
                 _ => UnknownError
             };
 
@@ -81,6 +84,23 @@ namespace MarginTrading.Backend.Exceptions
                 OrderValidationError.None => string.Empty,
                 OrderValidationError.OrderNotFound => ValidationErrorCodes.OrderNotFound,
                 OrderValidationError.IncorrectStatusWhenCancel => ValidationErrorCodes.OrderIncorrectStatus,
+                _ => UnknownError
+            };
+
+        /// <summary>
+        /// Maps <see cref="PositionGroupValidationError"/> to public error code.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>Public error code or <see cref="UnknownError" /> if mapping is not possible.</returns>
+        public static string Map(PositionGroupValidationError source) =>
+            source switch
+            {
+                PositionGroupValidationError.None => string.Empty,
+                PositionGroupValidationError.DirectionEmpty => ValidationErrorCodes.PositionGroupDirectionEmpty,
+                PositionGroupValidationError.MultipleAccounts => ValidationErrorCodes.PositionGroupMultipleAccounts,
+                PositionGroupValidationError.MultipleInstruments => 
+                    ValidationErrorCodes.PositionGroupMultipleInstruments,
+                PositionGroupValidationError.MultipleDirections => ValidationErrorCodes.PositionGroupMultipleDirections,
                 _ => UnknownError
             };
     }
