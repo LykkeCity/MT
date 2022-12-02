@@ -9,7 +9,7 @@ namespace MarginTrading.Backend.Exceptions
 {
     public static class PublicErrorCodeMap
     {
-        public const string UnknownError = "Unknown Error"; 
+        private const string UnknownError = "Unknown Error"; 
         public const string UnsupportedError = "Unsupported Error"; 
         
         /// <summary>
@@ -67,6 +67,20 @@ namespace MarginTrading.Backend.Exceptions
             {
                 PositionValidationError.None => string.Empty,
                 PositionValidationError.PositionNotFound => ValidationErrorCodes.PositionNotFound,
+                _ => UnknownError
+            };
+
+        /// <summary>
+        /// Maps <see cref="OrderValidationError"/> to public error code.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>Public error code or <see cref="UnknownError" /> if mapping is not possible.</returns>
+        public static string Map(OrderValidationError source) =>
+            source switch
+            {
+                OrderValidationError.None => string.Empty,
+                OrderValidationError.OrderNotFound => ValidationErrorCodes.OrderNotFound,
+                OrderValidationError.IncorrectStatusWhenCancel => ValidationErrorCodes.OrderIncorrectStatus,
                 _ => UnknownError
             };
     }

@@ -8,7 +8,7 @@ namespace MarginTrading.Backend.Extensions
 {
     internal static class ValidateOrderExceptionExtensions
     {
-        public static bool IsPublic(this ValidateOrderException ex)
+        public static bool IsPublic(this OrderRejectionException ex)
         {
             var publicErrorCode = PublicErrorCodeMap.Map(ex.RejectReason);
             return publicErrorCode != PublicErrorCodeMap.UnsupportedError;

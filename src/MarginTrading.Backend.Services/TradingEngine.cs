@@ -140,7 +140,7 @@ namespace MarginTrading.Backend.Services
 
                 return await PlaceOrderByMarketPrice(order);
             }
-            catch (ValidateOrderException ex)
+            catch (OrderRejectionException ex)
             {
                 RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
                 return order;
@@ -256,7 +256,7 @@ namespace MarginTrading.Backend.Services
             }
             else
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidParent, "Order parent is not valid");
+                throw new OrderRejectionException(OrderRejectReason.InvalidParent, "Order parent is not valid");
             }
 
             await ExecutePendingOrderIfNeededAsync(order);
@@ -298,7 +298,7 @@ namespace MarginTrading.Backend.Services
                     {
                         _orderValidator.PreTradeValidate(orderFulfillmentPlan, matchingEngine);
                     }
-                    catch (ValidateOrderException ex)
+                    catch (OrderRejectionException ex)
                     {
                         RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
                         return order;
@@ -1028,7 +1028,8 @@ namespace MarginTrading.Backend.Services
             }
             else
             {
-                throw new InvalidOperationException($"Order in state {order.Status} can not be cancelled");
+                throw new OrderValidationException($"Order in state {order.Status} can not be cancelled", 
+                    OrderValidationError.IncorrectStatusWhenCancel);
             }
 
             order.Cancel(_dateService.Now(), additionalInfo);

@@ -27,10 +27,11 @@ namespace MarginTrading.Backend.Middleware
         
         public static bool CanHandle(Exception ex)
         {
-            return (ex is ValidateOrderException orderException && orderException.IsPublic()) ||
+            return (ex is OrderRejectionException orderException && orderException.IsPublic()) ||
                    ex is AccountValidationException ||
                    ex is InstrumentValidationException ||
-                   ex is PositionValidationException;
+                   ex is PositionValidationException ||
+                   ex is OrderValidationException;
         }
 
         /// <summary>
@@ -44,21 +45,22 @@ namespace MarginTrading.Backend.Middleware
         {
             switch (ex)
             {
-                case ValidateOrderException e:
-                    var publicErrorCode = PublicErrorCodeMap.Map(e.RejectReason);
-                    return HandleOrderValidationException(e, publicErrorCode);
+                case OrderRejectionException e:
+                    return HandleOrderRejectionException(e);
                 case AccountValidationException e:
-                    return HandleAccountValidationException(e);
+                    return HandleValidationException(e, PublicErrorCodeMap.Map);
                 case InstrumentValidationException e:
-                    return HandleInstrumentValidationException(e);
+                    return HandleValidationException(e, PublicErrorCodeMap.Map);
                 case PositionValidationException e:
-                    return HandlePositionValidationException(e);
+                    return HandleValidationException(e, PublicErrorCodeMap.Map);
+                case OrderValidationException e:
+                    return HandleValidationException(e, PublicErrorCodeMap.Map);
             }
             
             return Task.CompletedTask;
         }
-
-        private async Task HandlePositionValidationException(PositionValidationException ex)
+        
+        private async Task HandleOrderRejectionException(OrderRejectionException ex)
         {
             if (_httpContextAccessor.HttpContext == null)
             {
@@ -67,34 +69,17 @@ namespace MarginTrading.Backend.Middleware
             
             await Log(ex);
 
-            var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode); 
-
+            var responseErrorCode = PublicErrorCodeMap.Map(ex.RejectReason);
+            
             var problemDetails = ProblemDetailsFactory.Create422(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
-                ex.Message);
-            
-            await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
-        }
-
-        private async Task HandleOrderValidationException(ValidateOrderException ex, string publicErrorCode)
-        {
-            if (_httpContextAccessor.HttpContext == null)
-            {
-                return;
-            }
-            
-            await Log(ex);
-            
-            var problemDetails = ProblemDetailsFactory.Create422(
-                _httpContextAccessor.HttpContext.Request.Path,
-                publicErrorCode,
                 ex.Message);
                 
             await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
         }
 
-        private async Task HandleAccountValidationException(AccountValidationException ex)
+        private async Task HandleValidationException<T>(ValidationException<T> ex, Func<T, string> errorCodeMapper)
         {
             if (_httpContextAccessor.HttpContext == null)
             {
@@ -103,28 +88,9 @@ namespace MarginTrading.Backend.Middleware
             
             await Log(ex);
 
-            var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode); 
+            var responseErrorCode = errorCodeMapper?.Invoke(ex.ErrorCode) ?? string.Empty;
 
-            var problemDetails = ProblemDetailsFactory.Create422(
-                _httpContextAccessor.HttpContext.Request.Path,
-                responseErrorCode,
-                ex.Message);
-            
-            await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
-        }
-
-        private async Task HandleInstrumentValidationException(InstrumentValidationException ex)
-        {
-            if (_httpContextAccessor.HttpContext == null)
-            {
-                return;
-            }
-            
-            await Log(ex);
-
-            var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode);
-
-            var problemDetails = ProblemDetailsFactory.Create422(
+            var problemDetails = ProblemDetailsFactory.Create400(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
                 ex.Message);

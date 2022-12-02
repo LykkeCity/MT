@@ -33,7 +33,7 @@ namespace MarginTradingTests
         public void CanHandle_WhenExceptionIsOrderValidationException_And_PublicErrorCodeAvailable_ReturnsTrue(
             [Random(100)] OrderRejectReason rejectReason)
         {
-            var ex = new ValidateOrderException(rejectReason, "message");
+            var ex = new OrderRejectionException(rejectReason, "message");
 
             ValidationExceptionHandler.CanHandle(ex).Should().Be(ex.IsPublic());
         }

@@ -12,5 +12,7 @@ namespace MarginTrading.Backend.Contracts.ErrorCodes
         public const string TradesAreNotAvailable = "TRADES_ARE_NOT_AVAILABLE";
         public const string NoLiquidity = "NO_LIQUIDITY";
         public const string PositionNotFound = "POSITION_NOT_FOUND";
+        public const string OrderNotFound = "ORDER_NOT_FOUND";
+        public const string OrderIncorrectStatus = "ORDER_INCORRECT_STATUS";
     }
 }
