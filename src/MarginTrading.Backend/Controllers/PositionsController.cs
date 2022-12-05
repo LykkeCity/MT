@@ -13,11 +13,9 @@ using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Extensions;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
@@ -88,23 +86,13 @@ namespace MarginTrading.Backend.Controllers
             [FromBody] PositionCloseRequest request = null,
             [FromQuery] string accountId = null)
         {
-            var positionClose = request.Parse(
+            var positionsCloseData = request.Parse(
                 _ordersCache.Positions.TryGetPositionById,
                 _assetDayOffService.IsAssetTradingDisabled,
                 positionId,
                 accountId);
 
-            if (positionClose.Error != PositionCloseError.None)
-            {
-                return new PositionCloseResponse
-                {
-                    PositionId = positionId,
-                    Result = PositionCloseResultContract.FailedToClose,
-                    ErrorCode = positionClose.Error
-                };
-            }
-
-            var closeResult = await _tradingEngine.ClosePositionsAsync(positionClose.Data, true);
+            var closeResult = await _tradingEngine.ClosePositionsAsync(positionsCloseData, true);
 
             _operationsLogService.AddLog("action order.close", accountId, request?.ToJson(), closeResult.ToJson());
 
@@ -113,7 +101,6 @@ namespace MarginTrading.Backend.Controllers
                 PositionId = positionId,
                 OrderId = closeResult.order?.Id,
                 Result = closeResult.result.ToType<PositionCloseResultContract>(),
-                ErrorCode = PositionCloseError.None
             };
         }
 
@@ -139,54 +126,26 @@ namespace MarginTrading.Backend.Controllers
         {
             var originator = GetOriginator(request?.Originator);
 
-            Dictionary<string, (PositionCloseResult, Order)> result;
-            try
-            {
-                result = await _tradingEngine.ClosePositionsGroupAsync(accountId, 
-                    assetPairId,
-                    direction?.ToType<PositionDirection>(), 
-                    originator, 
-                    request?.AdditionalInfo);
-            }
-            catch (ArgumentNullException e)
-            {
-                await _log.WriteWarningAsync(nameof(PositionsController),
-                    nameof(CloseGroupAsync),
-                    "Invalid input parameters",
-                    e);
-
-                return PositionsGroupCloseResponse.Fail(PositionGroupCloseError.InvalidInput);
-            }
-            catch (SpecialLiquidationPositionStatusException e)
-            {
-                await _log.WriteWarningAsync(nameof(PositionsController),
-                    nameof(CloseGroupAsync),
-                    $"Invalid position status for special liquidation: {e.PositionId} - {e.PositionStatus}",
-                    e);
-                
-                return PositionsGroupCloseResponse.Fail(PositionGroupCloseError.InvalidPositionStatus);
-            }
-            catch (ClosePositionGroupException e)
-            {
-                await _log.WriteWarningAsync(nameof(PositionsController),
-                    nameof(CloseGroupAsync),
-                    $"Positions group closure validation error: {e.ErrorCode}",
-                    e);
-                
-                return PositionsGroupCloseResponse.Fail(e.ErrorCode);
-            }
+            var result = await _tradingEngine.ClosePositionsGroupAsync(accountId,
+                assetPairId,
+                direction?.ToType<PositionDirection>(),
+                originator,
+                request?.AdditionalInfo);
 
             _operationsLogService.AddLog("Position liquidation started",
                 accountId,
                 $"instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
                 result.ToJson());
 
-            return PositionsGroupCloseResponse.Ok(result.Select(r => new PositionCloseResponse
+            return new PositionsGroupCloseResponse
             {
-                PositionId = r.Key,
-                Result = r.Value.Item1.ToType<PositionCloseResultContract>(),
-                OrderId = r.Value.Item2?.Id
-            }).ToArray());
+                Responses = result.Select(r => new PositionCloseResponse
+                {
+                    PositionId = r.Key,
+                    Result = r.Value.Item1.ToType<PositionCloseResultContract>(),
+                    OrderId = r.Value.Item2?.Id
+                }).ToArray()
+            };
         }
 
         /// <summary>

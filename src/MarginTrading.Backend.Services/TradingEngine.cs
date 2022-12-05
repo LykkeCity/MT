@@ -140,7 +140,7 @@ namespace MarginTrading.Backend.Services
 
                 return await PlaceOrderByMarketPrice(order);
             }
-            catch (ValidateOrderException ex)
+            catch (OrderRejectionException ex)
             {
                 RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
                 return order;
@@ -256,7 +256,7 @@ namespace MarginTrading.Backend.Services
             }
             else
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidParent, "Order parent is not valid");
+                throw new OrderRejectionException(OrderRejectReason.InvalidParent, "Order parent is not valid");
             }
 
             await ExecutePendingOrderIfNeededAsync(order);
@@ -298,7 +298,7 @@ namespace MarginTrading.Backend.Services
                     {
                         _orderValidator.PreTradeValidate(orderFulfillmentPlan, matchingEngine);
                     }
-                    catch (ValidateOrderException ex)
+                    catch (OrderRejectionException ex)
                     {
                         RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
                         return order;
@@ -840,18 +840,13 @@ namespace MarginTrading.Backend.Services
         [ItemNotNull]
         public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync( 
             IList<Position> positions, 
-            string operationId,
+            [NotNull] string operationId,
             OriginatorType originator,
             PositionDirection? direction = null,
             string additionalInfo = null)
         {
             # region Validations
             
-            if (string.IsNullOrWhiteSpace(operationId))
-            {
-                throw new ArgumentNullException(nameof(operationId), "OperationId must be set.");
-            }
-
             if (positions == null || !positions.Any())
             {
                 return new Dictionary<string, (PositionCloseResult, Order)>();
@@ -860,8 +855,9 @@ namespace MarginTrading.Backend.Services
             var accountId = positions.First().AccountId;
             if (positions.Any(p => p.AccountId != accountId))
             {
-                throw new ClosePositionGroupException("Positions list contains elements of multiple accounts",
-                    PositionGroupCloseError.MultipleAccounts);
+                throw new PositionGroupValidationException(
+                    "Positions list contains elements of multiple accounts",
+                    PositionGroupValidationError.MultipleAccounts);
             }
 
             // if direction was not passed in we have to ensure all the positions in the list are of single direction
@@ -870,17 +866,18 @@ namespace MarginTrading.Backend.Services
                 direction = positions.First().Direction;
                 if (positions.Any(p => p.Direction != direction))
                 {
-                    throw new ClosePositionGroupException(
+                    throw new PositionGroupValidationException(
                         "Direction was not explicitly specified and positions list contains elements of both directions",
-                        PositionGroupCloseError.BothDirections);
+                        PositionGroupValidationError.MultipleDirections);
                 }
             }
 
             var assetPairId = positions.First().AssetPairId;
             if (positions.Any(p => p.AssetPairId != assetPairId))
             {
-                throw new ClosePositionGroupException("Positions list contains elements of multiple instruments",
-                    PositionGroupCloseError.MultipleAssets);
+                throw new PositionGroupValidationException(
+                    "Positions list contains elements of multiple instruments",
+                    PositionGroupValidationError.MultipleInstruments);
             }
             
             #endregion
@@ -941,7 +938,7 @@ namespace MarginTrading.Backend.Services
         {
             if (string.IsNullOrWhiteSpace(accountId))
             {
-                throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
+                throw new AccountValidationException(AccountValidationError.AccountEmpty);
             }
 
             bool closeAll = string.IsNullOrEmpty(assetPairId);
@@ -955,7 +952,11 @@ namespace MarginTrading.Backend.Services
             // Closing group of positions (asset and direction are always defined)
             // let's ensure direction is always passed in
             if (!direction.HasValue)
-                throw new ArgumentNullException(nameof(direction), "When closing group of positions direction is mandatory");
+            {
+                throw new PositionGroupValidationException(
+                    "When closing group of positions direction is mandatory",
+                    PositionGroupValidationError.DirectionEmpty);
+            }
 
             var mandatoryDirection = direction.Value;
             
@@ -1028,7 +1029,8 @@ namespace MarginTrading.Backend.Services
             }
             else
             {
-                throw new InvalidOperationException($"Order in state {order.Status} can not be cancelled");
+                throw new OrderValidationException($"Order in state {order.Status} can not be cancelled", 
+                    OrderValidationError.IncorrectStatusWhenCancel);
             }
 
             order.Cancel(_dateService.Now(), additionalInfo);

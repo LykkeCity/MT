@@ -3,10 +3,12 @@
 
 namespace MarginTrading.Backend.Core.Exceptions
 {
-    public enum PositionValidationError
+    public enum PositionGroupValidationError
     {
         None,
-        PositionNotFound,
-        InvalidStatusWhenRunSpecialLiquidation,
+        DirectionEmpty,
+        MultipleAccounts,
+        MultipleInstruments,
+        MultipleDirections,
     }
 }

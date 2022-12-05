@@ -40,7 +40,7 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                if (ValidationExceptionHandler.CanHandle(ex))
+                if (ValidationExceptionHandler.CanHandleException(ex))
                 {
                     await _validationExceptionHandler.WriteProblemDetails(ex);
                     return;

@@ -9,5 +9,6 @@ namespace MarginTrading.Backend.Core.Exceptions
         AccountDisabled,
         AccountDoesNotExist,
         AccountMismatch,
+        AccountEmpty,
     }
 }

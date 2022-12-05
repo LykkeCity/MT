@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using Common.Log;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Extensions;
@@ -14,6 +15,19 @@ using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
 {
+    /// <summary>
+    /// Handles exceptions - inheritors from <see cref="ValidationException"/>
+    /// and returns responses as RFC 7807 compliant Problem Details with
+    /// corresponding business error code.
+    /// To add new exception following steps are requried:
+    /// 1. Add new domain error code enum.
+    /// 2. Add new corresponsing errors to be used as public error codes to
+    /// <see cref="ValidationErrorCodes"/> class.
+    /// 3. Add mapping from domain error code to public error code
+    /// to <see cref="PublicErrorCodeMap"/> class.
+    /// 4. Finally, add new exception class - inheritor
+    /// from <see cref="ValidationException"/>
+    /// </summary>
     public class ValidationExceptionHandler
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -29,18 +43,16 @@ namespace MarginTrading.Backend.Middleware
             _settings = settings;
         }
         
-        public static bool CanHandle(Exception ex)
+        public static bool CanHandleException(Exception ex)
         {
-            return (ex is ValidateOrderException orderException && orderException.IsPublic()) ||
-                   ex is AccountValidationException ||
-                   ex is InstrumentValidationException ||
-                   ex is PositionValidationException;
+            return (ex is OrderRejectionException orderException && orderException.IsPublic()) ||
+                   ex.IsValidationException();
         }
 
         /// <summary>
         /// Writes error to response in problem details format for only specific cases:
         /// <a href="https://tools.ietf.org/html/rfc7807">RFC 7807</a>.
-        /// Check with <see cref="CanHandle"/> before calling this method.
+        /// Check with <see cref="CanHandleException"/> before calling this method.
         /// </summary>
         /// <param name="ex"></param>
         /// <returns></returns>
@@ -48,21 +60,17 @@ namespace MarginTrading.Backend.Middleware
         {
             switch (ex)
             {
-                case ValidateOrderException e:
-                    var publicErrorCode = PublicErrorCodeMap.Map(e.RejectReason);
-                    return HandleOrderValidationException(e, publicErrorCode);
-                case AccountValidationException e:
-                    return HandleAccountValidationException(e);
-                case InstrumentValidationException e:
-                    return HandleInstrumentValidationException(e);
-                case PositionValidationException e:
-                    return HandlePositionValidationException(e);
+                case OrderRejectionException e:
+                    return HandleOrderRejectionException(e);
+                case { } e when e.IsValidationException():
+                    var publicErrorCode = PublicErrorCodeMap.MapFromValidationExceptionOrRaise(e);
+                    return HandleValidationException(e, publicErrorCode);
             }
             
             return Task.CompletedTask;
         }
-
-        private async Task HandlePositionValidationException(PositionValidationException ex)
+        
+        private async Task HandleOrderRejectionException(OrderRejectionException ex)
         {
             if (_httpContextAccessor.HttpContext == null)
             {
@@ -71,34 +79,17 @@ namespace MarginTrading.Backend.Middleware
             
             await Log(ex);
 
-            var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode); 
-
+            var responseErrorCode = PublicErrorCodeMap.Map(ex.RejectReason);
+            
             var problemDetails = ProblemDetailsFactory.Create422(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
-                ex.Message);
-            
-            await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
-        }
-
-        private async Task HandleOrderValidationException(ValidateOrderException ex, string publicErrorCode)
-        {
-            if (_httpContextAccessor.HttpContext == null)
-            {
-                return;
-            }
-            
-            await Log(ex);
-            
-            var problemDetails = ProblemDetailsFactory.Create422(
-                _httpContextAccessor.HttpContext.Request.Path,
-                publicErrorCode,
                 ex.Message);
                 
             await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
         }
 
-        private async Task HandleAccountValidationException(AccountValidationException ex)
+        private async Task HandleValidationException(Exception ex, string responseErrorCode)
         {
             if (_httpContextAccessor.HttpContext == null)
             {
@@ -107,28 +98,7 @@ namespace MarginTrading.Backend.Middleware
             
             await Log(ex);
 
-            var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode); 
-
-            var problemDetails = ProblemDetailsFactory.Create422(
-                _httpContextAccessor.HttpContext.Request.Path,
-                responseErrorCode,
-                ex.Message);
-            
-            await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
-        }
-
-        private async Task HandleInstrumentValidationException(InstrumentValidationException ex)
-        {
-            if (_httpContextAccessor.HttpContext == null)
-            {
-                return;
-            }
-            
-            await Log(ex);
-
-            var responseErrorCode = PublicErrorCodeMap.Map(ex.ErrorCode);
-
-            var problemDetails = ProblemDetailsFactory.Create422(
+            var problemDetails = ProblemDetailsFactory.Create400(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
                 ex.Message);

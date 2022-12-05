@@ -75,7 +75,7 @@ namespace MarginTradingTests
             }
             else
             {
-                var ex = Assert.ThrowsAsync<ValidateOrderException>(
+                var ex = Assert.ThrowsAsync<OrderRejectionException>(
                     async () =>
                     {
                         var order = (await _orderValidator.ValidateRequestAndCreateOrders(request)).order;
@@ -124,7 +124,7 @@ namespace MarginTradingTests
             }
             else
             {
-                var ex = Assert.Throws<ValidateOrderException>(() =>
+                var ex = Assert.Throws<OrderRejectionException>(() =>
                     _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
                 Assert.That(ex.RejectReason == OrderRejectReason.MaxPositionLimit);
@@ -146,7 +146,7 @@ namespace MarginTradingTests
                 Volume = 10
             };
 
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -168,7 +168,7 @@ namespace MarginTradingTests
                 Volume = 10
             };
 
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -184,7 +184,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -206,7 +206,7 @@ namespace MarginTradingTests
                 Volume = 10
             };
 
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
@@ -228,7 +228,7 @@ namespace MarginTradingTests
                 Volume = 10
             };
 
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
@@ -244,7 +244,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InstrumentTradingDisabled);
@@ -267,7 +267,7 @@ namespace MarginTradingTests
                 ForceOpen = true
             };
 
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -327,7 +327,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -343,7 +343,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10, price: 1);
 
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -366,7 +366,7 @@ namespace MarginTradingTests
                 ForceOpen = true
             };
 
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -403,7 +403,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -436,7 +436,7 @@ namespace MarginTradingTests
                 Volume = 10
             };
             
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidAccount);
@@ -456,7 +456,7 @@ namespace MarginTradingTests
                 Volume = 10
             };
             
-            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+            var ex = Assert.ThrowsAsync<OrderRejectionException>(async () =>
                 await _orderValidator.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidValidity);
@@ -504,7 +504,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 150000);
 
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me));
 
             Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
@@ -566,7 +566,7 @@ namespace MarginTradingTests
             }
             else
             {
-                var ex = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                var ex = Assert.ThrowsAsync<OrderRejectionException>(() =>
                     _orderValidator.ValidateRequestAndCreateOrders(request));
 
                 Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
@@ -623,12 +623,12 @@ namespace MarginTradingTests
             }
             else
             {
-                var ex1 = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                var ex1 = Assert.ThrowsAsync<OrderRejectionException>(() =>
                     _orderValidator.ValidateRequestAndCreateOrders(limitOrderRequest));
 
                 Assert.That(ex1.RejectReason == rejectReason);
                 
-                var ex2 = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                var ex2 = Assert.ThrowsAsync<OrderRejectionException>(() =>
                     _orderValidator.ValidateRequestAndCreateOrders(stopOrderRequest));
 
                 Assert.That(ex2.RejectReason == rejectReason);
@@ -676,7 +676,7 @@ namespace MarginTradingTests
             }
             else
             {
-                var ex1 = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                var ex1 = Assert.ThrowsAsync<OrderRejectionException>(() =>
                     _orderValidator.ValidateRequestAndCreateOrders(orderRequest));
 
                 Assert.That(ex1.RejectReason == rejectReason);
@@ -738,13 +738,13 @@ namespace MarginTradingTests
             }
             else
             {
-                var ex1 = Assert.Throws<ValidateOrderException>(() =>
+                var ex1 = Assert.Throws<OrderRejectionException>(() =>
                     _orderValidator.ValidateOrderPriceChange(limitOrder, newPrice));
 
                 Assert.That(ex1.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
                 StringAssert.Contains("against related", ex1.Message);
                 
-                var ex2 = Assert.Throws<ValidateOrderException>(() =>
+                var ex2 = Assert.Throws<OrderRejectionException>(() =>
                     _orderValidator.ValidateOrderPriceChange(stopOrder, newPrice));
 
                 Assert.That(ex2.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
