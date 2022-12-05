@@ -1,9 +1,14 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+#nullable enable
+
+using System;
+using System.Reflection;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Extensions;
 
 namespace MarginTrading.Backend.Exceptions
 {
@@ -103,5 +108,32 @@ namespace MarginTrading.Backend.Exceptions
                 PositionGroupValidationError.MultipleDirections => ValidationErrorCodes.PositionGroupMultipleDirections,
                 _ => UnknownError
             };
+
+        public static string MapFromValidationExceptionOrRaise(Exception exception)
+        {
+            var errorType = exception.GetValidationErrorType();
+            if (errorType == null)
+            {
+                throw new InvalidOperationException("Validation exception does not have error type parameter");
+            }
+            
+            var errorValue = exception.GetValidationErrorValue();
+            if (errorValue == null)
+            {
+                throw new InvalidOperationException("Validation exception does not have error value");
+            }
+            
+            var publicErrorCode = FindMapMethod(errorType)?.Invoke(null, new[] {errorValue});
+            
+            return publicErrorCode?.ToString() ?? string.Empty;
+        }
+
+        private static MethodInfo? FindMapMethod(Type mapErrorType)
+        {
+            var method = typeof(PublicErrorCodeMap)
+                .GetMethod("Map", BindingFlags.Static | BindingFlags.Public, new[] { mapErrorType });
+
+            return method;
+        }
     }
 }

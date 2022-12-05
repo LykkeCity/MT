@@ -18,7 +18,7 @@ namespace MarginTradingTests
         {
             var ex = new AccountValidationException(AccountValidationError.None);
 
-            ValidationExceptionHandler.CanHandle(ex).Should().Be(true);
+            ValidationExceptionHandler.CanHandleException(ex).Should().Be(true);
         }
         
         [Test]
@@ -26,7 +26,7 @@ namespace MarginTradingTests
         {
             var ex = new InstrumentValidationException(InstrumentValidationError.None);
 
-            ValidationExceptionHandler.CanHandle(ex).Should().Be(true);
+            ValidationExceptionHandler.CanHandleException(ex).Should().Be(true);
         }
         
         [Test]
@@ -35,7 +35,7 @@ namespace MarginTradingTests
         {
             var ex = new OrderRejectionException(rejectReason, "message");
 
-            ValidationExceptionHandler.CanHandle(ex).Should().Be(ex.IsPublic());
+            ValidationExceptionHandler.CanHandleException(ex).Should().Be(ex.IsPublic());
         }
     }
 }
