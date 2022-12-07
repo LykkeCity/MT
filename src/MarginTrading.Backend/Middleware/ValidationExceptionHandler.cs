@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core.Exceptions;
@@ -77,10 +78,10 @@ namespace MarginTrading.Backend.Middleware
                 return;
             }
             
-            await Log(ex);
-
             var responseErrorCode = PublicErrorCodeMap.Map(ex.RejectReason);
             
+            await Log(ex, responseErrorCode);
+
             var problemDetails = ProblemDetailsFactory.Create422(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
@@ -96,7 +97,7 @@ namespace MarginTrading.Backend.Middleware
                 return;
             }
             
-            await Log(ex);
+            await Log(ex, responseErrorCode);
 
             var problemDetails = ProblemDetailsFactory.Create400(
                 _httpContextAccessor.HttpContext.Request.Path,
@@ -106,7 +107,7 @@ namespace MarginTrading.Backend.Middleware
             await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
         }
         
-        private async Task Log(Exception ex)
+        private async Task Log(Exception ex, string responseErrorCode)
         {
             if (_httpContextAccessor.HttpContext == null)
             {
@@ -118,7 +119,8 @@ namespace MarginTrading.Backend.Middleware
 
             var requestUri = _httpContextAccessor.HttpContext.Request.GetUri().AbsoluteUri;
 
-            await _log.WriteInfoAsync(nameof(ValidationExceptionHandler), requestUri, bodyPart + ex.Message);
+            await _log.WriteInfoAsync(nameof(ValidationExceptionHandler),
+                new { requestUri, responseErrorCode }.ToJson(), bodyPart + ex.Message);
         }
     }
 }
