@@ -105,8 +105,7 @@ namespace MarginTrading.Backend.Services.Modules
                 Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
             var engine = new RabbitMqCqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), new DefaultEndpointProvider(), 
-                rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName, rabbitMqSettings.Password,
-                registrations.ToArray());
+                rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName, rabbitMqSettings.Password, true, registrations.ToArray());
             engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
             engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);
             engine.StartPublishers();
