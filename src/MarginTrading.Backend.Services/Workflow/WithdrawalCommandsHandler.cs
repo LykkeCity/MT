@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -26,6 +27,9 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILogger<WithdrawalCommandsHandler> _logger;
         private const string OperationName = "FreezeAmountForWithdrawal";
+        
+        private static readonly ConcurrentDictionary<string, object> LockObjects =
+            new ConcurrentDictionary<string, object>();
 
         public WithdrawalCommandsHandler(
             IDateService dateService,
@@ -78,36 +82,40 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
             {
-                _logger.LogInformation("{Command}: AccountId {AccountId}, FreeMargin {FreeMargin}, OperationId {OperationId}",
-                    nameof(FreezeAmountForWithdrawalCommand),
-                    command.AccountId,
-                    account.GetFreeMargin(),
-                    command.OperationId
-                    );
-                if (account.GetFreeMargin() >= command.Amount)
+                lock (GetLockObject(command.AccountId))
                 {
-                    var frozenMargin = await _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
-                        command.Amount);
-                    
-                    _logger.LogInformation("{Command} (after freeze): AccountId {AccountId}, FrozenMargin {FrozenMargin}, OperationId {OperationId}",
+                    _logger.LogInformation("{Command}: AccountId {AccountId}, FreeMargin {FreeMargin}, OperationId {OperationId}",
                         nameof(FreezeAmountForWithdrawalCommand),
                         command.AccountId,
-                        frozenMargin,
+                        account.GetFreeMargin(),
                         command.OperationId
                     );
-                    
-                    _chaosKitty.Meow(command.OperationId);
 
-                    publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
-                        command.AccountId, command.Amount, command.Reason));
+                    if (account.GetFreeMargin() >= command.Amount)
+                    {
+                        var frozenMargin = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
+                            command.Amount);
+                    
+                        _logger.LogInformation("{Command} (after freeze): AccountId {AccountId}, FrozenMargin {FrozenMargin}, OperationId {OperationId}",
+                            nameof(FreezeAmountForWithdrawalCommand),
+                            command.AccountId,
+                            frozenMargin,
+                            command.OperationId
+                        );
+                    
+                        _chaosKitty.Meow(command.OperationId);
+
+                        publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
+                            command.AccountId, command.Amount, command.Reason));
+                    }
+                    else
+                    {
+                        publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
+                            _dateService.Now(),
+                            command.AccountId, command.Amount, "Not enough free margin"));
+                    }
                 }
-                else
-                {
-                    publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
-                        _dateService.Now(),
-                        command.AccountId, command.Amount, "Not enough free margin"));
-                }
-                
+
                 _chaosKitty.Meow(command.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
@@ -140,6 +148,11 @@ namespace MarginTrading.Backend.Services.Workflow
                 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
+        }
+        
+        private object GetLockObject(string accountId)
+        {
+            return LockObjects.GetOrAdd(accountId, new object());
         }
     }
 }
