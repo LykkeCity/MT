@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Services.Services
             UpdateAccount(account, GetPositions(account.Id), GetActiveOrders(account.Id));
         }
 
-        public async Task FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
+        public async Task<decimal> FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
         {
             var account = _accountsProvider.GetAccountById(accountId);
 
@@ -87,6 +87,8 @@ namespace MarginTrading.Backend.Services.Services
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
             }
+
+            return account.AccountFpl.WithdrawalFrozenMargin;
         }
 
         public async Task UnfreezeWithdrawalMargin(string accountId, string operationId)

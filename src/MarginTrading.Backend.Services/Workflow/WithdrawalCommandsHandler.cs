@@ -13,6 +13,7 @@ using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Common.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Workflow
 {
@@ -23,6 +24,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
+        private readonly ILogger<WithdrawalCommandsHandler> _logger;
         private const string OperationName = "FreezeAmountForWithdrawal";
 
         public WithdrawalCommandsHandler(
@@ -30,13 +32,15 @@ namespace MarginTrading.Backend.Services.Workflow
             IAccountsCacheService accountsCacheService,
             IAccountUpdateService accountUpdateService,
             IChaosKitty chaosKitty,
-            IOperationExecutionInfoRepository operationExecutionInfoRepository)
+            IOperationExecutionInfoRepository operationExecutionInfoRepository,
+            ILogger<WithdrawalCommandsHandler> logger)
         {
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _accountUpdateService = accountUpdateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
+            _logger = logger;
         }
 
         /// <summary>
@@ -74,10 +78,23 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
             {
+                _logger.LogInformation("{Command}: AccountId {AccountId}, FreeMargin {FreeMargin}, OperationId {OperationId}",
+                    nameof(FreezeAmountForWithdrawalCommand),
+                    command.AccountId,
+                    account.GetFreeMargin(),
+                    command.OperationId
+                    );
                 if (account.GetFreeMargin() >= command.Amount)
                 {
-                    await _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
+                    var frozenMargin = await _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
                         command.Amount);
+                    
+                    _logger.LogInformation("{Command} (after freeze): AccountId {AccountId}, FrozenMargin {FrozenMargin}, OperationId {OperationId}",
+                        nameof(FreezeAmountForWithdrawalCommand),
+                        command.AccountId,
+                        frozenMargin,
+                        command.OperationId
+                    );
                     
                     _chaosKitty.Meow(command.OperationId);
 
