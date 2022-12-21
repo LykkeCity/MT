@@ -13,18 +13,27 @@ namespace MarginTrading.Backend.Services.Builders
     /// </summary>
     internal sealed class PartialDealBuilder : DealBuilder
     {
-        public PartialDealBuilder(Position position, Order order) : base(position, order)
+        private readonly decimal? _volume;
+
+        /// <summary>
+        /// Creates deal contract from order and position which was partially closed
+        /// </summary>
+        /// <param name="position">Position</param>
+        /// <param name="order">Order</param>
+        /// <param name="volume">Volume left to match, if not passed the order volume will be used</param>
+        public PartialDealBuilder(Position position, Order order, decimal? volume = null) : base(position, order)
         {
+            _volume = volume;
         }
 
         /// <inheritdoc />
         public override DealBuilder AddIdentity()
         {
             base.AddIdentity();
-            
+
             Deal.DealId = AlphanumericIdentityGenerator.GenerateAlphanumericId();
-            Deal.Volume = Math.Abs(Order.Volume);
-        
+            Deal.Volume = _volume ?? Math.Abs(Order.Volume);
+
             return this;
         }
 
@@ -33,7 +42,7 @@ namespace MarginTrading.Backend.Services.Builders
         {
             var chargedPnL = Deal.Volume / Math.Abs(Position.Volume) * Position.ChargedPnL;
             Deal.PnlOfTheLastDay = Deal.Fpl - chargedPnL.WithDefaultAccuracy();
-            
+
             return this;
         }
     }
