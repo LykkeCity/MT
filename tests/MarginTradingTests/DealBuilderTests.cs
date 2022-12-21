@@ -119,7 +119,7 @@ namespace MarginTradingTests
             var closeOrder = CreateOrder(closePositionVolume);
             
             ExecutePnlFlowPartiallyClose(openedPosition, closeOrder, closePositionVolume,matchedOrderVolume, matchedOrderPrice);
-            var builder = new PartialDealBuilder(openedPosition, closeOrder, closeOrder.Volume);
+            var builder = new PartialDealBuilder(openedPosition, closeOrder, Math.Abs(closeOrder.Volume));
             var deal = DealDirector.Construct(builder);
             
             Assert.AreEqual(expectedPnl, deal.Fpl);
@@ -157,7 +157,7 @@ namespace MarginTradingTests
                 matchedOrderVolume,
                 matchedOrderPrice,
                 positionChargedPnl);
-            var builder = new PartialDealBuilder(openedPosition, closeOrder, closeOrder.Volume);
+            var builder = new PartialDealBuilder(openedPosition, closeOrder, Math.Abs(closeOrder.Volume));
             var deal = DealDirector.Construct(builder);
             
             Assert.AreEqual(expectedPnlOfTheDay, deal.PnlOfTheLastDay);
@@ -190,7 +190,7 @@ namespace MarginTradingTests
                 positionChargedPnl);
 
             var partiallyClosingVolume = new Random().Next(1, 100) * initialPositionVolume / 100;
-            var builder = new PartialDealBuilder(openedPosition, closeOrder, partiallyClosingVolume);
+            var builder = new PartialDealBuilder(openedPosition, closeOrder, Math.Abs(partiallyClosingVolume));
             var deal = DealDirector.Construct(builder);
 
             var expectedDealVolume = Math.Abs(deal.Volume);
