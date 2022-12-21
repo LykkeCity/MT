@@ -23,9 +23,6 @@ namespace MarginTrading.Backend.Services.Builders
         /// <param name="closedVolume">Partially closed volume</param>
         public PartialDealBuilder(Position position, Order order, decimal closedVolume) : base(position, order)
         {
-            if (Math.Abs(position.Volume) < Math.Abs(closedVolume))
-                throw new ArgumentException("Deal volume can't be greater than position volume it partially closes");
-            
             _closedVolume = closedVolume;
         }
 
