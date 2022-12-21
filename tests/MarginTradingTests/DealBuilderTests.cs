@@ -181,23 +181,26 @@ namespace MarginTradingTests
             
             Assert.True(closeOrderVolume > initialPositionVolume,
                 "The point of test is to check the case when order spans multiple positions therefore it volume is greater than single position volume");
+            
+            var partiallyClosingVolume = new Random().Next(1, 100) * initialPositionVolume / 100;
+
+            Assert.True(partiallyClosingVolume < initialPositionVolume,
+                "When partially closing position the volume [{0}] should be less than position's volume [{1}]",
+                partiallyClosingVolume, initialPositionVolume);
 
             ExecutePnlOfTheDayFlowPartiallyClose(openedPosition,
                 closeOrder,
-                closeOrder.Volume,
+                partiallyClosingVolume,
                 matchedOrderVolume,
                 matchedOrderPrice,
                 positionChargedPnl);
-
-            var partiallyClosingVolume = new Random().Next(1, 100) * initialPositionVolume / 100;
             var builder = new PartialDealBuilder(openedPosition, closeOrder, Math.Abs(partiallyClosingVolume));
             var deal = DealDirector.Construct(builder);
 
             var expectedDealVolume = Math.Abs(deal.Volume);
-            var expectedPositionVolume = Math.Abs(openedPosition.Volume);
 
-            Assert.True(expectedDealVolume <= expectedPositionVolume,
-                "Deal volume [{0}] cannot be greater than position it partially closes [{1}]", expectedDealVolume, expectedPositionVolume);
+            Assert.True(expectedDealVolume <= initialPositionVolume,
+                "Deal volume [{0}] cannot be greater than position it partially closes [{1}]", expectedDealVolume, initialPositionVolume);
         }
         
         private Position CreateOpenedPosition(decimal volume, decimal price)
