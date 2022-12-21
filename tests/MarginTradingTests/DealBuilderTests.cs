@@ -35,7 +35,7 @@ namespace MarginTradingTests
         [Test]
         public void Order_Executed_Is_Required_When_Partially_Closing_Position()
         {
-            var builder = new PartialDealBuilder(new Position(), CreateOrder(1));
+            var builder = new PartialDealBuilder(new Position(), CreateOrder(1), 0);
 
             Assert.Throws(
                 Is.TypeOf<InvalidOperationException>().And.Message
@@ -118,8 +118,8 @@ namespace MarginTradingTests
             var openedPosition = CreateOpenedPosition(openedPositionVolume, openedPositionPrice);
             var closeOrder = CreateOrder(closePositionVolume);
             
-            ExectePnlFlowPartiallyClose(openedPosition, closeOrder, closePositionVolume,matchedOrderVolume, matchedOrderPrice);
-            var builder = new PartialDealBuilder(openedPosition, closeOrder);
+            ExecutePnlFlowPartiallyClose(openedPosition, closeOrder, closePositionVolume,matchedOrderVolume, matchedOrderPrice);
+            var builder = new PartialDealBuilder(openedPosition, closeOrder, closeOrder.Volume);
             var deal = DealDirector.Construct(builder);
             
             Assert.AreEqual(expectedPnl, deal.Fpl);
@@ -157,10 +157,47 @@ namespace MarginTradingTests
                 matchedOrderVolume,
                 matchedOrderPrice,
                 positionChargedPnl);
-            var builder = new PartialDealBuilder(openedPosition, closeOrder);
+            var builder = new PartialDealBuilder(openedPosition, closeOrder, closeOrder.Volume);
             var deal = DealDirector.Construct(builder);
             
             Assert.AreEqual(expectedPnlOfTheDay, deal.PnlOfTheLastDay);
+        }
+
+        [Test]
+        [Repeat(100)]
+        [TestCase(100, 1.2, 200, 500, 1.3, 0.5)]
+        public void Deal_Volume_Cannot_Be_Greater_Than_Position_Volume_When_Partially_Closing_Position(decimal initialPositionVolume, 
+            decimal openedPositionPrice,
+            decimal closeOrderVolume,
+            decimal matchedOrderVolume,
+            decimal matchedOrderPrice,
+            decimal positionChargedPnl)
+        {
+            var openedPosition = CreateOpenedPosition(initialPositionVolume, openedPositionPrice);
+            // assuming, there were other positions closed as a part of order
+            // execution so that left volume to match will be less than original
+            // position volume
+            var closeOrder = CreateOrder(closeOrderVolume);
+            
+            Assert.True(closeOrderVolume > initialPositionVolume,
+                "The point of test is to check the case when order spans multiple positions therefore it volume is greater than single position volume");
+
+            ExecutePnlOfTheDayFlowPartiallyClose(openedPosition,
+                closeOrder,
+                closeOrder.Volume,
+                matchedOrderVolume,
+                matchedOrderPrice,
+                positionChargedPnl);
+
+            var partiallyClosingVolume = new Random().Next(1, 100) * initialPositionVolume / 100;
+            var builder = new PartialDealBuilder(openedPosition, closeOrder, partiallyClosingVolume);
+            var deal = DealDirector.Construct(builder);
+
+            var expectedDealVolume = Math.Abs(deal.Volume);
+            var expectedPositionVolume = Math.Abs(openedPosition.Volume);
+
+            Assert.True(expectedDealVolume <= expectedPositionVolume,
+                "Deal volume [{0}] cannot be greater than position it partially closes [{1}]", expectedDealVolume, expectedPositionVolume);
         }
         
         private Position CreateOpenedPosition(decimal volume, decimal price)
@@ -215,7 +252,7 @@ namespace MarginTradingTests
                 OriginatorType.System, PositionCloseReason.None, string.Empty, "CloseTrade");
         }
 
-        private void ExectePnlFlowPartiallyClose(Position position,
+        private void ExecutePnlFlowPartiallyClose(Position position,
             Order order,
             decimal closeVolume,
             decimal matchedVolume,

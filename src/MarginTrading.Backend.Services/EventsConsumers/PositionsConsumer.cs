@@ -189,7 +189,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     
                     openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id, chargedPnl);
 
-                    var deal = DealDirector.Construct(new PartialDealBuilder(openedPosition, order, leftVolumeToMatch));
+                    var deal = DealDirector.Construct(new PartialDealBuilder(openedPosition, order, Math.Abs(leftVolumeToMatch)));
                     await _accountUpdateService.FreezeUnconfirmedMargin(openedPosition.AccountId, deal.DealId, deal.PnlOfTheLastDay);
                     await _positionHistoryHandler.HandlePartialClosePosition(openedPosition, deal, order.AdditionalInfo);
 
