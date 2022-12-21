@@ -13,17 +13,20 @@ namespace MarginTrading.Backend.Services.Builders
     /// </summary>
     internal sealed class PartialDealBuilder : DealBuilder
     {
-        private readonly decimal? _volume;
+        private readonly decimal _closedVolume;
 
         /// <summary>
         /// Creates deal contract from order and position which was partially closed
         /// </summary>
         /// <param name="position">Position</param>
         /// <param name="order">Order</param>
-        /// <param name="volume">Volume left to match, if not passed the order volume will be used</param>
-        public PartialDealBuilder(Position position, Order order, decimal? volume = null) : base(position, order)
+        /// <param name="closedVolume">Partially closed volume</param>
+        public PartialDealBuilder(Position position, Order order, decimal closedVolume) : base(position, order)
         {
-            _volume = volume;
+            if (Math.Abs(position.Volume) < Math.Abs(closedVolume))
+                throw new ArgumentException("Deal volume can't be greater than position volume it partially closes");
+            
+            _closedVolume = closedVolume;
         }
 
         /// <inheritdoc />
@@ -32,7 +35,7 @@ namespace MarginTrading.Backend.Services.Builders
             base.AddIdentity();
 
             Deal.DealId = AlphanumericIdentityGenerator.GenerateAlphanumericId();
-            Deal.Volume = _volume ?? Math.Abs(Order.Volume);
+            Deal.Volume = _closedVolume;
 
             return this;
         }
