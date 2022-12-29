@@ -44,6 +44,11 @@ namespace MarginTrading.Backend.Contracts.ErrorCodes
         /// There is no liquidity for the instrument
         /// </summary>
         public const string InstrumentNoLiquidity = "NO_LIQUIDITY";
+        
+        /// <summary>
+        /// Multiple reasons with internal error code
+        /// </summary>
+        public const string InvalidInstrument = "INVALID_INSTRUMENT";
         #endregion
         
         #region Position

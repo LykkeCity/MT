@@ -628,6 +628,7 @@ namespace MarginTrading.Backend.Services
                         throw new OrderRejectionException(OrderRejectReason.InstrumentTradingDisabled, 
                             $"Trading for the instrument {assetPairId} is disabled.");
                     }
+
                     throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                         $"Trades for instrument {assetPairId} are not available due to trading is closed");
                 }
