@@ -59,10 +59,8 @@ namespace MarginTrading.Backend.Exceptions
             source switch
             {
                 OrderRejectReason.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
-                // TODO: add more specific mappings, InvalidInstrument is too general
-                OrderRejectReason.InvalidInstrument => ValidationErrorCodes.InvalidInstrument,
                 OrderRejectReason.NoLiquidity => ValidationErrorCodes.InstrumentNoLiquidity,
-                _ => UnsupportedError
+                _ => ValidationErrorCodes.InvalidInstrument
             };
 
         /// <summary>
