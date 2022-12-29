@@ -119,8 +119,9 @@ namespace MarginTrading.Backend.Middleware
 
             var requestUri = _httpContextAccessor.HttpContext.Request.GetUri().AbsoluteUri;
 
-            await _log.WriteInfoAsync(nameof(ValidationExceptionHandler),
-                new { requestUri, responseErrorCode }.ToJson(), bodyPart + ex.Message);
+            await _log.WriteWarningAsync(nameof(ValidationExceptionHandler),
+                new { requestUri, responseErrorCode }.ToJson(),
+                new { bodyPart, message = ex.Message }.ToJson());
         }
     }
 }
