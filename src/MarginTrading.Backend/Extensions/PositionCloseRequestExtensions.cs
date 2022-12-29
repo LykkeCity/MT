@@ -37,10 +37,14 @@ namespace MarginTrading.Backend.Extensions
             var assetTradingStatus = tradingStatusGetter.Invoke(position.AssetPairId);
             if (!assetTradingStatus.TradingEnabled)
             {
-                throw new InstrumentValidationException(
-                    assetTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled
-                        ? InstrumentValidationError.InstrumentTradingDisabled
-                        : InstrumentValidationError.TradesAreNotAvailable);
+                if (assetTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
+                {
+                    throw new InstrumentValidationException(
+                        $"Trading is disabled for the instrument [{position.AssetPairId}]",
+                        InstrumentValidationError.InstrumentTradingDisabled);
+                }
+
+                throw new InstrumentValidationException("Trading is disabled", InstrumentValidationError.TradesAreNotAvailable);
             }
 
             var originator = request?.Originator.ToType<OriginatorType>() ?? OriginatorType.Investor;
