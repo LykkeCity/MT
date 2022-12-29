@@ -281,7 +281,7 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
-                throw new OrderValidationException(OrderValidationError.OrderNotFound);
+                throw new OrderValidationException("Order to cancel not found", OrderValidationError.OrderNotFound);
             }
 
             ValidationHelper.ValidateAccountId(order, accountId);
@@ -389,7 +389,7 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
-                throw new OrderValidationException(OrderValidationError.OrderNotFound);
+                throw new OrderValidationException("Order to change not found", OrderValidationError.OrderNotFound);
             }
 
             ValidationHelper.ValidateAccountId(order, request.AccountId);
@@ -417,7 +417,7 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
-                throw new OrderValidationException(OrderValidationError.OrderNotFound);
+                throw new OrderValidationException("Order to change validity  not found", OrderValidationError.OrderNotFound);
             }
 
             ValidationHelper.ValidateAccountId(order, request.AccountId);
@@ -445,7 +445,7 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
-                throw new OrderValidationException(OrderValidationError.OrderNotFound);
+                throw new OrderValidationException("Order to remove validity not found", OrderValidationError.OrderNotFound);
             }
 
             ValidationHelper.ValidateAccountId(order, request.AccountId);
