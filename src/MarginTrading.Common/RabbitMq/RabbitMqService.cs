@@ -153,11 +153,11 @@ namespace MarginTrading.Common.RabbitMq
                 var rabbitMqSubscriber = new RabbitMqPullingSubscriber<TMessage>(
                         _loggerFactory.CreateLogger<RabbitMqPullingSubscriber<TMessage>>(),
                         subscriptionSettings)
+                    .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(_loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()))
                     .SetMessageDeserializer(deserializer)
-                    .Subscribe(handler)
                     .SetReadHeadersAction(_correlationManager.FetchCorrelationIfExists)
-                    .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(
-                        _loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()));
+                    .CreateDefaultBinding()
+                    .Subscribe(handler);
 
                 if (!_subscribers.TryAdd((subscriptionSettings, consumerNumber), rabbitMqSubscriber))
                 {
