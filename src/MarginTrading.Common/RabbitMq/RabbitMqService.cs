@@ -134,8 +134,10 @@ namespace MarginTrading.Common.RabbitMq
             }
         }
         
-        public void Subscribe<TMessage>(RabbitMqSettings settings, bool isDurable,
-            Func<TMessage, Task> handler, IMessageDeserializer<TMessage> deserializer)
+        public void Subscribe<TMessage>(RabbitMqSettings settings, 
+            bool isDurable,
+            Func<TMessage, Task> handler, 
+            IMessageDeserializer<TMessage> deserializer)
         {
             var consumerCount = settings.ConsumerCount == 0 ? 1 : settings.ConsumerCount;
             
@@ -156,7 +158,6 @@ namespace MarginTrading.Common.RabbitMq
                     .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(_loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()))
                     .SetMessageDeserializer(deserializer)
                     .SetReadHeadersAction(_correlationManager.FetchCorrelationIfExists)
-                    .CreateDefaultBinding()
                     .Subscribe(handler);
 
                 if (!_subscribers.TryAdd((subscriptionSettings, consumerNumber), rabbitMqSubscriber))
