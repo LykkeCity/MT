@@ -13,6 +13,7 @@ using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Common.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Workflow
 {
@@ -23,6 +24,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
+        private readonly ILogger<WithdrawalCommandsHandler> _logger;
         private const string OperationName = "FreezeAmountForWithdrawal";
 
         public WithdrawalCommandsHandler(
@@ -30,13 +32,15 @@ namespace MarginTrading.Backend.Services.Workflow
             IAccountsCacheService accountsCacheService,
             IAccountUpdateService accountUpdateService,
             IChaosKitty chaosKitty,
-            IOperationExecutionInfoRepository operationExecutionInfoRepository)
+            IOperationExecutionInfoRepository operationExecutionInfoRepository,
+            ILogger<WithdrawalCommandsHandler> logger)
         {
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _accountUpdateService = accountUpdateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
+            _logger = logger;
         }
 
         /// <summary>
@@ -67,6 +71,10 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             catch
             {
+                _logger.LogWarning("Freezing the amount for withdrawal has failed. Reason: Failed to get account data. " +
+                    "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                    command.OperationId, command.AccountId, command.Amount);
+
                 publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(), 
                     command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
                 return;
@@ -81,11 +89,19 @@ namespace MarginTrading.Backend.Services.Workflow
                     
                     _chaosKitty.Meow(command.OperationId);
 
+                    _logger.LogInformation("The amount for withdrawal has been frozen. " +
+                        "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                        command.OperationId, command.AccountId, command.Amount);
+
                     publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
                         command.AccountId, command.Amount, command.Reason));
                 }
                 else
                 {
+                    _logger.LogWarning("Freezing the amount for withdrawal has failed. Reason: There's not enough free margin. " +
+                        "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                        command.OperationId, command.AccountId, command.Amount);
+
                     publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
                         _dateService.Now(),
                         command.AccountId, command.Amount, "Not enough free margin"));
