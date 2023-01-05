@@ -92,4 +92,7 @@
   <ItemGroup>
     <None Include="..\MarginTrading.SqlRepositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="MarginTradingTests" />
+  </ItemGroup>
 </Project>
