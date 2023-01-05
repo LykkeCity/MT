@@ -43,7 +43,7 @@
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
     <PackageReference Include="LykkeBiz.Logs.MsSql" Version="3.0.0" />
     <PackageReference Include="LykkeBiz.Logs.Serilog" Version="3.3.1" />
-    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.2.0" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.2.1" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Snow.Common" Version="1.52.0" />
     <PackageReference Include="Lykke.Snow.Common.Startup" Version="3.0.1" />
@@ -91,10 +91,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\MarginTrading.SqlRepositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
-  </ItemGroup>
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-        <_Parameter1>MarginTradingTests</_Parameter1>
-    </AssemblyAttribute>
   </ItemGroup>
 </Project>
