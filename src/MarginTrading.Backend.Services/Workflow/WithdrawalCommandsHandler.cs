@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -115,7 +116,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 }
                 else
                 {
-                    var reasonStr = $"There's not enough free margin. Available free margin is: {freeMargin}";
+                    var reasonStr = $"There's not enough free margin. Available free margin is: {Math.Round(freeMargin, 2)}";
 
                     _logger.LogWarning("Freezing the amount for withdrawal has failed. Reason: {Reason}. " +
                         "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
