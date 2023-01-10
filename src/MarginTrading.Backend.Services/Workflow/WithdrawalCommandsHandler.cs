@@ -118,9 +118,9 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     var reasonStr = $"There's not enough free margin. Available free margin is: {Math.Round(freeMargin, 2)}";
 
-                    _logger.LogWarning("Freezing the amount for withdrawal has failed. Reason: {Reason}. " +
-                        "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
-                        command.OperationId, command.AccountId, command.Amount, reasonStr);
+                    _logger.LogWarning("Freezing the amount for withdrawal has failed. " +
+                        "Details: (Amount: {Amount}, AccountId: {AccountId}, OperationId: {OperationId}, Reason: {Reason})",
+                        command.Amount, command.AccountId, command.OperationId, reasonStr);
 
                     publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
                         _dateService.Now(),
