@@ -32,11 +32,11 @@ namespace MarginTrading.Backend.Core
         /// <summary>
         /// Updates the volume and positions list with the actual state of orders/positions cache
         /// </summary>
-        /// <param name="actualPositionsGetter">The source of actual positions</param>
+        /// <param name="actualPositions">The list of actual positions</param>
         /// <returns>True if volume has changed, false otherwise</returns>
-        public bool Sync(Func<IEnumerable<Position>> actualPositionsGetter)
+        public bool UpdatePositions(IEnumerable<Position> actualPositions)
         {
-            var actualPositionsList = actualPositionsGetter()
+            var actualPositionsList = actualPositions
                 .Where(x => PositionIds.Contains(x.Id) && (string.IsNullOrEmpty(AccountId) || x.AccountId == AccountId))
                 .ToList();
             
