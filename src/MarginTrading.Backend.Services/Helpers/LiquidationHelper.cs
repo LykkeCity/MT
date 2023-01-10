@@ -138,5 +138,18 @@ namespace MarginTrading.Backend.Services.Helpers
 
             return result;
         }
+
+        public static string GetComment(LiquidationType liquidationType)
+        {
+            var comment = liquidationType switch
+            {
+                LiquidationType.Mco => "MCO liquidation",
+                LiquidationType.Normal => "Liquidation",
+                LiquidationType.Forced => "Close positions group",
+                _ => string.Empty
+            };
+
+            return comment;
+        }
     }
 }

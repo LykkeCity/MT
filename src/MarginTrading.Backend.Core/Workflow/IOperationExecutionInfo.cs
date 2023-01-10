@@ -10,7 +10,6 @@ namespace MarginTrading.Backend.Core
         string OperationName { get; }
         string Id { get; }
         DateTime LastModified { get; }
-
         T Data { get; }
     }
 }
