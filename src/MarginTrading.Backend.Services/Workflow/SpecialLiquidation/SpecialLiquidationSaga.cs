@@ -84,7 +84,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
             {
-                executionInfo.Data.Sync(() => _ordersCache.GetPositions());
+                executionInfo.Data.UpdatePositions(_ordersCache.GetPositions());
                 executionInfo.Data.Instrument = e.Instrument;
                 executionInfo.Data.RequestNumber = 1;
                 executionInfo.Data.TryStartClosing(id => _ordersCache.Positions.GetPositionById(id), _dateService.Now);
@@ -116,7 +116,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
 
             //validate that volume didn't change to peek either to execute order or request the price again
-            var volumeChanged = executionInfo.Data.Sync(() => _ordersCache.GetPositions());
+            var volumeChanged = executionInfo.Data.UpdatePositions(_ordersCache.GetPositions());
             if (volumeChanged)
             {
                 // if RFQ is paused we will not continue
