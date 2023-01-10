@@ -27,7 +27,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILogger<WithdrawalCommandsHandler> _logger;
         private const string OperationName = "FreezeAmountForWithdrawal";
-        
+
         private static readonly ConcurrentDictionary<string, object> LockObjects =
             new ConcurrentDictionary<string, object>();
 
@@ -51,7 +51,7 @@ namespace MarginTrading.Backend.Services.Workflow
         /// Freeze the the amount in the margin.
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
+        public async Task Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
             var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
@@ -67,7 +67,7 @@ namespace MarginTrading.Backend.Services.Workflow
                         Amount = command.Amount,
                     }
                 ));
-            
+
             MarginTradingAccount account = null;
             try
             {
@@ -75,53 +75,65 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             catch
             {
-                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(), 
+                _logger.LogWarning("Freezing the amount for withdrawal has failed. Reason: Failed to get account data. " +
+                    "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                    command.OperationId, command.AccountId, command.Amount);
+
+                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(),
                     command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
                 return;
             }
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
             {
+                // freezeSucceeded is used to minimize the scope under lock
+                var freezeSucceeded = false;
+                var freeMargin = account.GetFreeMargin();
+
                 lock (GetLockObject(command.AccountId))
                 {
-                    _logger.LogInformation("{Command}: AccountId {AccountId}, FreeMargin {FreeMargin}, OperationId {OperationId}",
-                        nameof(FreezeAmountForWithdrawalCommand),
-                        command.AccountId,
-                        account.GetFreeMargin(),
-                        command.OperationId
-                    );
-
                     if (account.GetFreeMargin() >= command.Amount)
                     {
-                        var frozenMargin = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
+                        var freezeAmount = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
+                            command.OperationId,
                             command.Amount);
-                    
-                        _logger.LogInformation("{Command} (after freeze): AccountId {AccountId}, FrozenMargin {FrozenMargin}, OperationId {OperationId}",
-                            nameof(FreezeAmountForWithdrawalCommand),
-                            command.AccountId,
-                            frozenMargin,
-                            command.OperationId
-                        );
-                    
-                        _chaosKitty.Meow(command.OperationId);
 
-                        publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
-                            command.AccountId, command.Amount, command.Reason));
-                    }
-                    else
-                    {
-                        publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
-                            _dateService.Now(),
-                            command.AccountId, command.Amount, "Not enough free margin"));
+                        freezeSucceeded = true;
                     }
                 }
+
+                if (freezeSucceeded)
+                {
+                    _chaosKitty.Meow(command.OperationId);
+
+                    _logger.LogInformation("The amount for withdrawal has been frozen. " +
+                        "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                        command.OperationId, command.AccountId, command.Amount);
+
+                    publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId,
+                        _dateService.Now(),
+                        command.AccountId, command.Amount, command.Reason));
+                }
+                else
+                {
+                    var reasonStr = $"There's not enough free margin. Available free margin is: {Math.Round(freeMargin, 2)}";
+
+                    _logger.LogWarning("Freezing the amount for withdrawal has failed. " +
+                        "Details: (Amount: {Amount}, AccountId: {AccountId}, OperationId: {OperationId}, Reason: {Reason})",
+                        command.Amount, command.AccountId, command.OperationId, reasonStr);
+
+                    publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
+                        _dateService.Now(),
+                        command.AccountId, command.Amount, reasonStr));
+                }
+            
 
                 _chaosKitty.Meow(command.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
-        
+
         /// <summary>
         /// Withdrawal failed => margin must be unfrozen.
         /// </summary>
@@ -136,20 +148,20 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo == null)
                 return;
-            
+
             if (executionInfo.Data.SwitchState(OperationState.Started, OperationState.Finished))
             {
                 await _accountUpdateService.UnfreezeWithdrawalMargin(executionInfo.Data.AccountId, command.OperationId);
-                
+
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
                     _dateService.Now(), executionInfo.Data.AccountId, executionInfo.Data.Amount));
-                
+
                 _chaosKitty.Meow(command.OperationId);
-                
+
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
-        
+
         private object GetLockObject(string accountId)
         {
             return LockObjects.GetOrAdd(accountId, new object());
