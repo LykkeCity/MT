@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Common;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
@@ -110,7 +111,9 @@ namespace MarginTrading.Backend.Services.Helpers
                         result.Add(position.Id, (PositionCloseResult.Closed, null));
                         break;
                     default:
-                        throw new InvalidOperationException($"Position state {position.Status.ToString()} is not handled");
+                        throw new PositionValidationException(
+                            $"Position [{position.Id}] status [{position.Status}] is not expected for special liquidation",
+                            PositionValidationError.InvalidStatusWhenRunSpecialLiquidation);
                 }
             }
 

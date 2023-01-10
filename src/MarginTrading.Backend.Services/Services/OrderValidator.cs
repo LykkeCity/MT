@@ -81,7 +81,7 @@ namespace MarginTrading.Backend.Services
             
             if (request.Volume == 0)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume can not be 0");
+                throw new OrderRejectionException(OrderRejectReason.InvalidVolume, "Volume can not be 0");
             }
 
             var assetPair = GetAssetPairIfAvailableForTrading(request.InstrumentId, request.Type.ToType<OrderType>(),
@@ -91,7 +91,7 @@ namespace MarginTrading.Backend.Services
             {
                 if (!request.Price.HasValue)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                    throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                         $"Price is required for {request.Type} order");
                 }
                 else
@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Services
 
                     if (request.Price <= 0)
                     {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                        throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                             $"Price should be more than 0");
                     }
                 }
@@ -115,7 +115,7 @@ namespace MarginTrading.Backend.Services
 
             if (account == null)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidAccount, "Account not found");
+                throw new OrderRejectionException(OrderRejectReason.InvalidAccount, "Account not found");
             }
 
             ValidateValidity(request.Validity, request.Type.ToType<OrderType>());
@@ -128,13 +128,13 @@ namespace MarginTrading.Backend.Services
             }
             catch
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                     $"Instrument {assetPair.Id} is not available for trading on selected account");
             }
 
             if (tradingInstrument.DealMinLimit > 0 && Math.Abs(request.Volume) < tradingInstrument.DealMinLimit)
             {
-                throw new ValidateOrderException(OrderRejectReason.MinOrderSizeLimit,
+                throw new OrderRejectionException(OrderRejectReason.MinOrderSizeLimit,
                     $"The minimum volume of a single order is limited to {tradingInstrument.DealMinLimit} {tradingInstrument.Instrument}.");
             }
 
@@ -179,7 +179,7 @@ namespace MarginTrading.Backend.Services
 
                 if (request.StopLoss <= 0)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
+                    throw new OrderRejectionException(OrderRejectReason.InvalidStoploss,
                         $"StopLoss should be more then 0");
                 }
 
@@ -198,7 +198,7 @@ namespace MarginTrading.Backend.Services
 
                 if (request.TakeProfit <= 0)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                    throw new OrderRejectionException(OrderRejectReason.InvalidTakeProfit,
                         $"TakeProfit should be more then 0");
                 }
 
@@ -245,7 +245,7 @@ namespace MarginTrading.Backend.Services
 
             if (!productComplexityConfimationReceived)
             {
-                throw new ValidateOrderException(OrderRejectReason.AccountInvalidState,
+                throw new OrderRejectionException(OrderRejectReason.AccountInvalidState,
                     $"Product complexity warning not received for order, placed by account {account.Id}");
             }
         }
@@ -259,7 +259,7 @@ namespace MarginTrading.Backend.Services
             
             if (!order.IsBasicPendingOrder() && forceOpen.Value)
             {
-                throw new ValidateOrderException(OrderRejectReason.None,
+                throw new OrderRejectionException(OrderRejectReason.None,
                     "Force open cannot be set to true for related order");
             }
 
@@ -269,7 +269,7 @@ namespace MarginTrading.Backend.Services
                     _tradingInstrumentsCache.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
                 if (!tradingInstrument.ShortPosition)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
+                    throw new OrderRejectionException(OrderRejectReason.ShortPositionsDisabled,
                         $"Short positions are disabled for {tradingInstrument.Instrument}.");
                 }
             }
@@ -281,7 +281,7 @@ namespace MarginTrading.Backend.Services
                 orderType != OrderType.Market &&
                 validity.Value.Date < _dateService.Now().Date)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidValidity, "Invalid validity date");
+                throw new OrderRejectionException(OrderRejectReason.InvalidValidity, "Invalid validity date");
             }
         }
 
@@ -292,7 +292,7 @@ namespace MarginTrading.Backend.Services
 
             if (newPrice <= 0)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                     $"Price should be more than 0");
             }
             
@@ -388,7 +388,7 @@ namespace MarginTrading.Backend.Services
 
             if (order == null)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidParent,
+                throw new OrderRejectionException(OrderRejectReason.InvalidParent,
                     "Related order must have parent order or position");
             }
 
@@ -404,7 +404,7 @@ namespace MarginTrading.Backend.Services
                 || ((orderType == OrderType.StopLoss || orderType == OrderType.TrailingStop)
                     && relatedOrders.Any(o => o.Type == OrderType.StopLoss || o.Type == OrderType.TrailingStop)))
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidParent,
+                throw new OrderRejectionException(OrderRejectReason.InvalidParent,
                     $"Parent order already has related order with type {orderType}");
             }
         }
@@ -433,7 +433,7 @@ namespace MarginTrading.Backend.Services
         {
             if (!_quoteCashService.TryGetQuoteById(order.AssetPairId, out var quote))
             {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
+                throw new OrderRejectionException(OrderRejectReason.NoLiquidity, "Quote not found");
             }
 
             //TODO: implement in MTC-155            
@@ -447,14 +447,14 @@ namespace MarginTrading.Backend.Services
             {
                 if (order.Direction == OrderDirection.Buy && quote.Ask <= orderPrice)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                    throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                         string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
                 } 
             
                 if (order.Direction == OrderDirection.Sell && quote.Bid >= orderPrice)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
+                    throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice, 
                         string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
                 }
@@ -464,14 +464,14 @@ namespace MarginTrading.Backend.Services
             {
                 if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                    throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                         string.Format(MtMessages.Validation_PriceBelowAsk, orderPrice, quote.Ask),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
                 } 
             
                 if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
+                    throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice, 
                         string.Format(MtMessages.Validation_PriceAboveBid, orderPrice, quote.Bid),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
                 }
@@ -498,7 +498,7 @@ namespace MarginTrading.Backend.Services
                 (slPrice.HasValue && slPrice <= newPrice
                  || tpPrice.HasValue && tpPrice >= newPrice))
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                     "Price is not valid against related orders prices.");
             }
         }
@@ -522,7 +522,7 @@ namespace MarginTrading.Backend.Services
             {
                 if (!_quoteCashService.TryGetQuoteById(relatedOrder.AssetPairId, out var quote))
                 {
-                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
+                    throw new OrderRejectionException(OrderRejectReason.NoLiquidity, "Quote not found");
                 }
 
                 basePrice = quote.GetPriceForOrderDirection(relatedOrder.Direction);
@@ -545,13 +545,13 @@ namespace MarginTrading.Backend.Services
         {
             if (orderDirection == OrderDirection.Buy && basePrice <= orderPrice)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                throw new OrderRejectionException(OrderRejectReason.InvalidTakeProfit,
                     string.Format(MtMessages.Validation_TakeProfitMustBeLess, orderPrice, basePrice));
             }
             
             if (orderDirection == OrderDirection.Sell && basePrice >= orderPrice)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                throw new OrderRejectionException(OrderRejectReason.InvalidTakeProfit,
                     string.Format(MtMessages.Validation_TakeProfitMustBeMore, orderPrice, basePrice));
             }
         }
@@ -560,13 +560,13 @@ namespace MarginTrading.Backend.Services
         {
             if (orderDirection == OrderDirection.Buy && basePrice >= orderPrice)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
+                throw new OrderRejectionException(OrderRejectReason.InvalidStoploss,
                     string.Format(MtMessages.Validation_StopLossMustBeMore, orderPrice, basePrice));
             }
             
             if (orderDirection == OrderDirection.Sell && basePrice <= orderPrice)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
+                throw new OrderRejectionException(OrderRejectReason.InvalidStoploss,
                     string.Format(MtMessages.Validation_StopLossMustBeLess, orderPrice, basePrice));
             }
         }
@@ -625,16 +625,17 @@ namespace MarginTrading.Backend.Services
                 {
                     if (tradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
                     {
-                        throw new ValidateOrderException(OrderRejectReason.InstrumentTradingDisabled, 
+                        throw new OrderRejectionException(OrderRejectReason.InstrumentTradingDisabled, 
                             $"Trading for the instrument {assetPairId} is disabled.");
                     }
-                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+
+                    throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                         $"Trades for instrument {assetPairId} are not available due to trading is closed");
                 }
             }
             else if (_assetDayOffService.ArePendingOrdersDisabled(assetPairId))
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                     $"Pending orders for instrument {assetPairId} are not available");
             }
 
@@ -642,18 +643,18 @@ namespace MarginTrading.Backend.Services
             
             if (assetPair == null)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, $"Instrument {assetPairId} not found");
+                throw new OrderRejectionException(OrderRejectReason.InvalidInstrument, $"Instrument {assetPairId} not found");
             }
             
             if (assetPair.IsDiscontinued)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                throw new OrderRejectionException(OrderRejectReason.InvalidInstrument, 
                     $"Trading for the instrument {assetPairId} is discontinued");
             }
 
             if (assetPair.IsTradingDisabled && !validateForEdit)
             {
-                throw new ValidateOrderException(OrderRejectReason.InstrumentTradingDisabled, 
+                throw new OrderRejectionException(OrderRejectReason.InstrumentTradingDisabled, 
                     $"Trading for the instrument {assetPairId} is disabled.");
             }
 
@@ -661,20 +662,20 @@ namespace MarginTrading.Backend.Services
             {
                 if (isPreTradeValidation)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                    throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                         $"Orders execution for instrument {assetPairId} is temporarily unavailable (instrument is suspended)");
                 }
 
                 if (orderType == OrderType.Market)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                    throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                         $"Market orders for instrument {assetPairId} are temporarily unavailable (instrument is suspended)");
                 }
             }
 
             if (assetPair.IsFrozen && shouldOpenNewPosition)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                     $"Opening new positions for instrument {assetPairId} is temporarily unavailable (instrument is frozen)");
             }
 
@@ -689,7 +690,7 @@ namespace MarginTrading.Backend.Services
 
             if (tradingInstrument == null)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                     $"The instrument is not found for the trading condition {orderFulfillmentPlan.Order.TradingConditionId} and asset pair {orderFulfillmentPlan.Order.AssetPairId}");
             }
             
@@ -697,7 +698,7 @@ namespace MarginTrading.Backend.Services
                 Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.DealMaxLimit &&
                 orderFulfillmentPlan.RequiresPositionOpening)
             {
-                throw new ValidateOrderException(OrderRejectReason.MaxOrderSizeLimit,
+                throw new OrderRejectionException(OrderRejectReason.MaxOrderSizeLimit,
                     $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument} but was {orderFulfillmentPlan.UnfulfilledVolume}. Order id = [{orderFulfillmentPlan.Order.Id}]");
             }
 
@@ -709,7 +710,7 @@ namespace MarginTrading.Backend.Services
                 orderFulfillmentPlan.RequiresPositionOpening &&
                 positionsAbsVolume + Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
             {
-                throw new ValidateOrderException(OrderRejectReason.MaxPositionLimit,
+                throw new OrderRejectionException(OrderRejectReason.MaxPositionLimit,
                     $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
 
@@ -717,7 +718,7 @@ namespace MarginTrading.Backend.Services
                 orderFulfillmentPlan.Order.Direction == OrderDirection.Sell &&
                 !tradingInstrument.ShortPosition)
             {
-                throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
+                throw new OrderRejectionException(OrderRejectReason.ShortPositionsDisabled,
                     $"Short positions are disabled for {tradingInstrument.Instrument}.");
             }
         }
