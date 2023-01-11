@@ -4,7 +4,6 @@
 using Autofac;
 using Common.Log;
 using Lykke.Common;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
@@ -26,6 +25,10 @@ namespace MarginTrading.Backend.Services.Modules
         {
             builder.RegisterType<ThreadSwitcherToNewTask>()
                 .As<IThreadSwitcher>()
+                .SingleInstance();
+
+            builder.RegisterType<RabbitMqProducerContainer>()
+                .As<IRabbitMqProducerContainer>()
                 .SingleInstance();
 
             builder.RegisterType<RabbitMqNotifyService>()

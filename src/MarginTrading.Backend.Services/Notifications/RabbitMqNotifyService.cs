@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
@@ -17,7 +16,6 @@ using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Backend.Services.Mappers;
-using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.Backend.Services.Notifications
 {
@@ -28,20 +26,21 @@ namespace MarginTrading.Backend.Services.Notifications
         private readonly Dictionary<string, Lykke.RabbitMqBroker.Publisher.IMessageProducer<string>> _publishers;
         private readonly ILog _log;
         private readonly IOrderReader _orderReader;
+        private readonly IRabbitMqProducerContainer _producerContainer;
 
-        public RabbitMqNotifyService(IDateService dateService, 
+        public RabbitMqNotifyService(IDateService dateService,
             MarginTradingSettings settings,
-            ILog log, 
+            ILog log,
             IOrderReader orderReader,
-            IRabbitMqService rabbitMqService)
+            IRabbitMqProducerContainer rabbitMqProducerContainer)
         {
             _dateService = dateService;
             _settings = settings;
             _log = log;
             _orderReader = orderReader;
-            _publishers = new Dictionary<string, Lykke.RabbitMqBroker.Publisher.IMessageProducer<string>>();
+            _producerContainer = rabbitMqProducerContainer;
 
-            RegisterPublishers(rabbitMqService);
+            RegisterPublishers();
         }
 
         public Task OrderHistory(Order order, OrderUpdateType orderUpdateType, string activitiesMetadata = null)
@@ -55,7 +54,7 @@ namespace MarginTrading.Backend.Services.Notifications
                     relatedOrders.Add(relatedOrder);
                 }
             }
-            
+
             var historyEvent = new OrderHistoryEvent
             {
                 OrderSnapshot = order.ConvertToContract(relatedOrders),
@@ -63,98 +62,80 @@ namespace MarginTrading.Backend.Services.Notifications
                 Type = orderUpdateType.ToType<OrderHistoryTypeContract>(),
                 ActivitiesMetadata = activitiesMetadata
             };
-            
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, historyEvent,
-                _settings.RabbitMqQueues.OrderHistory.LogEventPublishing);
+
+            return TryProduceMessageAsync(historyEvent);
         }
 
         public Task OrderBookPrice(InstrumentBidAskPair quote, bool isEod)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                quote.ToRabbitMqContract(isEod),
-                false);
+            return TryProduceMessageAsync(quote.ToRabbitMqContract(isEod));
         }
 
         public Task AccountMarginEvent(MarginEventMessage eventMessage)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage,
-                _settings.RabbitMqQueues.AccountMarginEvents.LogEventPublishing);
+            return TryProduceMessageAsync(eventMessage);
         }
 
         public Task UpdateAccountStats(AccountStatsUpdateMessage message)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStats.ExchangeName, message,
-                _settings.RabbitMqQueues.AccountStats.LogEventPublishing);
+            return TryProduceMessageAsync(message);
         }
 
         public Task NewTrade(TradeContract trade)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.Trades.ExchangeName, trade,
-                _settings.RabbitMqQueues.Trades.LogEventPublishing);
+            return TryProduceMessageAsync(trade);
         }
 
         public Task ExternalOrder(ExecutionReport trade)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.ExternalOrder.ExchangeName, trade,
-                _settings.RabbitMqQueues.ExternalOrder.LogEventPublishing);
+            return TryProduceMessageAsync(trade);
         }
-        
+
         public Task PositionHistory(PositionHistoryEvent historyEvent)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.PositionHistory.ExchangeName, historyEvent,
-                _settings.RabbitMqQueues.PositionHistory.LogEventPublishing);
+            return TryProduceMessageAsync(historyEvent);
         }
 
         public Task Rfq(RfqEvent rfqEvent) =>
-            TryProduceMessageAsync(_settings.RfqChangedRabbitMqSettings.ExchangeName, rfqEvent, true);
+            TryProduceMessageAsync(rfqEvent);
 
-        private async Task TryProduceMessageAsync(string exchangeName, object message, bool logEvent)
+        private async Task TryProduceMessageAsync<T>(T message)
         {
-            string messageStr = null;
+            // TODO: double serialization
+            var messageStr = message.ToString();
+
+            string exchangeName = null;
+
             try
             {
-                messageStr = message.ToJson();
-                await _publishers[exchangeName].ProduceAsync(messageStr);
+                var (queueInfo, producer) = _producerContainer.GetProducer<T>();
+                exchangeName = queueInfo.ExchangeName;
+                await producer.ProduceAsync(message);
 
-                if (logEvent)
+                if (queueInfo.LogEventPublishing)
                     _log.WriteInfoAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr,
                         "Published RabbitMqEvent");
             }
             catch (Exception ex)
             {
 #pragma warning disable 4014
+                // TODO: exchangeName is null if producer is not found
                 _log.WriteErrorAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr, ex);
 #pragma warning restore 4014
             }
         }
 
-        private void RegisterPublishers(IRabbitMqService rabbitMqService)
+        private void RegisterPublishers()
         {
-            var publishExchanges = new List<string>
-            {
-                _settings.RabbitMqQueues.OrderHistory.ExchangeName,
-                _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
-                _settings.RabbitMqQueues.AccountStats.ExchangeName,
-                _settings.RabbitMqQueues.Trades.ExchangeName,
-                _settings.RabbitMqQueues.PositionHistory.ExchangeName,
-                _settings.RabbitMqQueues.ExternalOrder.ExchangeName,
-            };
+            _producerContainer.RegisterProducer<OrderHistoryEvent>(_settings.RabbitMqQueues.OrderHistory);
+            _producerContainer.RegisterProducer<BidAskPairRabbitMqContract>(_settings.RabbitMqQueues.OrderbookPrices);
+            _producerContainer.RegisterProducer<MarginEventMessage>(_settings.RabbitMqQueues.AccountMarginEvents);
+            _producerContainer.RegisterProducer<AccountStatsUpdateMessage>(_settings.RabbitMqQueues.AccountStats);
+            _producerContainer.RegisterProducer<TradeContract>(_settings.RabbitMqQueues.Trades);
+            _producerContainer.RegisterProducer<PositionHistoryEvent>(_settings.RabbitMqQueues.PositionHistory);
+            _producerContainer.RegisterProducer<ExecutionReport>(_settings.RabbitMqQueues.ExternalOrder);
 
-            var bytesSerializer = new BytesStringSerializer();
-
-            foreach (var exchangeName in publishExchanges)
-            {
-                var settings = new RabbitMqSettings
-                {
-                    ConnectionString = _settings.MtRabbitMqConnString, 
-                    ExchangeName = exchangeName
-                };
-                _publishers[exchangeName] = rabbitMqService.GetProducer(settings, bytesSerializer);
-            }
-
-            _publishers[_settings.RfqChangedRabbitMqSettings.ExchangeName] =
-                rabbitMqService.GetProducer(_settings.RfqChangedRabbitMqSettings, bytesSerializer);
+            _producerContainer.RegisterProducer<RfqEvent>(_settings.RfqChangedRabbitMqSettings, true);
         }
     }
 }
