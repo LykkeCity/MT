@@ -81,7 +81,7 @@ namespace MarginTrading.Backend.Services.Services
             if (typeof(TData) == SpecialLiquidationDataType)
             {
                 await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
-                    nameof(GetOrAddAsync),
+                    nameof(Save),
                     new { executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
                     $"RFQ has been updated therefore {nameof(RfqEvent)} is about to be published");
 

@@ -8,7 +8,12 @@ namespace MarginTrading.Backend.Middleware
 {
     public static class ProblemDetailsFactory
     {
-        public static ProblemDetails Create(string title, string detail, string type, string instance, int status, Dictionary<string, string[]> errors)
+        private static ProblemDetails Create(string title,
+            string detail,
+            string type,
+            string instance,
+            int status,
+            Dictionary<string, string[]> errors)
         {
             return new ProblemDetails
             {
@@ -21,13 +26,23 @@ namespace MarginTrading.Backend.Middleware
             };
         }
 
-        public static ProblemDetails Create(string requestPath, string errorCode, string errorMessage)
+        public static ProblemDetails Create422(string requestPath, string errorCode, string errorMessage)
         {
-            return Create("Internal Server Error",
-                string.Empty,
-                "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+            return Create("Unprocessable Entity",
+                errorMessage,
+                "https://www.rfc-editor.org/rfc/rfc4918#section-11.2",
                 requestPath,
-                500,
+                422,
+                new Dictionary<string, string[]> { { errorCode, new[] { errorMessage } } });
+        }
+
+        public static ProblemDetails Create400(string requestPath, string errorCode, string errorMessage)
+        {
+            return Create("Bad Request",
+                string.Empty,
+                "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                requestPath,
+                400,
                 new Dictionary<string, string[]> { { errorCode, new[] { errorMessage } } });
         }
     }

@@ -15,7 +15,8 @@ namespace MarginTrading.Backend.Core.Exceptions
         {
         }
 
-        public AccountValidationException(string message, AccountValidationError errorCode, Exception innerException) : base(message, errorCode, innerException)
+        public AccountValidationException(string message, AccountValidationError errorCode, Exception innerException) :
+            base(message, errorCode, innerException)
         {
         }
     }
