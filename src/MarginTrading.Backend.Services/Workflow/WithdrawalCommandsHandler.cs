@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -74,6 +75,10 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             catch
             {
+                _logger.LogWarning("Freezing the amount for withdrawal has failed. Reason: Failed to get account data. " +
+                    "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                    command.OperationId, command.AccountId, command.Amount);
+
                 publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(),
                     command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
                 return;
@@ -83,9 +88,10 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 // freezeSucceeded is used to minimize the scope under lock
                 var freezeSucceeded = false;
+                var freeMargin = account.GetFreeMargin();
+
                 lock (GetLockObject(command.AccountId))
                 {
-                    // var freeMargin = account.GetFreeMargin();
                     if (account.GetFreeMargin() >= command.Amount)
                     {
                         var freezeAmount = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
@@ -100,19 +106,29 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     _chaosKitty.Meow(command.OperationId);
 
+                    _logger.LogInformation("The amount for withdrawal has been frozen. " +
+                        "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                        command.OperationId, command.AccountId, command.Amount);
+
                     publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId,
                         _dateService.Now(),
                         command.AccountId, command.Amount, command.Reason));
                 }
                 else
                 {
+                    var reasonStr = $"There's not enough free margin. Available free margin is: {Math.Round(freeMargin, 2)}";
+
+                    _logger.LogWarning("Freezing the amount for withdrawal has failed. " +
+                        "Details: (Amount: {Amount}, AccountId: {AccountId}, OperationId: {OperationId}, Reason: {Reason})",
+                        command.Amount, command.AccountId, command.OperationId, reasonStr);
+
                     publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
                         _dateService.Now(),
-                        command.AccountId, command.Amount, "Not enough free margin"));
+                        command.AccountId, command.Amount, reasonStr));
                 }
             
 
-            _chaosKitty.Meow(command.OperationId);
+                _chaosKitty.Meow(command.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
