@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
@@ -101,9 +102,6 @@ namespace MarginTrading.Backend.Services.Notifications
 
         private async Task TryProduceMessageAsync<T>(T message)
         {
-            // TODO: double serialization
-            var messageStr = message.ToString();
-
             string exchangeName = null;
 
             try
@@ -113,13 +111,16 @@ namespace MarginTrading.Backend.Services.Notifications
                 await producer.ProduceAsync(message);
 
                 if (queueInfo.LogEventPublishing)
+                {
+                    var messageStr =  message.ToJson();
                     _log.WriteInfoAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr,
                         "Published RabbitMqEvent");
+                }
             }
             catch (Exception ex)
             {
 #pragma warning disable 4014
-                // TODO: exchangeName is null if producer is not found
+                var messageStr =  message.ToJson();
                 _log.WriteErrorAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr, ex);
 #pragma warning restore 4014
             }

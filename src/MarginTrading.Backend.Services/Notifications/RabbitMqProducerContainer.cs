@@ -26,16 +26,19 @@ namespace MarginTrading.Backend.Services.Notifications
             _settings = settings;
         }
 
+        /// <inheritdoc />
         public void RegisterProducer<TMessage>(RabbitMqQueueInfoWithLogging queueInfo)
         {
             RegisterProducerImpl<TMessage>(queueInfo);
         }
 
+        /// <inheritdoc />
         public void RegisterProducer<TMessage>(RabbitMqQueueInfo queueInfo)
         {
             RegisterProducerImpl<TMessage>(queueInfo.WithLogging(false));
         }
 
+        /// <inheritdoc />
         public void RegisterProducer<TMessage>(RabbitMqSettings settings, bool shouldLogProducedEvents)
         {
             var producer = _rabbitMqService.GetProducer(settings, _rabbitMqService.GetJsonSerializer<TMessage>());
@@ -58,12 +61,7 @@ namespace MarginTrading.Backend.Services.Notifications
         }
 
 
-        /// <summary>
-        /// Gets producer for a specified type
-        /// ShouldLogProducedEvents states if a message should be logged in plain json
-        /// </summary>
-        /// <typeparam name="TMessage">Type of produced message</typeparam>
-        /// <returns></returns>
+        /// <inheritdoc />
         public (RabbitMqQueueInfoWithLogging QueueInfo, IMessageProducer<TMessage> Producer) GetProducer<TMessage>()
         {
             var type = typeof(TMessage);
