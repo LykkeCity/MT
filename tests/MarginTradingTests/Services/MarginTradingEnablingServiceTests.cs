@@ -7,6 +7,8 @@ using Lykke.RabbitMqBroker.Publisher;
 using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Client;
@@ -55,8 +57,8 @@ namespace MarginTradingTests.Services
             };
 
             _marginTradingSettingsCacheService = Mock.Of<IMarginTradingSettingsCacheService>();
-            _sut = new MarginTradingEnablingService(_clientAccountsService, rabbitMqService, _marginSettings,
-                _marginTradingSettingsCacheService);
+            _sut = new MarginTradingEnablingService(_clientAccountsService, _marginSettings,
+                _marginTradingSettingsCacheService, new RabbitMqProducerContainer(rabbitMqService, _marginSettings));
             _sut.Start();
         }
 

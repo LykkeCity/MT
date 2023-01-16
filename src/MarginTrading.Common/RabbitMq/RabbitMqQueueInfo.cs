@@ -6,5 +6,14 @@ namespace MarginTrading.Common.RabbitMq
     public class RabbitMqQueueInfo
     {
         public string ExchangeName { get; set; }
+
+        public RabbitMqSettings ToRabbitMqSettings(string connectionString)
+        {
+            return  new RabbitMqSettings
+            {
+                ConnectionString = connectionString,
+                ExchangeName = ExchangeName,
+            };
+        }
     }
 }
