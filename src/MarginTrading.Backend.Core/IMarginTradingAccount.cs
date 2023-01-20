@@ -36,6 +36,7 @@ namespace MarginTrading.Backend.Core
         decimal TodayStartBalance { get; }
         string LogInfo { get; set; }
         decimal TemporaryCapital { get; set; }
+        public DateTime ClientModificationTimestamp { get; set; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -61,13 +62,10 @@ namespace MarginTrading.Backend.Core
         public decimal TodayCommissionAmount { get; set; }
         public decimal TodayOtherAmount { get; set; }
         public decimal TodayStartBalance { get; set; }
-        
         public string LogInfo { get; set; }
-
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
-
         public decimal TemporaryCapital { get; set; }
-
+        public DateTime ClientModificationTimestamp { get; set; }
         public static MarginTradingAccount Create(IMarginTradingAccount src, AccountFpl accountFpl = null)
         {
             return new MarginTradingAccount

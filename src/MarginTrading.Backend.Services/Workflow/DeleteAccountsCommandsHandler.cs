@@ -218,7 +218,7 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 await _accountsCacheService.UpdateAccountChanges(account.Id, account.TradingConditionId,
                     account.WithdrawTransferLimit, toDisablementState, 
-                    toDisablementState, commandTime, account.AdditionalInfo);
+                    toDisablementState, commandTime, account.AdditionalInfo, account.ClientModificationTimestamp);
             }
             catch (Exception exception)
             {
