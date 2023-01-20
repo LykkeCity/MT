@@ -206,8 +206,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public async Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
-            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, 
-            DateTime eventTime, string additionalInfo)
+            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime, string additionalInfo)
         {
             _lockSlim.EnterWriteLock();
             try
