@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Core
 
         Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, 
-            DateTime eventTime, string additionalInfo, DateTime clientModificationTimestamp);
+            DateTime eventTime, string additionalInfo);
         Task<bool> HandleBalanceChange(string accountId,
             decimal accountBalance, decimal changeAmount, AccountBalanceChangeReasonType reasonType, DateTime eventTime);
         

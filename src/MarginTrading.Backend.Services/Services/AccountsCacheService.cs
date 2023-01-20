@@ -10,6 +10,7 @@ using Common.Log;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Services;
@@ -206,23 +207,12 @@ namespace MarginTrading.Backend.Services
 
         public async Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, 
-            DateTime eventTime, string additionalInfo, DateTime clientModificationTimestamp)
+            DateTime eventTime, string additionalInfo)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 var account = _accounts[accountId];
-
-                if(clientModificationTimestamp > account.ClientModificationTimestamp)
-                {
-                    account.TradingConditionId = updatedTradingConditionId;
-                    account.ClientModificationTimestamp = clientModificationTimestamp;
-
-                    await _log.WriteInfoAsync(nameof(AccountsCacheService), 
-                        nameof(UpdateAccountChanges),
-                        $"The TradingCondition is set to {updatedTradingConditionId} for account {accountId}.");
-                }
-
                 if (account.LastUpdateTime > eventTime)
                 {
                     await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
@@ -230,6 +220,7 @@ namespace MarginTrading.Backend.Services
                     return false;
                 } 
                 
+                account.TradingConditionId = updatedTradingConditionId;
                 account.WithdrawTransferLimit = updatedWithdrawTransferLimit;
                 account.IsDisabled = isDisabled;
                 account.IsWithdrawalDisabled = isWithdrawalDisabled;
