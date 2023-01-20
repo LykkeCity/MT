@@ -220,12 +220,12 @@ namespace MarginTrading.Backend.Services
                     return false;
                 } 
                 
+                account.TradingConditionId = updatedTradingConditionId;
                 account.WithdrawTransferLimit = updatedWithdrawTransferLimit;
                 account.IsDisabled = isDisabled;
                 account.IsWithdrawalDisabled = isWithdrawalDisabled;
                 account.LastUpdateTime = eventTime;
                 account.AdditionalInfo = additionalInfo;
-                account.TradingConditionId = updatedTradingConditionId;
             }
             finally
             {

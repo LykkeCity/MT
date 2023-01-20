@@ -97,7 +97,7 @@ namespace MarginTrading.Backend.Services.Workflow
                                 && await _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
                                     updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit,
                                     updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled, 
-                                    DateTimeExtensions.MaxDateTime(e.ChangeTimestamp, e.Account.ClientModificationTimestamp), 
+                                    DateTimeExtensions.MaxDateTime(e.ChangeTimestamp, e.Account.ClientModificationTimestamp),
                                     updatedAccount.AdditionalInfo))
                             {
                                 _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,

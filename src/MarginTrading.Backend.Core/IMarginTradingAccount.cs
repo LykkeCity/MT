@@ -64,7 +64,6 @@ namespace MarginTrading.Backend.Core
         public string LogInfo { get; set; }
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
         public decimal TemporaryCapital { get; set; }
-        public DateTime ClientModificationTimestamp { get; set; }
         public static MarginTradingAccount Create(IMarginTradingAccount src, AccountFpl accountFpl = null)
         {
             return new MarginTradingAccount
