@@ -36,7 +36,6 @@ namespace MarginTrading.Backend.Core
         decimal TodayStartBalance { get; }
         string LogInfo { get; set; }
         decimal TemporaryCapital { get; set; }
-        public DateTime ClientModificationTimestamp { get; set; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
