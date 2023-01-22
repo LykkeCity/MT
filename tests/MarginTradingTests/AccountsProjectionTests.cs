@@ -13,6 +13,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
@@ -311,7 +312,38 @@ namespace MarginTradingTests
                 It.IsAny<AccountBalanceChangedEventArgs>()), Times.Once);
         }
 
-        private AccountsProjection AssertEnv(string accountId = null, string failMessage = null)
+        [Test]
+        [TestCase("2023-01-18T10:00:00+0000", "2023-01-18T11:00:00+0000")]
+        [TestCase("2023-01-19T17:00:00+0000", "2023-01-19T15:00:00+0000")]
+        [TestCase("2023-01-19T17:01:00+0000", "2023-01-19T17:00:00+0000")]
+        public async Task UpdateAccountCache_ShouldBeCalledWith_TheMostRecentTimestamp_Successfully(string changeTimeStr, string clientModificationTimestampStr)
+        {
+            //Arrange
+            var changeTimestamp = DateTime.Parse(changeTimeStr);
+            var clientModificationTimestamp = DateTime.Parse(clientModificationTimestampStr);
+
+            DateTime greater = DateTimeExtensions.MaxDateTime(changeTimestamp, clientModificationTimestamp);
+
+            var mockAccountCacheService = new Mock<IAccountsCacheService>();
+            mockAccountCacheService.Setup(svc => svc.TryGet(It.IsAny<string>())).Returns(new MarginTradingAccount());
+
+            var accountProjection = AssertEnv(accountsCacheServiceArg: mockAccountCacheService.Object);
+
+            var accountContract = new AccountContract() { ModificationTimestamp = changeTimestamp, 
+                ClientModificationTimestamp = clientModificationTimestamp };
+            var @event = new AccountChangedEvent(changeTimestamp, "", accountContract, AccountChangedEventTypeContract.Updated);
+
+            // Act
+            await accountProjection.Handle(@event);
+        
+            // Assert
+            mockAccountCacheService.Verify(svc => svc.UpdateAccountChanges(It.IsAny<string>(), 
+                It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<bool>(), It.IsAny<bool>(), 
+                It.Is<DateTime>(dt => dt == greater), It.IsAny<string>()));
+        }
+
+        private AccountsProjection AssertEnv(string accountId = null, string failMessage = null, 
+            IAccountsCacheService accountsCacheServiceArg = null)
         {
             _accountBalanceChangedEventChannelMock = new Mock<IEventChannel<AccountBalanceChangedEventArgs>>();
             _accountUpdateServiceMock = new Mock<IAccountUpdateService>();
@@ -340,9 +372,16 @@ namespace MarginTradingTests
             }
             
             _connectionMultiplexerMock = new Mock<IConnectionMultiplexer>();
-            
-            _accountsCacheService = new AccountsCacheService(DateService, _logMock.Object, _connectionMultiplexerMock.Object);
-            _accountsCacheService.TryAddNew(Convert(Accounts[0]));
+
+            if(accountsCacheServiceArg == null)
+            {
+                _accountsCacheService = new AccountsCacheService(DateService, _logMock.Object, _connectionMultiplexerMock.Object);
+                _accountsCacheService.TryAddNew(Convert(Accounts[0]));
+            }
+            else 
+            {
+                _accountsCacheService = accountsCacheServiceArg;
+            }
 
             _ordersCache = new OrdersCache();
             _fakePosition = new Mock<Position>();
