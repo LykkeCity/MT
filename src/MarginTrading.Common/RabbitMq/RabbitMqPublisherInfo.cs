@@ -3,7 +3,7 @@
 
 namespace MarginTrading.Common.RabbitMq
 {
-    public class RabbitMqQueueInfo
+    public class RabbitMqPublisherInfo
     {
         public string ExchangeName { get; set; }
 

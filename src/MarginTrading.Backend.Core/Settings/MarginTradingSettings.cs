@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Core.Settings
         
         public Db Db { get; set; }
         
-        public RabbitMqQueues RabbitMqQueues { get; set; }
+        public RabbitMqPublishers RabbitMqPublishers { get; set; }
         
         [Optional, CanBeNull]
         public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
@@ -41,6 +41,8 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqSettings BrokerSettingsRabbitMqSettings { get; set; }
         
         public RabbitMqSettings RfqChangedRabbitMqSettings { get; set; }
+        
+        public RabbitMqSettings SettingsChangedRabbitMqSettings { get; set; }
 
         [AmqpCheck]
         public string MtRabbitMqConnString { get; set; }

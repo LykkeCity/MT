@@ -66,10 +66,10 @@ namespace MarginTradingTests
             var overnightMarginSettings = new OvernightMarginSettings();
             var marginSettings = new MarginTradingSettings
             {
-                RabbitMqQueues =
-                    new RabbitMqQueues
+                RabbitMqPublishers =
+                    new RabbitMqPublishers
                     {
-                        MarginTradingEnabledChanged = new RabbitMqQueueInfo { ExchangeName = "" }
+                        MarginTradingEnabledChanged = new RabbitMqPublisherInfo { ExchangeName = "" }
                     },
                 BlobPersistence = new BlobPersistenceSettings()
                 {
