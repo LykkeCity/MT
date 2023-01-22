@@ -13,6 +13,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
@@ -321,12 +322,7 @@ namespace MarginTradingTests
             var changeTimestamp = DateTime.Parse(changeTimeStr);
             var clientModificationTimestamp = DateTime.Parse(clientModificationTimestampStr);
 
-            DateTime greater = default(DateTime);
-
-            if (changeTimestamp > clientModificationTimestamp)
-                greater = changeTimestamp;
-            else
-                greater = clientModificationTimestamp;
+            DateTime greater = DateTimeExtensions.MaxDateTime(changeTimestamp, clientModificationTimestamp);
 
             var mockAccountCacheService = new Mock<IAccountsCacheService>();
             mockAccountCacheService.Setup(svc => svc.TryGet(It.IsAny<string>())).Returns(new MarginTradingAccount());
