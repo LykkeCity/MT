@@ -50,9 +50,9 @@ namespace MarginTradingTests.Services
             _marginSettings = new MarginTradingSettings
             {
                 MtRabbitMqConnString = "conn str",
-                RabbitMqQueues = new RabbitMqQueues
+                RabbitMqPublishers = new RabbitMqPublishers
                 {
-                    MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = "exchange name"}
+                    MarginTradingEnabledChanged = new RabbitMqPublisherInfo {ExchangeName = "exchange name"}
                 }
             };
 

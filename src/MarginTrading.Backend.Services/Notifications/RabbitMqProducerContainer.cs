@@ -16,8 +16,8 @@ namespace MarginTrading.Backend.Services.Notifications
 
         private readonly Dictionary<Type, object> _producers = new Dictionary<Type, object>();
 
-        private readonly Dictionary<Type, RabbitMqQueueInfoWithLogging> _producerSettings =
-            new Dictionary<Type, RabbitMqQueueInfoWithLogging>();
+        private readonly Dictionary<Type, RabbitMqPublisherInfoWithLogging> _producerSettings =
+            new Dictionary<Type, RabbitMqPublisherInfoWithLogging>();
 
         public RabbitMqProducerContainer(IRabbitMqService rabbitMqService,
             MarginTradingSettings settings)
@@ -27,15 +27,15 @@ namespace MarginTrading.Backend.Services.Notifications
         }
 
         /// <inheritdoc />
-        public void RegisterProducer<TMessage>(RabbitMqQueueInfoWithLogging queueInfo)
+        public void RegisterProducer<TMessage>(RabbitMqPublisherInfoWithLogging publisherInfo)
         {
-            RegisterProducerImpl<TMessage>(queueInfo);
+            RegisterProducerImpl<TMessage>(publisherInfo);
         }
 
         /// <inheritdoc />
-        public void RegisterProducer<TMessage>(RabbitMqQueueInfo queueInfo)
+        public void RegisterProducer<TMessage>(RabbitMqPublisherInfo publisherInfo)
         {
-            RegisterProducerImpl<TMessage>(queueInfo.WithLogging(false));
+            RegisterProducerImpl<TMessage>(publisherInfo.WithLogging(false));
         }
 
         /// <inheritdoc />
@@ -44,25 +44,25 @@ namespace MarginTrading.Backend.Services.Notifications
             var producer = _rabbitMqService.GetProducer(settings, _rabbitMqService.GetJsonSerializer<TMessage>());
             var type = typeof(TMessage);
             _producers.Add(type, producer);
-            _producerSettings.Add(type, new RabbitMqQueueInfoWithLogging()
+            _producerSettings.Add(type, new RabbitMqPublisherInfoWithLogging()
             {
                 ExchangeName = settings.ExchangeName,
                 LogEventPublishing = shouldLogProducedEvents,
             });
         }
 
-        private void RegisterProducerImpl<TMessage>(RabbitMqQueueInfoWithLogging queueInfo)
+        private void RegisterProducerImpl<TMessage>(RabbitMqPublisherInfoWithLogging publisherInfo)
         {
-            var settings = queueInfo.ToRabbitMqSettings(_settings.MtRabbitMqConnString);
+            var settings = publisherInfo.ToRabbitMqSettings(_settings.MtRabbitMqConnString);
             var producer = _rabbitMqService.GetProducer(settings, _rabbitMqService.GetJsonSerializer<TMessage>());
             var type = typeof(TMessage);
             _producers.Add(type, producer);
-            _producerSettings.Add(type, queueInfo);
+            _producerSettings.Add(type, publisherInfo);
         }
 
 
         /// <inheritdoc />
-        public (RabbitMqQueueInfoWithLogging QueueInfo, IMessageProducer<TMessage> Producer) GetProducer<TMessage>()
+        public (RabbitMqPublisherInfoWithLogging PublisherInfo, IMessageProducer<TMessage> Producer) GetProducer<TMessage>()
         {
             var type = typeof(TMessage);
             return (

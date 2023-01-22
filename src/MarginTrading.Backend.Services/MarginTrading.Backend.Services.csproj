@@ -38,7 +38,7 @@
     <PackageReference Include="Lykke.Snow.Common" Version="1.52.0" />
     <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="3.30.1" />
     <PackageReference Include="LykkeBiz.Messaging.RabbitMq" Version="5.0.1" />
-    <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="2.0.3" />
+    <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />

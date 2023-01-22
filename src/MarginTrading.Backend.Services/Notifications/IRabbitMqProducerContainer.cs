@@ -9,20 +9,20 @@ namespace MarginTrading.Backend.Services.Notifications
     public interface IRabbitMqProducerContainer
     {
         /// <summary>
-        /// Registers a producer with RabbitMqQueueInfoWithLogging queueInfo.
-        /// Human-readable message logging is enabled based on a setting in queueInfo.
+        /// Registers a producer with RabbitMqPublisherInfoWithLogging publisherInfo.
+        /// Human-readable message logging is enabled based on a setting in publisherInfo.
         /// </summary>
-        /// <param name="queueInfo"></param>
+        /// <param name="publisherInfo"></param>
         /// <typeparam name="TMessage"></typeparam>
-        void RegisterProducer<TMessage>(RabbitMqQueueInfoWithLogging queueInfo);
+        void RegisterProducer<TMessage>(RabbitMqPublisherInfoWithLogging publisherInfo);
         
         /// <summary>
-        /// Registers a producer with RabbitMqQueueInfo queueInfo.
+        /// Registers a producer with RabbitMqPublisherInfo publisherInfo.
         /// Human-readable message logging is disabled.
         /// </summary>
-        /// <param name="queueInfo"></param>
+        /// <param name="publisherInfo"></param>
         /// <typeparam name="TMessage"></typeparam>
-        void RegisterProducer<TMessage>(RabbitMqQueueInfo queueInfo);
+        void RegisterProducer<TMessage>(RabbitMqPublisherInfo publisherInfo);
 
         /// <summary>
         /// Registers a producer with extended settings from RabbitMqSettings.
@@ -35,10 +35,10 @@ namespace MarginTrading.Backend.Services.Notifications
 
         /// <summary>
         /// Gets producer for a specified type.
-        /// QueueInfo contains LogEventPublishing flag that states if a message should be logged in plain json.
+        /// PublisherInfo contains LogEventPublishing flag that states if a message should be logged in plain json.
         /// </summary>
         /// <typeparam name="TMessage">Type of produced message</typeparam>
         /// <returns></returns>
-        (RabbitMqQueueInfoWithLogging QueueInfo, IMessageProducer<TMessage> Producer) GetProducer<TMessage>();
+        (RabbitMqPublisherInfoWithLogging PublisherInfo, IMessageProducer<TMessage> Producer) GetProducer<TMessage>();
     }
 }

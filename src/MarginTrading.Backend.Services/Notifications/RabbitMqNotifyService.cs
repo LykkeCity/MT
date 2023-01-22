@@ -106,11 +106,11 @@ namespace MarginTrading.Backend.Services.Notifications
 
             try
             {
-                var (queueInfo, producer) = _producerContainer.GetProducer<T>();
-                exchangeName = queueInfo.ExchangeName;
+                var (publisherInfo, producer) = _producerContainer.GetProducer<T>();
+                exchangeName = publisherInfo.ExchangeName;
                 await producer.ProduceAsync(message);
 
-                if (queueInfo.LogEventPublishing)
+                if (publisherInfo.LogEventPublishing)
                 {
                     var messageStr =  message.ToJson();
                     _log.WriteInfoAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr,
@@ -128,13 +128,13 @@ namespace MarginTrading.Backend.Services.Notifications
 
         private void RegisterPublishers()
         {
-            _producerContainer.RegisterProducer<OrderHistoryEvent>(_settings.RabbitMqQueues.OrderHistory);
-            _producerContainer.RegisterProducer<BidAskPairRabbitMqContract>(_settings.RabbitMqQueues.OrderbookPrices);
-            _producerContainer.RegisterProducer<MarginEventMessage>(_settings.RabbitMqQueues.AccountMarginEvents);
-            _producerContainer.RegisterProducer<AccountStatsUpdateMessage>(_settings.RabbitMqQueues.AccountStats);
-            _producerContainer.RegisterProducer<TradeContract>(_settings.RabbitMqQueues.Trades);
-            _producerContainer.RegisterProducer<PositionHistoryEvent>(_settings.RabbitMqQueues.PositionHistory);
-            _producerContainer.RegisterProducer<ExecutionReport>(_settings.RabbitMqQueues.ExternalOrder);
+            _producerContainer.RegisterProducer<OrderHistoryEvent>(_settings.RabbitMqPublishers.OrderHistory);
+            _producerContainer.RegisterProducer<BidAskPairRabbitMqContract>(_settings.RabbitMqPublishers.OrderbookPrices);
+            _producerContainer.RegisterProducer<MarginEventMessage>(_settings.RabbitMqPublishers.AccountMarginEvents);
+            _producerContainer.RegisterProducer<AccountStatsUpdateMessage>(_settings.RabbitMqPublishers.AccountStats);
+            _producerContainer.RegisterProducer<TradeContract>(_settings.RabbitMqPublishers.Trades);
+            _producerContainer.RegisterProducer<PositionHistoryEvent>(_settings.RabbitMqPublishers.PositionHistory);
+            _producerContainer.RegisterProducer<ExecutionReport>(_settings.RabbitMqPublishers.ExternalOrder);
 
             _producerContainer.RegisterProducer<RfqEvent>(_settings.RfqChangedRabbitMqSettings, true);
         }

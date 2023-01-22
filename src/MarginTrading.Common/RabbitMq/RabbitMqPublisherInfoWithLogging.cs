@@ -5,7 +5,7 @@ using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Common.RabbitMq
 {
-    public class RabbitMqQueueInfoWithLogging : RabbitMqQueueInfo
+    public class RabbitMqPublisherInfoWithLogging : RabbitMqPublisherInfo
     {
         [Optional]
         public bool LogEventPublishing { get; set; } = true;

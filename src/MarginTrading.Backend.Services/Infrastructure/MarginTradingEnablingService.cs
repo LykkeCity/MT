@@ -53,7 +53,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public void Start()
         {
-            _producerContainer.RegisterProducer<MarginTradingEnabledChangedMessage>(_marginSettings.RabbitMqQueues.MarginTradingEnabledChanged);
+            _producerContainer.RegisterProducer<MarginTradingEnabledChangedMessage>(_marginSettings.RabbitMqPublishers.MarginTradingEnabledChanged);
         }
     }
 }

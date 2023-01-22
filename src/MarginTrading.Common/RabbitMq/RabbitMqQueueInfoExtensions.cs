@@ -5,9 +5,9 @@ namespace MarginTrading.Common.RabbitMq
 {
     public static class RabbitMqQueueInfoExtensions
     {
-        public static RabbitMqQueueInfoWithLogging WithLogging(this RabbitMqQueueInfo info, bool logEventPublishing)
+        public static RabbitMqPublisherInfoWithLogging WithLogging(this RabbitMqPublisherInfo info, bool logEventPublishing)
         {
-            return new RabbitMqQueueInfoWithLogging()
+            return new RabbitMqPublisherInfoWithLogging()
             {
                 ExchangeName = info.ExchangeName,
                 LogEventPublishing = logEventPublishing,
