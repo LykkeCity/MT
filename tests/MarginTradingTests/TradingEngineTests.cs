@@ -1288,7 +1288,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _tradingEngine.ChangeOrderAsync(order.Id, 1.2M, OriginatorType.Investor,
                     Guid.NewGuid().ToString()).GetAwaiter().GetResult());
 

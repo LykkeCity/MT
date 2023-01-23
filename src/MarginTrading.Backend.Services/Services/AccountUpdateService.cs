@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Services.Services
             UpdateAccount(account, GetPositions(account.Id), GetActiveOrders(account.Id));
         }
 
-        public async Task FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
+        public decimal FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
         {
             var account = _accountsProvider.GetAccountById(accountId);
 
@@ -87,6 +87,8 @@ namespace MarginTrading.Backend.Services.Services
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
             }
+
+            return account.AccountFpl.WithdrawalFrozenMargin;
         }
 
         public async Task UnfreezeWithdrawalMargin(string accountId, string operationId)
@@ -174,7 +176,7 @@ namespace MarginTrading.Backend.Services.Services
                 $"Calculation made on order");
 
             if (orderBalanceAvailable < orderMargin)
-                throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
+                throw new OrderRejectionException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
                     $"Account available margin: {marginAvailable}, order margin: {orderMargin}, pnl at execution: {pnlAtExecution}, entry cost: {(decimal)entryCost}, exit cost: {(decimal)exitCost} ");
         }
@@ -269,7 +271,7 @@ namespace MarginTrading.Backend.Services.Services
 
                 if (openPriceInfo.price == null || closePriceInfo == null)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                    throw new OrderRejectionException(OrderRejectReason.NoLiquidity,
                         "Price for open/close can not be calculated");
                 }
 

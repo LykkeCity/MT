@@ -4,7 +4,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Extensions;
@@ -14,81 +16,86 @@ using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
 {
+    /// <summary>
+    /// Handles exceptions - inheritors from <see cref="ValidationException"/>
+    /// and returns responses as RFC 7807 compliant Problem Details with
+    /// corresponding business error code.
+    /// To add new exception following steps are requried:
+    /// 1. Add new domain error code enum.
+    /// 2. Add new corresponsing errors to be used as public error codes to
+    /// <see cref="ValidationErrorCodes"/> class.
+    /// 3. Add mapping from domain error code to public error code
+    /// to <see cref="PublicErrorCodeMap"/> class.
+    /// 4. Finally, add new exception class - inheritor
+    /// from <see cref="ValidationException"/>
+    /// </summary>
     public class ValidationExceptionHandler
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILog _log;
-
+        
         public ValidationExceptionHandler(IHttpContextAccessor httpContextAccessor, ILog log)
         {
             _httpContextAccessor = httpContextAccessor;
             _log = log;
         }
-
-        public async Task<bool> TryHandleAsync(Exception ex)
+        
+        public static bool CanHandleException(Exception ex)
         {
-            if (ex is ValidateOrderException validateOrderException)
-            {
-                return await TryHandleOrderValidationException(validateOrderException);
-            }
-
-            if (ex is AccountValidationException accountValidationException)
-            {
-                await HandleAccountValidationException(accountValidationException);
-                return true;
-            }
-
-            if (ex is InstrumentValidationException instrumentValidationException)
-            {
-                await HandleInstrumentValidationException(instrumentValidationException);
-                return true;
-            }
-
-            return false;
+            return (ex is OrderRejectionException orderException && orderException.IsPublic()) ||
+                   ex.IsValidationException();
         }
 
-        private async Task<bool> TryHandleOrderValidationException(ValidateOrderException ex)
+        /// <summary>
+        /// Writes error to response in problem details format for only specific cases:
+        /// <a href="https://tools.ietf.org/html/rfc7807">RFC 7807</a>.
+        /// Check with <see cref="CanHandleException"/> before calling this method.
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <returns></returns>
+        public Task WriteProblemDetails(Exception ex)
         {
-            var responseErrorCode = ResponseErrorCodeMap.MapOrderRejectReason(ex.RejectReason);
-
-            if (responseErrorCode == ResponseErrorCodeMap.UnsupportedError)
+            switch (ex)
             {
-                return false;
+                case OrderRejectionException e:
+                    return HandleOrderRejectionException(e);
+                case { } e when e.IsValidationException():
+                    var publicErrorCode = PublicErrorCodeMap.MapFromValidationExceptionOrRaise(e);
+                    return HandleValidationException(e, publicErrorCode);
             }
+            
+            return Task.CompletedTask;
+        }
+        
+        private async Task HandleOrderRejectionException(OrderRejectionException ex)
+        {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return;
+            }
+            
+            var responseErrorCode = PublicErrorCodeMap.Map(ex.RejectReason);
+            
+            await Log(ex, responseErrorCode);
 
-            await Log(ex);
-                
-            var problemDetails = ProblemDetailsFactory.Create(
+            var problemDetails = ProblemDetailsFactory.Create422(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
                 ex.Message);
                 
             await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
-            
-            return true;
         }
 
-        private async Task HandleAccountValidationException(AccountValidationException ex)
+        private async Task HandleValidationException(Exception ex, string responseErrorCode)
         {
-            await Log(ex);
-
-            var responseErrorCode = ResponseErrorCodeMap.MapAccountValidationError(ex.ErrorCode); 
-
-            var problemDetails = ProblemDetailsFactory.Create(
-                _httpContextAccessor.HttpContext.Request.Path,
-                responseErrorCode,
-                ex.Message);
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return;
+            }
             
-            await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
-        }
+            await Log(ex, responseErrorCode);
 
-        private async Task HandleInstrumentValidationException(InstrumentValidationException ex)
-        {
-            await Log(ex);
-
-            var responseErrorCode = ResponseErrorCodeMap.MapInstrumentValidationError(ex.ErrorCode);
-
-            var problemDetails = ProblemDetailsFactory.Create(
+            var problemDetails = ProblemDetailsFactory.Create400(
                 _httpContextAccessor.HttpContext.Request.Path,
                 responseErrorCode,
                 ex.Message);
@@ -96,8 +103,13 @@ namespace MarginTrading.Backend.Middleware
             await _httpContextAccessor.HttpContext.Response.WriteProblemDetailsAsync(problemDetails);
         }
         
-        private async Task Log(Exception ex)
+        private async Task Log(Exception ex, string responseErrorCode)
         {
+            if (_httpContextAccessor.HttpContext == null)
+            {
+                return;
+            }
+            
             string bodyPart;
 
             using (var memoryStream = new MemoryStream())
@@ -107,7 +119,9 @@ namespace MarginTrading.Backend.Middleware
 
             var requestUri = _httpContextAccessor.HttpContext.Request.GetUri().AbsoluteUri;
 
-            await _log.WriteInfoAsync(nameof(ValidationExceptionHandler), requestUri, bodyPart + ex.Message);
+            await _log.WriteWarningAsync(nameof(ValidationExceptionHandler),
+                new { requestUri, responseErrorCode }.ToJson(),
+                new { bodyPart, message = ex.Message }.ToJson());
         }
     }
 }

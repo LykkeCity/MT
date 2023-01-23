@@ -16,7 +16,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Filters;
@@ -42,7 +41,6 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrdersCache _ordersCache;
         private readonly IDateService _dateService;
         private readonly IOrderValidator _orderValidator;
-        private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
 
         public OrdersController(
@@ -52,7 +50,6 @@ namespace MarginTrading.Backend.Controllers
             OrdersCache ordersCache,
             IDateService dateService,
             IOrderValidator orderValidator,
-            IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender)
         {
             _tradingEngine = tradingEngine;
@@ -61,7 +58,6 @@ namespace MarginTrading.Backend.Controllers
             _ordersCache = ordersCache;
             _dateService = dateService;
             _orderValidator = orderValidator;
-            _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
         }
 
@@ -72,7 +68,8 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPatch]
-        public async Task<Dictionary<string, string>> UpdateRelatedOrderBulkAsync([FromBody] UpdateRelatedOrderBulkRequest request)
+        public async Task<Dictionary<string, string>> UpdateRelatedOrderBulkAsync(
+            [FromBody] UpdateRelatedOrderBulkRequest request)
         {
             var result = new Dictionary<string, string>();
 
@@ -87,7 +84,7 @@ namespace MarginTrading.Backend.Controllers
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
                         $"Failed to update related order for position {id}", ex);
 
-                    var errorCode = ResponseErrorCodeMap.MapAccountValidationError(ex.ErrorCode);
+                    var errorCode = PublicErrorCodeMap.Map(ex.ErrorCode);
 
                     result.Add(id, errorCode);
                 }
@@ -96,17 +93,17 @@ namespace MarginTrading.Backend.Controllers
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
                         $"Failed to update related order for position {id}", ex);
 
-                    var errorCode = ResponseErrorCodeMap.MapInstrumentValidationError(ex.ErrorCode);
+                    var errorCode = PublicErrorCodeMap.Map(ex.ErrorCode);
 
                     result.Add(id, errorCode);
                 }
-                catch (ValidateOrderException ex)
+                catch (OrderRejectionException ex)
                 {
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
                         $"Failed to update related order for position {id}", ex);
                     
-                    var errorCode = ResponseErrorCodeMap.MapOrderRejectReason(ex.RejectReason);
-                    if (errorCode == ResponseErrorCodeMap.UnsupportedError)
+                    var errorCode = PublicErrorCodeMap.Map(ex.RejectReason);
+                    if (errorCode == PublicErrorCodeMap.UnsupportedError)
                     {
                         result.Add(id, ex.Message);
                     }
@@ -136,7 +133,11 @@ namespace MarginTrading.Backend.Controllers
         public async Task UpdateRelatedOrderAsync(string positionId, [FromBody] UpdateRelatedOrderRequest request)
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
-                throw new InvalidOperationException($"Position {positionId} not found");
+            {
+                throw new PositionValidationException(
+                    $"Position {positionId} not found",
+                    PositionValidationError.PositionNotFound);
+            }
 
             ValidationHelper.ValidateAccountId(position, request.AccountId); 
 
@@ -232,7 +233,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 (baseOrder, relatedOrders) = await _orderValidator.ValidateRequestAndCreateOrders(request);
             }
-            catch (ValidateOrderException exception)
+            catch (OrderRejectionException exception)
             {
                 _cqrsSender.PublishEvent(new OrderPlacementRejectedEvent
                 {
@@ -252,7 +253,7 @@ namespace MarginTrading.Backend.Controllers
             if (placedOrder.Status == OrderStatus.Rejected)
             {
                 var message = $"Order {placedOrder.Id} from account {placedOrder.AccountId} for instrument {placedOrder.AssetPairId} is rejected: {placedOrder.RejectReason} ({placedOrder.RejectReasonText}). Comment: {placedOrder.Comment}.";
-                throw new ValidateOrderException(placedOrder.RejectReason, placedOrder.RejectReasonText, message);
+                throw new OrderRejectionException(placedOrder.RejectReason, placedOrder.RejectReasonText, message);
             }
 
             foreach (var order in relatedOrders)
@@ -279,7 +280,9 @@ namespace MarginTrading.Backend.Controllers
         public Task CancelAsync(string orderId, [FromBody] OrderCancelRequest request = null, string accountId = null)
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
-                throw new InvalidOperationException("Order not found");
+            {
+                throw new OrderValidationException("Order to cancel not found", OrderValidationError.OrderNotFound);
+            }
 
             ValidationHelper.ValidateAccountId(order, accountId);
 
@@ -386,12 +389,11 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
-                throw new InvalidOperationException("Order not found");
+                throw new OrderValidationException("Order to change not found", OrderValidationError.OrderNotFound);
             }
 
             ValidationHelper.ValidateAccountId(order, request.AccountId);
 
-           
             var originator = GetOriginator(request.Originator);
 
             await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, originator,
@@ -415,7 +417,7 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
-                throw new InvalidOperationException("Order not found");
+                throw new OrderValidationException("Order to change validity  not found", OrderValidationError.OrderNotFound);
             }
 
             ValidationHelper.ValidateAccountId(order, request.AccountId);
@@ -443,7 +445,7 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
-                throw new InvalidOperationException("Order not found");
+                throw new OrderValidationException("Order to remove validity not found", OrderValidationError.OrderNotFound);
             }
 
             ValidationHelper.ValidateAccountId(order, request.AccountId);

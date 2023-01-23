@@ -110,7 +110,7 @@ namespace MarginTradingTests
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 97000);
 
-            Assert.Throws<ValidateOrderException>(() =>
+            Assert.Throws<OrderRejectionException>(() =>
                 _accountUpdateService.CheckBalance(OrderFulfillmentPlan.Force(order2, true), me));
 
             var meWithSpread = new FakeMatchingEngine(10, closePrice: 1);
@@ -118,7 +118,7 @@ namespace MarginTradingTests
             var order3 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 96000);
 
-            Assert.Throws<ValidateOrderException>(
+            Assert.Throws<OrderRejectionException>(
                 () => _accountUpdateService.CheckBalance(OrderFulfillmentPlan.Force(order3, true), meWithSpread));
             
             var meForLimitOk = new FakeMatchingEngine(999);
@@ -132,7 +132,7 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
 
             var meWithHighPrice = new FakeMatchingEngine(1000, 10);
-            var ex = Assert.Throws<ValidateOrderException>(() =>
+            var ex = Assert.Throws<OrderRejectionException>(() =>
                 _accountUpdateService.CheckBalance(OrderFulfillmentPlan.Force(limitOrderErr, true), meWithHighPrice));
 
             Console.WriteLine(ex.Comment);

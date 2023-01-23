@@ -3,12 +3,10 @@
 
 namespace MarginTrading.Backend.Core.Exceptions
 {
-    public enum AccountValidationError
+    public enum OrderValidationError
     {
-        None = 0,
-        AccountDisabled,
-        AccountDoesNotExist,
-        AccountMismatch,
-        AccountEmpty,
+        None,
+        OrderNotFound,
+        IncorrectStatusWhenCancel,
     }
 }

@@ -13,16 +13,14 @@ using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Exceptions;
+using MarginTrading.Backend.Extensions;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Caches;
-using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
@@ -88,48 +86,21 @@ namespace MarginTrading.Backend.Controllers
             [FromBody] PositionCloseRequest request = null,
             [FromQuery] string accountId = null)
         {
-            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
-            {
-                throw new InvalidOperationException("Position not found");
-            }
+            var positionsCloseData = request.Parse(
+                _ordersCache.Positions.TryGetPositionById,
+                _assetDayOffService.IsAssetTradingDisabled,
+                positionId,
+                accountId);
 
-            ValidationHelper.ValidateAccountId(position, accountId);
+            var closeResult = await _tradingEngine.ClosePositionsAsync(positionsCloseData, true);
 
-            try
-            {
-                ValidateDayOff(position.AssetPairId);
-            }
-            catch (ValidationException<InstrumentValidationError> e)
-            {
-                return new PositionCloseResponse
-                {
-                    PositionId = positionId,
-                    Result = PositionCloseResultContract.FailedToClose,
-                    ErrorCode = ResponseErrorCodeMap.MapInstrumentValidationError(e.ErrorCode)
-                };
-            }
-
-            var originator = GetOriginator(request?.Originator);
-
-            var closeResult = await _tradingEngine.ClosePositionsAsync(
-                new PositionsCloseData(
-                    position,
-                    position.AccountId,
-                    position.AssetPairId,
-                    position.OpenMatchingEngineId,
-                    position.ExternalProviderId,
-                    originator,
-                    request?.AdditionalInfo,
-                    position.EquivalentAsset), true);
-
-            _operationsLogService.AddLog("action order.close", position.AccountId, request?.ToJson(),
-                closeResult.ToJson());
+            _operationsLogService.AddLog("action order.close", accountId, request?.ToJson(), closeResult.ToJson());
 
             return new PositionCloseResponse
             {
                 PositionId = positionId,
                 OrderId = closeResult.order?.Id,
-                Result = closeResult.result.ToType<PositionCloseResultContract>()
+                Result = closeResult.result.ToType<PositionCloseResultContract>(),
             };
         }
 
@@ -148,20 +119,27 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task<PositionsGroupCloseResponse> CloseGroupAsync([FromQuery] string assetPairId = null, 
-        [FromQuery] string accountId = null, [FromQuery] PositionDirectionContract? direction = null, [FromBody] PositionCloseRequest request = null)
+        public async Task<PositionsGroupCloseResponse> CloseGroupAsync([FromQuery] string assetPairId = null,
+            [FromQuery] string accountId = null,
+            [FromQuery] PositionDirectionContract? direction = null,
+            [FromBody] PositionCloseRequest request = null)
         {
             var originator = GetOriginator(request?.Originator);
 
-            var closeResult = await _tradingEngine.ClosePositionsGroupAsync(accountId, assetPairId, direction?.ToType<PositionDirection>(), originator, request?.AdditionalInfo);
-            
-            _operationsLogService.AddLog("Position liquidation started", string.Empty, 
+            var result = await _tradingEngine.ClosePositionsGroupAsync(accountId,
+                assetPairId,
+                direction?.ToType<PositionDirection>(),
+                originator,
+                request?.AdditionalInfo);
+
+            _operationsLogService.AddLog("Position liquidation started",
+                accountId,
                 $"instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
-                closeResult?.ToJson());
+                result.ToJson());
 
             return new PositionsGroupCloseResponse
             {
-                Responses = closeResult.Select(r => new PositionCloseResponse
+                Responses = result.Select(r => new PositionCloseResponse
                 {
                     PositionId = r.Key,
                     Result = r.Value.Item1.ToType<PositionCloseResultContract>(),
@@ -291,23 +269,6 @@ namespace MarginTrading.Backend.Controllers
             }
 
             return originator.ToType<OriginatorType>();
-        }
-
-        private void ValidateDayOff(params string[] assetPairIds)
-        {
-            foreach (var instrument in assetPairIds)
-            {
-                var instrumentTradingStatus = _assetDayOffService.IsAssetTradingDisabled(instrument);
-                if (instrumentTradingStatus.TradingEnabled)
-                    continue;
-                
-                if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
-                {
-                    throw new InstrumentValidationException($"Trades for {instrument} are disabled", InstrumentValidationError.InstrumentTradingDisabled);
-                }
-
-                throw new InstrumentValidationException($"Trades for {instrument} are disabled", InstrumentValidationError.TradesAreNotAvailable);
-            }
         }
     }
 }

@@ -3,14 +3,10 @@
 
 namespace MarginTrading.Backend.Contracts.Orders
 {
-    public class PositionCloseResponse
+    public sealed class PositionCloseResponse
     {
         public string PositionId { get; set; }
-        
         public PositionCloseResultContract Result { get; set; }
-        
         public string OrderId { get; set; }
-
-        public string ErrorCode { get; set; }
     }
 }

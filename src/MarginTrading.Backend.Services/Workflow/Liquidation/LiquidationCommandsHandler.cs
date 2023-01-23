@@ -335,22 +335,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             var liquidationInfos = new List<LiquidationInfo>();
 
-            var comment = string.Empty;
-
-            switch (executionInfo.Data.LiquidationType)
-            {
-                case LiquidationType.Mco:
-                    comment = "MCO liquidation";
-                    break;
-                
-                case LiquidationType.Normal:
-                    comment = "Liquidation";
-                    break;
-                
-                case LiquidationType.Forced:
-                    comment = "Close positions group";
-                    break;
-            }
+            var comment = LiquidationHelper.GetComment(executionInfo.Data.LiquidationType);
             
             var positionGroups = positions
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
