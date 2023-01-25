@@ -84,7 +84,7 @@ namespace MarginTrading.Backend.Services.Modules
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
                     environment: _settings.EnvironmentName);
-            var loggerFactory = ctx.Resolve<ILoggerFactory>();
+            
             var registrations = new List<IRegistration>
             {
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
