@@ -2,7 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Text;
-using Lykke.RabbitMqBroker.Publisher;
+using Lykke.RabbitMqBroker.Logging;
 using Lykke.RabbitMqBroker.Publisher.Serializers;
 
 namespace MarginTrading.Common.RabbitMq
@@ -13,5 +13,7 @@ namespace MarginTrading.Common.RabbitMq
         {
             return Encoding.UTF8.GetBytes(model);
         }
+
+        public SerializationFormat SerializationFormat { get; }
     }
 }

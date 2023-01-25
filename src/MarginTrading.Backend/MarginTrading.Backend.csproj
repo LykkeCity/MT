@@ -38,12 +38,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentScheduler" Version="5.5.1" />
-    <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
     <PackageReference Include="LykkeBiz.Logs.MsSql" Version="3.0.0" />
     <PackageReference Include="LykkeBiz.Logs.Serilog" Version="3.3.1" />
-    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.3.0" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Snow.Common" Version="1.52.0" />
     <PackageReference Include="Lykke.Snow.Common.Startup" Version="3.0.1" />
@@ -58,7 +58,7 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Nustache.Core" Version="1.0.0-alfa2" />
     <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="8.4.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.66" />
