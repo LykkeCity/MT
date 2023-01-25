@@ -171,23 +171,29 @@ namespace MarginTrading.Backend
                     });
             });
             app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Trading Engine API Swagger"));
-
-            appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
-
+            
             var application = app.ApplicationServices.GetService<Application>();
 
             appLifetime.ApplicationStarted.Register(() =>
             {
-                var cqrsEngine = ApplicationContainer.Resolve<ICqrsEngine>();
-                cqrsEngine.StartSubscribers();
-                cqrsEngine.StartProcesses();
-
-                var clientProfileSettingsCache = ApplicationContainer.Resolve<IClientProfileSettingsCache>();
-                clientProfileSettingsCache.Start();
-
-                Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
-
-                LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
+                try
+                {
+                    ApplicationContainer
+                        .Resolve<IClientProfileSettingsCache>()
+                        .Start();
+                
+                    ApplicationContainer
+                        .Resolve<ICqrsEngine>()
+                        .StartAll();
+                    
+                    Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
+                    LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
+                }
+                catch (Exception e)
+                {
+                    LogLocator.CommonLog?.WriteFatalErrorAsync("", "", e);
+                    appLifetime.StopApplication();
+                }
             });
 
             appLifetime.ApplicationStopping.Register(() =>
@@ -196,6 +202,8 @@ namespace MarginTrading.Backend
                     application.StopApplication();
                 }
             );
+            
+            appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
         }
 
         private static void RegisterModules(
