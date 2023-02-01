@@ -321,6 +321,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
+            _log.WriteInfo(nameof(LiquidationCommandsHandler) + ".Handle(LiquidatePositionsInternalCommand)",
+                new { command.AssetPairId, positions }.ToJson(), "Checking if net volume can be liquidated");
             if (!_liquidationHelper.CheckIfNetVolumeCanBeLiquidated(command.AssetPairId, positions, out var details))
             {
                 publisher.PublishEvent(new NotEnoughLiquidityInternalEvent

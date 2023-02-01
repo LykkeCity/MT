@@ -129,9 +129,17 @@ namespace MarginTrading.Backend.Services.Stp
         {
             if (!_orderbooks.TryGetValue(assetPairId, out var orderBook))
             {
+                _log.WriteInfo(nameof(GetPriceForPositionClose),
+                    new { assetPairId, volume, externalProviderId }.ToJson(),
+                    "No orderbook found for asset pair");
                 return null;
             }
 
+            _log.WriteInfo(nameof(GetPriceForPositionClose),
+                new { assetPairId, volume, externalProviderId }.ToJson(),
+                "Orderbook found for asset pair");
+            _log.WriteInfo(nameof(GetPriceForPositionClose), orderBook.ToJson(),"Orderbook");
+            
             return MatchBestPriceForPositionClose(orderBook, volume);
         }
 
@@ -163,7 +171,7 @@ namespace MarginTrading.Backend.Services.Stp
         private static decimal? MatchBestPriceForPositionClose(ExternalOrderBook externalOrderBook, decimal volume)
         {
             var direction = volume.GetClosePositionOrderDirection();
-            
+
             return externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
         }
 

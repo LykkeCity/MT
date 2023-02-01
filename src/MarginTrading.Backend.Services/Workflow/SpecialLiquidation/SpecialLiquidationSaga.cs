@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -319,6 +320,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         .Where(p => executionInfo.Data.PositionIds.Contains(p.Id))
                         .ToArray();
 
+                    _log.WriteInfo(nameof(SpecialLiquidationSaga) + ".Handle(SpecialLiquidationFailedEvent)",
+                        new {executionInfo.Data.Instrument, positions}.ToJson(),
+                        "Checking if net volume can be liquidated");
                     if (_liquidationHelper.CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.Instrument, positions, out _))
                     {
                         // there is liquidity so we can cancel the special liquidation flow.

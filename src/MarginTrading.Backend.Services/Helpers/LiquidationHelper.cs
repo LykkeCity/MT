@@ -67,7 +67,8 @@ namespace MarginTrading.Backend.Services.Helpers
 
                 if (me.GetPriceForClose(assetPairId, netPositionVolume, externalProvider) == null)
                 {
-                    details = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
+                    details =
+                        $"Not enough depth of orderbook. Asset id {assetPairId}, net volume {netPositionVolume}, external provider {externalProvider}, matching engine {anyPosition.OpenMatchingEngineId}.";
                     return false;
                 }
             }
