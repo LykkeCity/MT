@@ -5,13 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
@@ -30,7 +28,6 @@ namespace MarginTrading.Backend.Services.TradingConditions
         private readonly ILog _log;
         private readonly IOrderReader _orderReader;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly MarginTradingSettings _marginTradingSettings;
 
         private Dictionary<(string, string), ITradingInstrument> _instrumentsCache =
             new Dictionary<(string, string), ITradingInstrument>();
@@ -45,8 +42,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
             IDateService dateService,
             ILog log,
             IOrderReader orderReader,
-            IAccountsCacheService accountsCacheService,
-            MarginTradingSettings marginTradingSettings)
+            IAccountsCacheService accountsCacheService)
         {
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
@@ -54,7 +50,6 @@ namespace MarginTrading.Backend.Services.TradingConditions
             _log = log;
             _orderReader = orderReader;
             _accountsCacheService = accountsCacheService;
-            _marginTradingSettings = marginTradingSettings;
         }
 
         public ITradingInstrument GetTradingInstrument(string tradingConditionId, string instrument)
@@ -95,27 +90,12 @@ namespace MarginTrading.Backend.Services.TradingConditions
             return accountAssetPair;
         }
 
-        public (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument, bool isWarnCheck = false)
-        {
-            var marginInit = tradingInstrument.GetMarginInitByLeverage(_overnightMarginParameterOn, isWarnCheck);
-            var marginMaintenance = tradingInstrument.GetMarginMaintenanceByLeverage(_overnightMarginParameterOn, isWarnCheck);
-
-            if(_marginTradingSettings.LogBlockedMarginCalculation)
-            {
-                _log.WriteInfoAsync(nameof(TradingInstrumentsCacheService), nameof(GetMarginRates), 
-                    @$"Margin Rates for instrument 
-                        { 
-                            new 
-                            { 
-                                tradingInstrument.Instrument, tradingInstrument.TradingConditionId, 
-                                tradingInstrument.OvernightMarginMultiplier, tradingInstrument.InitLeverage, 
-                                tradingInstrument.MaintenanceLeverage, tradingInstrument.MarginRate 
-                            }
-                        .ToJson()} MarginInit: {marginInit}, MarginMaintenance: {marginMaintenance}");
-            }
-
-            return (marginInit, marginMaintenance);
-        }
+        public (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument,
+            bool isWarnCheck = false) =>
+        (
+            tradingInstrument.GetMarginInitByLeverage(_overnightMarginParameterOn, isWarnCheck),
+            tradingInstrument.GetMarginMaintenanceByLeverage(_overnightMarginParameterOn, isWarnCheck)
+        );
 
         public void InitCache(IEnumerable<ITradingInstrument> tradingInstruments)
         {
