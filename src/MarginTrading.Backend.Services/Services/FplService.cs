@@ -140,7 +140,7 @@ namespace MarginTrading.Backend.Services
                         tradingInstrument.Instrument, 
                         tradingInstrument.InitLeverage, 
                         tradingInstrument.MaintenanceLeverage
-                        }} 
+                        }.ToJson()} 
                     MarginInit = volumeForCalculation * marginRate * marginRateInit 
                     MarginInit = {marginInit} ({volumeForCalculation} * {marginRate} * {marginRateInit}) 
                     MarginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance 
