@@ -10,6 +10,7 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Core.TradingConditions;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
@@ -99,7 +100,7 @@ namespace MarginTrading.Backend.Services
 
             fplData.MarginRate = position.ClosePrice * position.CloseFxPrice;
 
-            if (_marginTradingSettings.LogBlockedMarginCalculation)
+            if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
                 _log.WriteInfo(nameof(FplService), nameof(CalculateMargin), @$"Margin Rate calculation for position 
                     {new
@@ -132,7 +133,7 @@ namespace MarginTrading.Backend.Services
             var marginInit = volumeForCalculation * marginRate * marginRateInit;
             var marginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance;
 
-            if (_marginTradingSettings.LogBlockedMarginCalculation)
+            if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
                 _log.WriteInfo(nameof(FplService), nameof(GetMargins), 
                     @$"Margin values for instrument 
