@@ -104,7 +104,7 @@ namespace MarginTrading.Backend.Services
 
             if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
-                _log.WriteInfo(nameof(FplService), nameof(CalculateMargin), @$"Margin Rate calculation for position 
+                _log.WriteInfo(nameof(FplService), nameof(CalculateMargin), @$"Margin Rate calculation for position {position.Id}
                     {new
                 {
                     position.Id,
