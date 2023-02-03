@@ -100,6 +100,8 @@ namespace MarginTrading.Backend.Services
 
             fplData.MarginRate = position.ClosePrice * position.CloseFxPrice;
 
+            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck);
+
             if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
                 _log.WriteInfo(nameof(FplService), nameof(CalculateMargin), @$"Margin Rate calculation for position 
@@ -116,10 +118,10 @@ namespace MarginTrading.Backend.Services
                     position.CloseFxPrice
                 }.ToJson()} 
                     ClosePrice: {position.ClosePrice}, CloseFxPrice: {position.CloseFxPrice},
-                    MarginRate = {fplData.MarginRate} calc: ({position.ClosePrice} * {position.CloseFxPrice})");
+                    MarginRate = {fplData.MarginRate} calc: ({position.ClosePrice} * {position.CloseFxPrice})
+                    MarginInit = {marginInit}, MarginMaintenance = {marginMaintenance}");
             }
 
-            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck);
             fplData.MarginInit = Math.Round(marginInit, fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance = Math.Round(marginMaintenance, fplData.AccountBaseAssetAccuracy);
             fplData.InitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation / tradingInstrument.InitLeverage, fplData.AccountBaseAssetAccuracy);
@@ -140,7 +142,8 @@ namespace MarginTrading.Backend.Services
                     {new {
                         tradingInstrument.Instrument, 
                         tradingInstrument.InitLeverage, 
-                        tradingInstrument.MaintenanceLeverage
+                        tradingInstrument.MaintenanceLeverage,
+                        tradingInstrument.OvernightMarginMultiplier
                         }.ToJson()} 
                     MarginInit = volumeForCalculation * marginRate * marginRateInit 
                     MarginInit = {marginInit} ({volumeForCalculation} * {marginRate} * {marginRateInit}) 
