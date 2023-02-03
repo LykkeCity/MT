@@ -2,9 +2,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -16,13 +19,19 @@ namespace MarginTrading.Backend.Services
     {
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
+        private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly ILog _log;
 
         public FplService(
             ICfdCalculatorService cfdCalculatorService,
-            ITradingInstrumentsCacheService tradingInstrumentsCache)
+            ITradingInstrumentsCacheService tradingInstrumentsCache,
+            MarginTradingSettings marginTradingSettings,
+            ILog log)
         {
             _cfdCalculatorService = cfdCalculatorService;
             _tradingInstrumentsCache = tradingInstrumentsCache;
+            _marginTradingSettings = marginTradingSettings;
+            _log = log;
         }
 
         public void UpdatePositionFpl(Position position)
@@ -90,6 +99,25 @@ namespace MarginTrading.Backend.Services
 
             fplData.MarginRate = position.ClosePrice * position.CloseFxPrice;
 
+            if (_marginTradingSettings.LogBlockedMarginCalculation)
+            {
+                _log.WriteInfo(nameof(FplService), nameof(CalculateMargin), @$"Margin Rate calculation for position 
+                    {new
+                {
+                    position.Id,
+                    position.AssetPairId,
+                    position.Volume,
+                    position.AccountId,
+                    position.TradingConditionId,
+                    position.OpenPrice,
+                    position.OpenFxPrice,
+                    position.ClosePrice,
+                    position.CloseFxPrice
+                }.ToJson()} 
+                    ClosePrice: {position.ClosePrice}, CloseFxPrice: {position.CloseFxPrice},
+                    MarginRate = {fplData.MarginRate} calc: ({position.ClosePrice} * {position.CloseFxPrice})");
+            }
+
             var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck);
             fplData.MarginInit = Math.Round(marginInit, fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance = Math.Round(marginMaintenance, fplData.AccountBaseAssetAccuracy);
@@ -99,11 +127,28 @@ namespace MarginTrading.Backend.Services
         private (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
             decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false)
         {
-            var (marginInit, marginMaintenance) = _tradingInstrumentsCache.GetMarginRates(tradingInstrument, isWarnCheck);
+            var (marginRateInit, marginRateMaintenance) = _tradingInstrumentsCache.GetMarginRates(tradingInstrument, isWarnCheck);
+
+            var marginInit = volumeForCalculation * marginRate * marginRateInit;
+            var marginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance;
+
+            if (_marginTradingSettings.LogBlockedMarginCalculation)
+            {
+                _log.WriteInfo(nameof(FplService), nameof(GetMargins), 
+                    @$"Margin values for instrument 
+                    {new {
+                        tradingInstrument.Instrument, 
+                        tradingInstrument.InitLeverage, 
+                        tradingInstrument.MaintenanceLeverage
+                        }} 
+                    MarginInit = volumeForCalculation * marginRate * marginRateInit 
+                    MarginInit = {marginInit} ({volumeForCalculation} * {marginRate} * {marginRateInit}) 
+                    MarginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance 
+                    MarginMaintenance = {marginMaintenance} ({volumeForCalculation} * {marginRate} * {marginRateMaintenance}).");
+            }
 
             return (
-                volumeForCalculation * marginRate * marginInit,
-                volumeForCalculation * marginRate * marginMaintenance
+                marginInit, marginMaintenance
             );
         }
     }
