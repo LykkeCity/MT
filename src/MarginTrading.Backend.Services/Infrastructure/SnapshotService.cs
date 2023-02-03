@@ -38,6 +38,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly MarginTradingSettings _settings;
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
+        public static bool IsMakingSnapshotInProgress => Lock.CurrentCount == 0;
 
         public SnapshotService(
             IScheduleSettingsCacheService scheduleSettingsCacheService,
