@@ -104,19 +104,19 @@ namespace MarginTrading.Backend.Services
 
             if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
-                _log.WriteInfo(nameof(FplService), nameof(CalculateMargin), @$"Margin calculation for position {position.Id}
-                    {new
-                {
-                    position.Id,
-                    position.AssetPairId,
-                    position.Volume,
-                    position.AccountId,
-                    position.TradingConditionId,
-                    position.OpenPrice,
-                    position.OpenFxPrice,
-                    position.ClosePrice,
-                    position.CloseFxPrice
-                }.ToJson()} 
+                _log.WriteInfo(nameof(FplService), 
+                    new { 
+                        position.Id,
+                        position.AssetPairId,
+                        position.Volume,
+                        position.AccountId,
+                        position.TradingConditionId,
+                        position.OpenPrice,
+                        position.OpenFxPrice,
+                        position.ClosePrice,
+                        position.CloseFxPrice
+                    }, 
+                    @$"Margin calculation for position {position.Id}
                     ClosePrice: {position.ClosePrice}, CloseFxPrice: {position.CloseFxPrice},
                     MarginRate = {fplData.MarginRate} calc: ({position.ClosePrice} * {position.CloseFxPrice})
                     MarginInit = {marginInit}, MarginMaintenance = {marginMaintenance}");
