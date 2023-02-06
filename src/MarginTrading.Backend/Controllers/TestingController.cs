@@ -19,7 +19,8 @@ namespace MarginTrading.Backend.Controllers
     [Authorize]
     [Route("api/testing")]
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-    public class TestingController : Controller, ITestingApi
+    [ApiController]
+    public class TestingController : ControllerBase, ITestingApi
     {
         private readonly IFakeSnapshotService _fakeSnapshotService;
         private readonly string _protectionKey;

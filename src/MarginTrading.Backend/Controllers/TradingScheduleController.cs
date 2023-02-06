@@ -21,7 +21,8 @@ namespace MarginTrading.Backend.Controllers
     /// </summary>
     [Authorize]
     [Route("api/trading-schedule")]
-    public class TradingScheduleController : Controller, ITradingScheduleApi
+    [ApiController]
+    public class TradingScheduleController : ControllerBase, ITradingScheduleApi
     {
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly IAssetPairDayOffService _assetPairDayOffService;

@@ -15,7 +15,8 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/reports")]
-    public class ReportController : Controller, IReportApi
+    [ApiController]
+    public class ReportController : ControllerBase, IReportApi
     {
         private readonly IReportService _reportService;
 
