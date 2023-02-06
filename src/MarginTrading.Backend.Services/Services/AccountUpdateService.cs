@@ -250,7 +250,7 @@ namespace MarginTrading.Backend.Services.Services
 
             if(_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
-                _log.WriteInfo(nameof(AccountUpdateService), positions?.Select(p => new { p.Id, p.AssetPairId, p.ClosePrice, p.CloseFxPrice }), 
+                _log.WriteInfo(nameof(AccountUpdateService), positions?.Select(p => new { p.Id, p.AssetPairId, p.ClosePrice, p.CloseFxPrice }).ToJson(), 
                     $"Position array from position provider");
             }
 
