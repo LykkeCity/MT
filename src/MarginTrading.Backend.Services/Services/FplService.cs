@@ -115,7 +115,7 @@ namespace MarginTrading.Backend.Services
                         position.OpenFxPrice,
                         position.ClosePrice,
                         position.CloseFxPrice
-                    }, 
+                    }.ToJson(), 
                     @$"Margin calculation for position {position.Id}
                     ClosePrice: {position.ClosePrice}, CloseFxPrice: {position.CloseFxPrice},
                     MarginRate = {fplData.MarginRate} calc: ({position.ClosePrice} * {position.CloseFxPrice})
@@ -137,14 +137,13 @@ namespace MarginTrading.Backend.Services
 
             if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
-                _log.WriteInfo(nameof(FplService), nameof(GetMargins), 
-                    @$"Margin values for instrument 
-                    {new {
+                _log.WriteInfo(nameof(FplService), new {
                         tradingInstrument.Instrument, 
                         tradingInstrument.InitLeverage, 
                         tradingInstrument.MaintenanceLeverage,
                         tradingInstrument.OvernightMarginMultiplier
-                        }.ToJson()} 
+                        }.ToJson(), 
+                    @$"Margin values for instrument {tradingInstrument.Instrument}
                     MarginInit = volumeForCalculation * marginRate * marginRateInit 
                     MarginInit = {marginInit} ({volumeForCalculation} * {marginRate} * {marginRateInit}) 
                     MarginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance 
