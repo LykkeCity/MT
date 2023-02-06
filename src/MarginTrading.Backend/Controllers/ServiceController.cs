@@ -18,7 +18,8 @@ namespace MarginTrading.Backend.Controllers
     [Authorize]
     [Route("api/service")]
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-    public class ServiceController : Controller, IServiceApi
+    [ApiController]
+    public class ServiceController : ControllerBase, IServiceApi
     {
         private readonly IOvernightMarginParameterContainer _overnightMarginParameterContainer;
         private readonly IIdentityGenerator _identityGenerator;

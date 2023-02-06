@@ -29,7 +29,8 @@ namespace MarginTrading.Backend.Controllers
     /// </summary>
     [Authorize]
     [Route("api/prices")]
-    public class PricesController : Controller, IPricesApi
+    [ApiController]
+    public class PricesController : ControllerBase, IPricesApi
     {
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly IFxRateCacheService _fxRateCacheService;
