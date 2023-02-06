@@ -33,8 +33,7 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/orders")]
-    [ApiController]
-    public class OrdersController : ControllerBase, IOrdersApi
+    public class OrdersController : Controller, IOrdersApi
     {
         private readonly ITradingEngine _tradingEngine;
         private readonly IOperationsLogService _operationsLogService;
