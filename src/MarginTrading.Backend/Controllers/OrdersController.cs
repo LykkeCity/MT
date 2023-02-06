@@ -214,7 +214,7 @@ namespace MarginTrading.Backend.Controllers
             }
             else
             {
-                throw new Exception($"Couldn't update related order for position {positionId}");
+                throw new OrderValidationException("Related order not found", OrderValidationError.OrderNotFound);
             }
         }
 
