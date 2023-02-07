@@ -123,7 +123,8 @@ namespace MarginTrading.Backend.Services
             }
 
             fplData.MarginInit = Math.Round(marginInit, fplData.AccountBaseAssetAccuracy);
-            fplData.MarginMaintenance = Math.Round(marginMaintenance, fplData.AccountBaseAssetAccuracy);
+            //TODO: revert
+            fplData.MarginMaintenance = marginMaintenance;
             fplData.InitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation / tradingInstrument.InitLeverage, fplData.AccountBaseAssetAccuracy);
         }
 
