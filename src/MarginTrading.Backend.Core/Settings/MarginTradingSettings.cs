@@ -124,5 +124,8 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public bool LogBlockedMarginCalculation { get; set; }
+
+        [Optional]
+        public bool RoundMarginMaintenance { get; set; }
     }
 }
