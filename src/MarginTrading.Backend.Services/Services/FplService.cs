@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Services
 
             fplData.MarginRate = position.ClosePrice * position.CloseFxPrice;
 
-            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck);
+            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck, position: position.Id);
 
             if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
@@ -138,7 +138,7 @@ namespace MarginTrading.Backend.Services
         }
 
         private (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
-            decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false)
+            decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false, string position = "")
         {
             var (marginRateInit, marginRateMaintenance) = _tradingInstrumentsCache.GetMarginRates(tradingInstrument, isWarnCheck);
 
@@ -153,7 +153,7 @@ namespace MarginTrading.Backend.Services
                         tradingInstrument.MaintenanceLeverage,
                         tradingInstrument.OvernightMarginMultiplier
                         }.ToJson(), 
-                    @$"Margin values for instrument {tradingInstrument.Instrument}
+                    @$"Margin values for instrument [{position}] - {tradingInstrument.Instrument}
                     MarginInit = volumeForCalculation * marginRate * marginRateInit 
                     MarginInit = {marginInit} ({volumeForCalculation} * {marginRate} * {marginRateInit}) 
                     MarginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance 
