@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Services
 
             fplData.MarginRate = position.ClosePrice * position.CloseFxPrice;
 
-            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck, position: position.Id);
+            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck, position.Id);
 
             if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
@@ -127,6 +127,9 @@ namespace MarginTrading.Backend.Services
             fplData.InitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation / tradingInstrument.InitLeverage, fplData.AccountBaseAssetAccuracy);
         }
 
+        // marginRate parameter in this function can be confusing
+        // it's calculated as follows in the calling function: 
+        // marginRate = position.ClosePrice * position.CloseFxPrice
         private (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
             decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false, string position = "")
         {
@@ -144,9 +147,9 @@ namespace MarginTrading.Backend.Services
                         tradingInstrument.OvernightMarginMultiplier
                         }.ToJson(), 
                     @$"Margin values for instrument [{position}] - {tradingInstrument.Instrument}
-                    MarginInit = volumeForCalculation * marginRate * marginRateInit 
+                    MarginInit = volumeForCalculation * (closePrice * closePriceFx) * marginRateInit 
                     MarginInit = {marginInit} ({volumeForCalculation} * {marginRate} * {marginRateInit}) 
-                    MarginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance 
+                    MarginMaintenance = volumeForCalculation * (closePrice * closePriceFx) * marginRateMaintenance 
                     MarginMaintenance = {marginMaintenance} ({volumeForCalculation} * {marginRate} * {marginRateMaintenance}).");
             }
 
