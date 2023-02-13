@@ -17,7 +17,6 @@ using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using Lykke.Messaging.RabbitMq.Retry;
 using Lykke.Messaging.Serialization;
 using Lykke.Snow.Common.Correlation.Cqrs;
-using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
