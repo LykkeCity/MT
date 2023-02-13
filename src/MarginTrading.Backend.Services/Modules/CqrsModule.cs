@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services.Modules
             engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
             engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);
             engine.StartPublishers();
-
+            
             return engine;
         }
 
