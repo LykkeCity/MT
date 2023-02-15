@@ -702,13 +702,11 @@ namespace MarginTrading.Backend.Services
                     $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument} but was {orderFulfillmentPlan.UnfulfilledVolume}. Order id = [{orderFulfillmentPlan.Order.Id}]");
             }
 
-            var positionsAbsVolume = _ordersCache.Positions
-                .GetPositionsByInstrumentAndAccount(orderFulfillmentPlan.Order.AssetPairId, orderFulfillmentPlan.Order.AccountId)
-                .Sum(o => Math.Abs(o.Volume));
+            var positionsAbsVolumeAfterClose = GetPositionsAbsVolumeAfterClose(orderFulfillmentPlan);
 
             if (tradingInstrument.PositionLimit > 0 &&
                 orderFulfillmentPlan.RequiresPositionOpening &&
-                positionsAbsVolume + Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
+                positionsAbsVolumeAfterClose + Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
             {
                 throw new OrderRejectionException(OrderRejectReason.MaxPositionLimit,
                     $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
@@ -721,6 +719,23 @@ namespace MarginTrading.Backend.Services
                 throw new OrderRejectionException(OrderRejectReason.ShortPositionsDisabled,
                     $"Short positions are disabled for {tradingInstrument.Instrument}.");
             }
+        }
+
+        private decimal GetPositionsAbsVolumeAfterClose(OrderFulfillmentPlan orderFulfillmentPlan)
+        {
+            var positionsAbsVolume = _ordersCache.Positions
+                .GetPositionsByInstrumentAndAccount(orderFulfillmentPlan.Order.AssetPairId, orderFulfillmentPlan.Order.AccountId)
+                .Sum(o => Math.Abs(o.Volume));
+            
+            if (orderFulfillmentPlan.Order.ForceOpen)
+            {
+                return positionsAbsVolume;
+            }
+
+            var oppositeVolumeAbs = Math.Abs(orderFulfillmentPlan.OppositePositionsState?.Volume ?? 0);
+            var orderVolumeAbs = Math.Abs(orderFulfillmentPlan.Order.Volume);
+                
+            return positionsAbsVolume - Math.Min(orderVolumeAbs, oppositeVolumeAbs);
         }
 
         private List<Order> GetRelatedOrders(Order baseOrder)
