@@ -25,6 +25,7 @@ using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
+using MarginTrading.Backend.Binders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
@@ -93,7 +94,10 @@ namespace MarginTrading.Backend
 
             services.AddSingleton(Configuration);
             services
-                .AddControllers()
+                .AddControllers(opt =>
+                {
+                    opt.ModelBinderProviders.Insert(0, new CoreModelBinderProvider());
+                })
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
