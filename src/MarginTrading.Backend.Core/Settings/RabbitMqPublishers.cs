@@ -15,5 +15,7 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqPublisherInfoWithLogging PositionHistory { get; set; }
         public RabbitMqPublisherInfo MarginTradingEnabledChanged { get; set; }
         public RabbitMqPublisherInfoWithLogging ExternalOrder { get; set; }
+        
+        public RabbitMqPublisherInfoWithLogging RfqChangedRabbitMqSettings { get; set; }
     }
 }

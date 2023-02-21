@@ -136,7 +136,7 @@ namespace MarginTrading.Backend.Services.Notifications
             _producerContainer.RegisterProducer<PositionHistoryEvent>(_settings.RabbitMqPublishers.PositionHistory);
             _producerContainer.RegisterProducer<ExecutionReport>(_settings.RabbitMqPublishers.ExternalOrder);
 
-            _producerContainer.RegisterProducer<RfqEvent>(_settings.RfqChangedRabbitMqSettings, true);
+            _producerContainer.RegisterProducer<RfqEvent>(_settings.RabbitMqPublishers.RfqChangedRabbitMqSettings);
         }
     }
 }

@@ -38,19 +38,6 @@ namespace MarginTrading.Backend.Services.Notifications
             RegisterProducerImpl<TMessage>(publisherInfo.WithLogging(false));
         }
 
-        /// <inheritdoc />
-        public void RegisterProducer<TMessage>(RabbitMqSettings settings, bool shouldLogProducedEvents)
-        {
-            var producer = _rabbitMqService.GetProducer(settings, _rabbitMqService.GetJsonSerializer<TMessage>());
-            var type = typeof(TMessage);
-            _producers.Add(type, producer);
-            _producerSettings.Add(type, new RabbitMqPublisherInfoWithLogging()
-            {
-                ExchangeName = settings.ExchangeName,
-                LogEventPublishing = shouldLogProducedEvents,
-            });
-        }
-
         private void RegisterProducerImpl<TMessage>(RabbitMqPublisherInfoWithLogging publisherInfo)
         {
             var settings = publisherInfo.ToRabbitMqSettings(_settings.MtRabbitMqConnString);
@@ -62,7 +49,8 @@ namespace MarginTrading.Backend.Services.Notifications
 
 
         /// <inheritdoc />
-        public (RabbitMqPublisherInfoWithLogging PublisherInfo, IMessageProducer<TMessage> Producer) GetProducer<TMessage>()
+        public (RabbitMqPublisherInfoWithLogging PublisherInfo, IMessageProducer<TMessage> Producer)
+            GetProducer<TMessage>()
         {
             var type = typeof(TMessage);
             return (

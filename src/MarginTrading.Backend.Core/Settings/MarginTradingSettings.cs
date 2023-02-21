@@ -39,9 +39,7 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
 
         public RabbitMqSettings BrokerSettingsRabbitMqSettings { get; set; }
-        
-        public RabbitMqSettings RfqChangedRabbitMqSettings { get; set; }
-        
+
         public RabbitMqSettings SettingsChangedRabbitMqSettings { get; set; }
 
         [AmqpCheck]

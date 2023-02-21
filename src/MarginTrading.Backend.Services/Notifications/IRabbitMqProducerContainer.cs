@@ -25,15 +25,6 @@ namespace MarginTrading.Backend.Services.Notifications
         void RegisterProducer<TMessage>(RabbitMqPublisherInfo publisherInfo);
 
         /// <summary>
-        /// Registers a producer with extended settings from RabbitMqSettings.
-        /// Human-readable message logging is enabled based on the shouldLogProducedEvents flag.
-        /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="shouldLogProducedEvents"></param>
-        /// <typeparam name="TMessage"></typeparam>
-        void RegisterProducer<TMessage>(RabbitMqSettings settings, bool shouldLogProducedEvents);
-
-        /// <summary>
         /// Gets producer for a specified type.
         /// PublisherInfo contains LogEventPublishing flag that states if a message should be logged in plain json.
         /// </summary>
