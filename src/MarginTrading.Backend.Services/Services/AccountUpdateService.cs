@@ -21,6 +21,7 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.TradingConditions;
 
 #pragma warning disable 1998
@@ -243,8 +244,18 @@ namespace MarginTrading.Backend.Services.Services
             account.AccountFpl.StopOutLevel = _marginTradingSettings.DefaultTradingConditionsSettings.StopOut;
         }
 
-        private ICollection<Position> GetPositions(string accountId) =>
-            _positionsProvider.GetPositionsByAccountIds(accountId);
+        private ICollection<Position> GetPositions(string accountId)
+        {
+            var positions = _positionsProvider.GetPositionsByAccountIds(accountId);
+
+            if(_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
+            {
+                _log.WriteInfo(nameof(AccountUpdateService), positions?.Select(p => new { p.Id, p.AssetPairId, p.ClosePrice, p.CloseFxPrice }).ToJson(), 
+                    $"Position array from position provider");
+            }
+
+            return positions;
+        }
 
         private ICollection<Order> GetActiveOrders(string accountId) =>
             _ordersProvider.GetActiveOrdersByAccountIds(accountId);
