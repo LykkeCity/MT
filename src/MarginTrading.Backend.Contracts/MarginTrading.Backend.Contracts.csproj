@@ -13,9 +13,9 @@
     <NoWarn>1701;1702;1705;1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" developmentDependency="true" />
+    <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" developmentDependency="true" />
     <PackageReference Include="MessagePack" Version="1.9.11" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Refit" Version="5.2.4" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="Lykke.Snow.Contracts" Version="1.48.0" />
