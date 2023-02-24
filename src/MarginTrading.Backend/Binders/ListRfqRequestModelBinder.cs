@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Snow.Common.Extensions;
@@ -17,42 +18,38 @@ namespace MarginTrading.Backend.Binders
             var model = new ListRfqRequest();
             
             model.RfqId = bindingContext.ValueProvider
-                .GetValue("rfqId")
+                .GetValue(nameof(ListRfqRequest.RfqId))
                 .FirstValue;
             
             model.InstrumentId = bindingContext.ValueProvider
-                .GetValue("instrumentId")
+                .GetValue(nameof(ListRfqRequest.InstrumentId))
                 .FirstValue;
             
             model.AccountId = bindingContext.ValueProvider
-                .GetValue("accountId")
+                .GetValue(nameof(ListRfqRequest.AccountId))
                 .FirstValue;
 
             if (bindingContext.ValueProvider
-                .GetValue("states")
+                .GetValue(nameof(ListRfqRequest.States))
                 .TryParseAsEnumList<RfqOperationState>(out var states))
             {
                 model.States = states.Distinct().ToList();
             }
-
-            if (bindingContext.ValueProvider
-                .GetValue("dateFrom")
-                .FirstValue
-                .TryParseAsUtcDate(out var dateFrom))
+            
+            var dateFromValue = bindingContext.ValueProvider.GetValue(nameof(ListRfqRequest.DateFrom)).FirstValue;
+            if(DateTime.TryParse(dateFromValue, out var dateFrom))
             {
                 model.DateFrom = dateFrom;
             }
-            
-            if (bindingContext.ValueProvider
-                .GetValue("dateTo")
-                .FirstValue
-                .TryParseAsUtcDate(out var dateTo))
+
+            var dateToValue = bindingContext.ValueProvider.GetValue(nameof(ListRfqRequest.DateTo)).FirstValue;
+            if(DateTime.TryParse(dateToValue, out var dateTo))
             {
                 model.DateTo = dateTo;
             }
             
             if (bool.TryParse(bindingContext.ValueProvider
-                    .GetValue("canBePaused")
+                    .GetValue(nameof(ListRfqRequest.CanBePaused))
                     .FirstValue, 
                     out var canBePaused))
             {
@@ -60,7 +57,7 @@ namespace MarginTrading.Backend.Binders
             }
             
             if (bool.TryParse(bindingContext.ValueProvider
-                        .GetValue("canBeResumed")
+                        .GetValue(nameof(ListRfqRequest.CanBeResumed))
                         .FirstValue, 
                     out var canBeResumed))
             {
