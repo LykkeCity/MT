@@ -17,7 +17,8 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/rfq")]
-    public class RfqController : Controller, IRfqApi
+    [ApiController]
+    public class RfqController : ControllerBase, IRfqApi
     {
         private readonly IRfqService _rfqService;
         private readonly IRfqPauseService _rfqPauseService;

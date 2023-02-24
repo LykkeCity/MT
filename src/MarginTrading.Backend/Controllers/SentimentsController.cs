@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/sentiments")]
+    [ApiController]
     public class SentimentsController : ControllerBase, ISentimentsApi
     {
         private readonly ISentimentCache _sentimentCache;
