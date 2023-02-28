@@ -152,8 +152,8 @@ namespace MarginTrading.Common.RabbitMq
                     RoutingKey = settings.RoutingKey,
                 };
                 
-                var rabbitMqSubscriber = new RabbitMqPullingSubscriber<TMessage>(
-                        _loggerFactory.CreateLogger<RabbitMqPullingSubscriber<TMessage>>(),
+                var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(
+                        _loggerFactory.CreateLogger<RabbitMqSubscriber<TMessage>>(),
                         subscriptionSettings)
                     .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(_loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()))
                     .SetMessageDeserializer(deserializer)
