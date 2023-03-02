@@ -16,6 +16,7 @@ using Lykke.Cqrs.Middleware.Logging;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using Lykke.Messaging.Serialization;
 using Lykke.Snow.Common.Correlation.Cqrs;
+using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -83,7 +84,7 @@ namespace MarginTrading.Backend.Services.Modules
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
                     environment: _settings.EnvironmentName);
 
-            var loggerFactory = ctx.Resolve<ILoggerFactory>();
+            var log = new LykkeLoggerAdapter<CqrsModule>(ctx.Resolve<ILogger<CqrsModule>>());
 
             var registrations = new List<IRegistration>
             {
@@ -92,8 +93,8 @@ namespace MarginTrading.Backend.Services.Modules
                 RegisterSpecialLiquidationSaga(),
                 RegisterLiquidationSaga(),
                 RegisterContext(),
-                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(loggerFactory)),
-                Register.EventInterceptors(new DefaultEventLoggingInterceptor(loggerFactory))
+                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(log)),
+                Register.EventInterceptors(new DefaultEventLoggingInterceptor(log))
             };
 
             var fakeGavel = RegisterGavelContextIfNeeded();
@@ -105,7 +106,7 @@ namespace MarginTrading.Backend.Services.Modules
             {
                 Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
-            var engine = new RabbitMqCqrsEngine(loggerFactory, ctx.Resolve<IDependencyResolver>(), new DefaultEndpointProvider(), 
+            var engine = new RabbitMqCqrsEngine(log, ctx.Resolve<IDependencyResolver>(), new DefaultEndpointProvider(), 
                 rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName, rabbitMqSettings.Password, true, registrations.ToArray());
             engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
             engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);
