@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
@@ -48,13 +49,16 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
 
+        private readonly ObsoleteFeature _compiledSchedulePublishingFeature;
+
         public ScheduleSettingsCacheService(
             ICqrsSender cqrsSender,
             IScheduleSettingsApi scheduleSettingsApi,
             IAssetPairsCache assetPairsCache,
             IDateService dateService,
             ILog log,
-            OvernightMarginSettings overnightMarginSettings)
+            OvernightMarginSettings overnightMarginSettings,
+            [CanBeNull] ObsoleteFeature compiledSchedulePublishingFeature)
         {
             _cqrsSender = cqrsSender;
             _scheduleSettingsApi = scheduleSettingsApi;
@@ -62,6 +66,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _dateService = dateService;
             _log = log;
             _overnightMarginSettings = overnightMarginSettings;
+            _compiledSchedulePublishingFeature = compiledSchedulePublishingFeature ?? ObsoleteFeature.Default;
         }
 
         public async Task UpdateAllSettingsAsync()
@@ -486,12 +491,15 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 _compiledAssetPairScheduleCache[assetPairId] = resultingTimeIntervals;
 
-                _cqrsSender.PublishEvent(new CompiledScheduleChangedEvent
+                if (_compiledSchedulePublishingFeature.IsEnabled)
                 {
-                    AssetPairId = assetPairId,
-                    EventTimestamp = _dateService.Now(),
-                    TimeIntervals = resultingTimeIntervals.Select(x => x.ToRabbitMqContract()).ToList(),
-                });
+                    _cqrsSender.PublishEvent(new CompiledScheduleChangedEvent
+                    {
+                        AssetPairId = assetPairId,
+                        EventTimestamp = _dateService.Now(),
+                        TimeIntervals = resultingTimeIntervals.Select(x => x.ToRabbitMqContract()).ToList(),
+                    });
+                }
             }
             finally
             {

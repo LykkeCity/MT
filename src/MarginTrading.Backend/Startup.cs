@@ -194,13 +194,17 @@ namespace MarginTrading.Backend
                 try
                 {
                     ApplicationContainer
+                        .Resolve<IConfigurationValidator>()
+                        .WarnOrThrowIfInvalid();
+                    
+                    ApplicationContainer
                         .Resolve<IClientProfileSettingsCache>()
                         .Start();
                 
                     ApplicationContainer
                         .Resolve<ICqrsEngine>()
                         .StartAll();
-                    
+
                     Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
                     LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
                 }

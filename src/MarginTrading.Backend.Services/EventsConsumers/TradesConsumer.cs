@@ -2,8 +2,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Orders;
+using JetBrains.Annotations;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Extensions;
@@ -11,19 +11,27 @@ using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
-    //TODO: change events and models
-    public class TradesConsumer:
-        IEventConsumer<OrderExecutedEventArgs>
+    /// <summary>
+    /// Consumes core internal event <see cref="OrderExecutedEventArgs"/> and
+    /// publishes <see cref="TradeContract"/> to RabbitMq
+    /// </summary>
+    public class TradesConsumer: IEventConsumer<OrderExecutedEventArgs>
     {
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
+        private readonly ObsoleteFeature _compiledSchedulePublishingFeature;
 
-        public TradesConsumer(IRabbitMqNotifyService rabbitMqNotifyService)
+        public TradesConsumer(IRabbitMqNotifyService rabbitMqNotifyService, 
+            [CanBeNull] ObsoleteFeature compiledSchedulePublishingFeature)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
+            _compiledSchedulePublishingFeature = compiledSchedulePublishingFeature ?? ObsoleteFeature.Default;
         }
 
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
+            if (!_compiledSchedulePublishingFeature.IsEnabled)
+                return;
+
             var tradeType = ea.Order.Direction.ToType<TradeType>();
             var volume = Math.Abs(ea.Order.Volume);
             
