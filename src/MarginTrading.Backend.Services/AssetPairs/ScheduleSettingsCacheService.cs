@@ -72,6 +72,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task UpdateScheduleSettingsAsync()
         {
+            await _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateScheduleSettingsAsync),
+                "Updating schedule settings cache");
+            
             var newScheduleContracts = (await _scheduleSettingsApi.StateList(null))
                 .Where(x => x.ScheduleSettings.Any()).ToList();
             var invalidSchedules = newScheduleContracts.InvalidSchedules();
@@ -119,6 +122,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task UpdateMarketsScheduleSettingsAsync()
         {
+            await _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateMarketsScheduleSettingsAsync),
+                "Updating markets schedule settings cache");
+            
             var marketsScheduleSettingsRaw = (await _scheduleSettingsApi.List())
                 .Where(x => !string.IsNullOrWhiteSpace(x.MarketId))
                 .ToList();
