@@ -123,6 +123,12 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional]
         public bool LogBlockedMarginCalculation { get; set; }
         
-        public RabbitMqRetryPolicySettings RabbitMqRetryPolicy { get; set; } 
+        public RabbitMqRetryPolicySettings RabbitMqRetryPolicy { get; set; }
+
+        [Optional] 
+        public ObsoleteFeature CompiledSchedulePublishing { get; set; } = ObsoleteFeature.Default;
+
+        [Optional]
+        public ObsoleteFeature TradeContractPublishing { get; set; } = ObsoleteFeature.Default;
     }
 }
