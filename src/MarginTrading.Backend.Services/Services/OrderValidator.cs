@@ -436,13 +436,6 @@ namespace MarginTrading.Backend.Services
                 throw new OrderRejectionException(OrderRejectReason.NoLiquidity, "Quote not found");
             }
 
-            //TODO: implement in MTC-155            
-//            if (_assetDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
-//            {
-//                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
-//                    "Trades for instrument are not available");
-//            }
-
             if (order.OrderType == OrderType.Limit)
             {
                 if (order.Direction == OrderDirection.Buy && quote.Ask <= orderPrice)
