@@ -32,6 +32,7 @@ using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTradingTests.Modules;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace MarginTradingTests
@@ -83,6 +84,9 @@ namespace MarginTradingTests
                 OvernightMargin = overnightMarginSettings
             };
 
+            // register mocks of loggers
+            builder.RegisterInstance(Mock.Of<ILogger<QuoteCacheInspector>>());
+            
             builder.RegisterInstance(marginSettings).SingleInstance();
             builder.RegisterInstance(PositionHistoryEvents).As<List<PositionHistoryEvent>>().SingleInstance();
             builder.RegisterInstance(overnightMarginSettings).SingleInstance();
