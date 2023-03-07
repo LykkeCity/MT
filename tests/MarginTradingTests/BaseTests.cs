@@ -123,7 +123,7 @@ namespace MarginTradingTests
             }
 
             builder.RegisterModule(new CacheModule());
-            builder.RegisterModule(new ServicesModule());
+            builder.RegisterModule(new ServicesModule(marginSettings));
             builder.RegisterModule(new ManagersModule());
             
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
