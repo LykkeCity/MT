@@ -2,8 +2,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Quotes;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
@@ -21,6 +23,7 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly IDateService _dateService;
         private readonly ILogger<QuoteCacheInspector> _logger;
         private readonly TimeSpan _quoteStalePeriod;
+        private readonly ConcurrentDictionary<int, byte> _warnedQuotes = new ConcurrentDictionary<int, byte>();
 
         public QuoteCacheInspector(IQuoteCacheService decoratee,
             IDateService dateService,
@@ -42,7 +45,8 @@ namespace MarginTrading.Backend.Services.Quotes
 
             try
             {
-                WarnOnStaleQuote(quote);
+                if (CanWarn(quote))
+                    WarnOnStaleQuote(quote);
             }
             catch (Exception e)
             {
@@ -63,7 +67,8 @@ namespace MarginTrading.Backend.Services.Quotes
             
             try
             {
-                WarnOnStaleQuote(quote);
+                if (CanWarn(quote))
+                    WarnOnStaleQuote(quote);
             }
             catch (Exception e)
             {
@@ -79,17 +84,30 @@ namespace MarginTrading.Backend.Services.Quotes
             return _decoratee.RemoveQuote(assetPairId);
         }
 
-        private void WarnOnStaleQuote(InstrumentBidAskPair quote)
+        public void WarnOnStaleQuote(InstrumentBidAskPair quote)
         {
             if (quote == null)
                 return;
 
+            _logger.LogWarning("Quote for {instrument} is stale. Quote date: {quoteDate}, now: {now}",
+                quote.Instrument, quote.Date, _dateService.Now());
+            
+            _warnedQuotes.TryAdd(quote.GetStaleHash(), 0);
+        }
+
+        public bool CanWarn(InstrumentBidAskPair quote)
+        {
+            if (quote == null)
+                return false;
+            
             var current = _dateService.Now();
             if (IsQuoteStale(quote.Date, current, _quoteStalePeriod))
             {
-                _logger.LogWarning("Quote for {instrument} is stale. Quote date: {quoteDate}, now: {now}",
-                    quote.Instrument, quote.Date, current);
+                var hash = quote.GetStaleHash();
+                return !_warnedQuotes.ContainsKey(hash);   
             }
+            
+            return false;
         }
         
         public static bool IsQuoteStale(DateTime quoteDateTime, DateTime now, TimeSpan stalePeriod)
