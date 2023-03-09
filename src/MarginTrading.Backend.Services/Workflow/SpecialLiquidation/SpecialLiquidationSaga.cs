@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
@@ -453,16 +452,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
-        }
-
-        private decimal GetActualNetPositionCloseVolume(ICollection<string> positionIds, string accountId)
-        {
-            var netPositionVolume = _ordersCache.GetPositions()
-                .Where(x => positionIds.Contains(x.Id)
-                            && (string.IsNullOrEmpty(accountId) || x.AccountId == accountId))
-                .Sum(x => x.Volume);
-
-            return -netPositionVolume;
         }
 
         private void RequestPrice(ICommandSender sender, IOperationExecutionInfo<SpecialLiquidationOperationData> 
