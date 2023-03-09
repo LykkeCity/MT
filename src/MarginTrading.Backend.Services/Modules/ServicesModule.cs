@@ -49,9 +49,12 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IQuoteCacheService>()
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance();
-			
-			builder.RegisterDecorator<QuoteCacheInspector, IQuoteCacheService>();
- 
+
+			if (_settings.Monitoring?.Quotes?.IsEnabled ?? false)
+			{
+				builder.RegisterDecorator<QuoteCacheInspector, IQuoteCacheService>();
+			}
+
 			builder.RegisterType<FxRateCacheService>() 
 				.AsSelf()
 				.As<IFxRateCacheService>()

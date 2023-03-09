@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Quotes;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
 using Microsoft.Extensions.Logging;
 
@@ -19,15 +20,17 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly IQuoteCacheService _decoratee;
         private readonly IDateService _dateService;
         private readonly ILogger<QuoteCacheInspector> _logger;
-        private readonly TimeSpan _quoteStalePeriod = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan _quoteStalePeriod;
 
         public QuoteCacheInspector(IQuoteCacheService decoratee,
             IDateService dateService,
-            ILogger<QuoteCacheInspector> logger)
+            ILogger<QuoteCacheInspector> logger,
+            MarginTradingSettings settings)
         {
             _decoratee = decoratee;
             _dateService = dateService;
             _logger = logger;
+            _quoteStalePeriod = settings.Monitoring?.Quotes?.ConsiderQuoteStalePeriod ?? TimeSpan.FromSeconds(5);
         }
 
         public InstrumentBidAskPair GetQuote(string instrument)

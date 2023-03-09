@@ -130,5 +130,8 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional]
         public ObsoleteFeature TradeContractPublishing { get; set; } = ObsoleteFeature.Default;
+        
+        [Optional]
+        public MonitoringSettings Monitoring { get; set; }
     }
 }
