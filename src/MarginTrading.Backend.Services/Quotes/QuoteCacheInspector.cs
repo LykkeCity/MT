@@ -31,6 +31,9 @@ namespace MarginTrading.Backend.Services.Quotes
             _dateService = dateService;
             _logger = logger;
             _quoteStalePeriod = settings.Monitoring?.Quotes?.ConsiderQuoteStalePeriod ?? TimeSpan.FromSeconds(5);
+
+            _logger.LogInformation("Quote Cache Inspector is activated with stale period {stalePeriod}",
+                _quoteStalePeriod);
         }
 
         public InstrumentBidAskPair GetQuote(string instrument)
