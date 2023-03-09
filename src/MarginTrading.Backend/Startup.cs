@@ -223,7 +223,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
-            builder.RegisterModule(new ServicesModule());
+            builder.RegisterModule(new ServicesModule(settings.CurrentValue));
             builder.RegisterModule(new BackendServicesModule(
                 mtSettings.CurrentValue,
                 settings.CurrentValue,
