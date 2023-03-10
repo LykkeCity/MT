@@ -504,6 +504,12 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo,
             TimeSpan retryTimeout)
         {
+            // fix the intention to make another price request to not let the parallel 
+            // ongoing GetPriceForSpecialLiquidationTimeoutInternalCommand execution
+            // break (fail) the flow
+            executionInfo.Data.NextRequestNumber();
+            await _operationExecutionInfoRepository.Save(executionInfo);
+            
             var shouldRetryAfter = eventCreationTime.Add(retryTimeout);
 
             var timeLeftBeforeRetry = shouldRetryAfter - _dateService.Now();
@@ -513,11 +519,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 await Task.Delay(timeLeftBeforeRetry);
             }
 
-            executionInfo.Data.NextRequestNumber();
-
             RequestPrice(sender, executionInfo);
-
-            await _operationExecutionInfoRepository.Save(executionInfo);
         }
 
         private async Task<bool> FailIfInstrumentDiscontinued(IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo, ICommandSender sender)
