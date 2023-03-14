@@ -18,11 +18,23 @@ namespace MarginTrading.Common.Helpers
         /// <returns></returns>
         public static async Task<byte[]> ReadBytes(this Stream stream, int maxBytes)
         {
-            if ((stream?.Length ?? 0) == 0)
+            try
             {
-                return Array.Empty<byte>();
+                if ((stream?.Length ?? 0) == 0)
+                {
+                    return Array.Empty<byte>();
+                }
             }
-            
+            catch (Exception e)
+            {
+                if (e is NotSupportedException || e is ObjectDisposedException)
+                {
+                    return Array.Empty<byte>();
+                }
+                
+                throw;
+            }
+
             if (maxBytes <= 0)
             {
                 return Array.Empty<byte>();
