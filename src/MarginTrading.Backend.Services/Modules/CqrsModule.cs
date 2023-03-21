@@ -267,7 +267,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .WithCommandsHandler<WithdrawalCommandsHandler>()
                 .PublishingEvents(
                     typeof(AmountForWithdrawalFrozenEvent),
-                    typeof(AmountForWithdrawalFreezeFailedEvent))
+                    typeof(AmountForWithdrawalFreezeFailedEvent),
+                    typeof(UnfreezeMarginOnFailSucceededWithdrawalEvent))
                 .With(EventsRoute);
         }
 
