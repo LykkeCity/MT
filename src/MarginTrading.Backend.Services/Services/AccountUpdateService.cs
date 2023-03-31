@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using Lykke.Snow.Common.Costs;
 using Lykke.Snow.Common.Percents;
 using Lykke.Snow.Common.Quotes;
@@ -177,9 +178,22 @@ namespace MarginTrading.Backend.Services.Services
                 $"Calculation made on order");
 
             if (orderBalanceAvailable < orderMargin)
+            {
+                _log.Info(nameof(CheckBalance),
+                    new
+                    {
+                        clientProfileSettings.ExecutionFeesFloor,
+                        clientProfileSettings.ExecutionFeesRate, 
+                        clientProfileSettings.ExecutionFeesCap, 
+                        fxRate, 
+                        orderFulfillmentPlan.Order.Volume,
+                        orderFulfillmentPlan.UnfulfilledVolume
+                    }.ToJson(),
+                    "Temp log to test contract size");
                 throw new OrderRejectionException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
-                    $"Account available margin: {marginAvailable}, order margin: {orderMargin}, pnl at execution: {pnlAtExecution}, entry cost: {(decimal)entryCost}, exit cost: {(decimal)exitCost} ");
+                    $"Account available margin: {marginAvailable}, order margin: {orderMargin}, pnl at execution: {pnlAtExecution}, entry cost: {(decimal)entryCost}, exit cost: {(decimal)exitCost} ");   
+            }
         }
 
         public async ValueTask RemoveLiquidationStateIfNeeded(string accountId,
