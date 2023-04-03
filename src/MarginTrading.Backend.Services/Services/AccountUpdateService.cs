@@ -178,19 +178,6 @@ namespace MarginTrading.Backend.Services.Services
                 }.ToJson(),
                 $"Calculation made on order");
 
-            _log.WriteInfo(nameof(CheckBalance),
-                new
-                {
-                    clientProfileSettings.ExecutionFeesFloor,
-                    clientProfileSettings.ExecutionFeesRate, 
-                    clientProfileSettings.ExecutionFeesCap, 
-                    fxRate, 
-                    orderFulfillmentPlan.Order.Volume,
-                    orderFulfillmentPlan.UnfulfilledVolume,
-                    orderFulfillmentPlan.Order.Price
-                }.ToJson(),
-                "Temp log");
-
             if (orderBalanceAvailable < orderMargin)
                 throw new OrderRejectionException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
