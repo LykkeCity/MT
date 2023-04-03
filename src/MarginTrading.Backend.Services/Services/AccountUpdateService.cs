@@ -179,7 +179,7 @@ namespace MarginTrading.Backend.Services.Services
 
             if (orderBalanceAvailable < orderMargin)
             {
-                _log.WriteInfo(nameof(CheckBalance),
+                _log.Info(nameof(CheckBalance),
                     new
                     {
                         clientProfileSettings.ExecutionFeesFloor,
