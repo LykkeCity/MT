@@ -148,14 +148,14 @@ namespace MarginTrading.Backend.Services.Services
                     new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate), 
                     clientProfileSettings.ExecutionFeesCap, 
                     fxRate, 
-                    orderFulfillmentPlan.Order.Volume * openPrice));
+                    orderFulfillmentPlan.Order.Volume * orderFulfillmentPlan.Order.Price));
             
             // orderFulfillmentPlan.UnfulfilledVolume is OrderSize in this case that's why price is included
             var exitCost = new ExitCost(new ExitCommissionCost(clientProfileSettings.ExecutionFeesFloor,
                 new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate),
                 clientProfileSettings.ExecutionFeesCap,
                 fxRate,
-                orderFulfillmentPlan.UnfulfilledVolume * closePrice));
+                orderFulfillmentPlan.UnfulfilledVolume * orderFulfillmentPlan.Order.Price));
 
             var marginAvailable = account.GetMarginAvailable() + (orderFulfillmentPlan.OppositePositionsState?.Margin ?? 0);
             
@@ -187,8 +187,7 @@ namespace MarginTrading.Backend.Services.Services
                     fxRate, 
                     orderFulfillmentPlan.Order.Volume,
                     orderFulfillmentPlan.UnfulfilledVolume,
-                    openPrice,
-                    closePrice
+                    orderFulfillmentPlan.Order.Price
                 }.ToJson(),
                 "Temp log");
 
