@@ -693,9 +693,11 @@ namespace MarginTrading.Backend.Services
                 throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
                     $"The instrument is not found for the trading condition {orderFulfillmentPlan.Order.TradingConditionId} and asset pair {orderFulfillmentPlan.Order.AssetPairId}");
             }
+
+            var unfulfilledAbsVolume = Math.Abs(orderFulfillmentPlan.UnfulfilledVolume);
             
             if (tradingInstrument.DealMaxLimit > 0 &&
-                Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.DealMaxLimit &&
+                unfulfilledAbsVolume > tradingInstrument.DealMaxLimit &&
                 orderFulfillmentPlan.RequiresPositionOpening)
             {
                 throw new OrderRejectionException(OrderRejectReason.MaxOrderSizeLimit,
@@ -706,9 +708,12 @@ namespace MarginTrading.Backend.Services
                 .GetPositionsByInstrumentAndAccount(orderFulfillmentPlan.Order.AssetPairId, orderFulfillmentPlan.Order.AccountId)
                 .Sum(o => Math.Abs(o.Volume));
 
+            var oppositePositionsToBeClosedAbsVolume =
+                Math.Abs(orderFulfillmentPlan.Order.Volume) - unfulfilledAbsVolume;
+
             if (tradingInstrument.PositionLimit > 0 &&
                 orderFulfillmentPlan.RequiresPositionOpening &&
-                positionsAbsVolume + Math.Abs(orderFulfillmentPlan.UnfulfilledVolume) > tradingInstrument.PositionLimit)
+                positionsAbsVolume - oppositePositionsToBeClosedAbsVolume + unfulfilledAbsVolume > tradingInstrument.PositionLimit)
             {
                 throw new OrderRejectionException(OrderRejectReason.MaxPositionLimit,
                     $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");

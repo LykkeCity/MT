@@ -61,13 +61,9 @@ namespace MarginTrading.Backend.Core
         public decimal TodayCommissionAmount { get; set; }
         public decimal TodayOtherAmount { get; set; }
         public decimal TodayStartBalance { get; set; }
-        
         public string LogInfo { get; set; }
-
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
-
         public decimal TemporaryCapital { get; set; }
-
         public static MarginTradingAccount Create(IMarginTradingAccount src, AccountFpl accountFpl = null)
         {
             return new MarginTradingAccount

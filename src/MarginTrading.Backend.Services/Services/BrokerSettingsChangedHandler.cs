@@ -12,6 +12,7 @@ using Lykke.Snow.Mdm.Contracts.Models.Events;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Services
 {
@@ -21,22 +22,27 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
         private readonly IOvernightMarginService _overnightMarginService;
         private readonly IScheduleControlService _scheduleControlService;
+        private readonly ILogger<BrokerSettingsChangedHandler> _logger;
 
         public BrokerSettingsChangedHandler(
             MarginTradingSettings settings,
             IScheduleSettingsCacheService scheduleSettingsCache,
             IOvernightMarginService overnightMarginService,
-            IScheduleControlService scheduleControlService)
+            IScheduleControlService scheduleControlService,
+            ILogger<BrokerSettingsChangedHandler> logger)
         {
             _settings = settings;
             _scheduleSettingsCache = scheduleSettingsCache;
             _overnightMarginService = overnightMarginService;
             _scheduleControlService = scheduleControlService;
+            _logger = logger;
         }
 
         [UsedImplicitly]
         public async Task Handle(BrokerSettingsChangedEvent e)
         {
+            _logger.LogInformation("BrokerSettingsChangedEvent received");
+            
             switch (e.ChangeType)
             {
                 case ChangeType.Creation:
@@ -44,6 +50,7 @@ namespace MarginTrading.Backend.Services.Services
                 case ChangeType.Edition:
                     if (e.OldValue == null || IsScheduleDataChanged(e.OldValue, e.NewValue, _settings.BrokerId))
                     {
+                        _logger.LogInformation("BrokerSettingsChangedEvent: schedule data changed");
                         await _scheduleSettingsCache.UpdateAllSettingsAsync();
                         _overnightMarginService.ScheduleNext();
                         _scheduleControlService.ScheduleNext();

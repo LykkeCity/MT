@@ -35,7 +35,8 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/positions")]
-    public class PositionsController : Controller, IPositionsApi
+    [ApiController]
+    public class PositionsController : ControllerBase, IPositionsApi
     {
         private readonly ITradingEngine _tradingEngine;
         private readonly IOperationsLogService _operationsLogService;

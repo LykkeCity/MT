@@ -38,6 +38,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly MarginTradingSettings _settings;
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
+        public static bool IsMakingSnapshotInProgress => Lock.CurrentCount == 0;
 
         public SnapshotService(
             IScheduleSettingsCacheService scheduleSettingsCacheService,
@@ -89,7 +90,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     $"{nameof(tradingDay)}'s Date component must be from current disabled interval's Start -1d to End: [{disabledInterval.Start.AddDays(-1)}, {disabledInterval.End}].");
             }
 
-            if (Lock.CurrentCount == 0)
+            if (IsMakingSnapshotInProgress)
             {
                 throw new InvalidOperationException("Trading data snapshot creation is already in progress");
             }
@@ -195,7 +196,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             IEnumerable<ClosingAssetPrice> cfdQuotes,
             IEnumerable<ClosingFxRate> fxRates)
         {
-            if (Lock.CurrentCount == 0)
+            if (IsMakingSnapshotInProgress)
             {
                 throw new InvalidOperationException("Trading data snapshot manipulations are already in progress");
             }

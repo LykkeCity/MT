@@ -20,7 +20,7 @@ namespace MarginTrading.Backend.Middleware
     /// Handles exceptions - inheritors from <see cref="ValidationException"/>
     /// and returns responses as RFC 7807 compliant Problem Details with
     /// corresponding business error code.
-    /// To add new exception following steps are requried:
+    /// To add new exception following steps are required:
     /// 1. Add new domain error code enum.
     /// 2. Add new corresponsing errors to be used as public error codes to
     /// <see cref="ValidationErrorCodes"/> class.

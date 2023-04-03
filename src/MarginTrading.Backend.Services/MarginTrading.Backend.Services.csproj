@@ -6,7 +6,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>2.23.0</Version>
+    <Version>2.24.5</Version>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -26,7 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="FluentScheduler" Version="5.5.1" />
-    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="7.6.1" />
+    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="7.8.0" />
     <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" Version="10.8.3" />
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="1.5.2" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
@@ -44,7 +44,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
     <PackageReference Include="morelinq" Version="3.3.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.66" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Reactive.Linq" Version="4.4.1" />

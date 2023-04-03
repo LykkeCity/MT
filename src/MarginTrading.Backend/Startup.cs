@@ -23,6 +23,7 @@ using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
+using MarginTrading.Backend.Binders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
@@ -91,7 +92,10 @@ namespace MarginTrading.Backend
 
             services.AddSingleton(Configuration);
             services
-                .AddControllers()
+                .AddControllers(opt =>
+                {
+                    opt.ModelBinderProviders.Insert(0, new CoreModelBinderProvider());
+                })
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
@@ -171,23 +175,29 @@ namespace MarginTrading.Backend
                     });
             });
             app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Trading Engine API Swagger"));
-
-            appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
-
+            
             var application = app.ApplicationServices.GetService<Application>();
 
             appLifetime.ApplicationStarted.Register(() =>
             {
-                var cqrsEngine = ApplicationContainer.Resolve<ICqrsEngine>();
-                cqrsEngine.StartSubscribers();
-                cqrsEngine.StartProcesses();
-
-                var clientProfileSettingsCache = ApplicationContainer.Resolve<IClientProfileSettingsCache>();
-                clientProfileSettingsCache.Start();
-
-                Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
-
-                LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
+                try
+                {
+                    ApplicationContainer
+                        .Resolve<IClientProfileSettingsCache>()
+                        .Start();
+                
+                    ApplicationContainer
+                        .Resolve<ICqrsEngine>()
+                        .StartAll();
+                    
+                    Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
+                    LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
+                }
+                catch (Exception e)
+                {
+                    LogLocator.CommonLog?.WriteFatalErrorAsync("", "", e);
+                    appLifetime.StopApplication();
+                }
             });
 
             appLifetime.ApplicationStopping.Register(() =>
@@ -196,6 +206,8 @@ namespace MarginTrading.Backend
                     application.StopApplication();
                 }
             );
+            
+            appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
         }
 
         private static void RegisterModules(

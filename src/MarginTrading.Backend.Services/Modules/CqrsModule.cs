@@ -72,8 +72,9 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterAssemblyTypes(GetType().Assembly).Where(t =>
                 new[] {"Saga", "CommandsHandler", "Projection"}.Any(ending => t.Name.EndsWith(ending))).AsSelf();
 
-            builder.Register(ctx => CreateEngine(ctx)).As<ICqrsEngine>().SingleInstance()
-                .AutoActivate();
+            builder.Register(CreateEngine)
+                .As<ICqrsEngine>()
+                .SingleInstance();
         }
 
         private CqrsEngine CreateEngine(IComponentContext ctx)
@@ -114,7 +115,6 @@ namespace MarginTrading.Backend.Services.Modules
                 registrations.ToArray());
             engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
             engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);
-            engine.StartPublishers();
 
             return engine;
         }
@@ -273,7 +273,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .WithCommandsHandler<WithdrawalCommandsHandler>()
                 .PublishingEvents(
                     typeof(AmountForWithdrawalFrozenEvent),
-                    typeof(AmountForWithdrawalFreezeFailedEvent))
+                    typeof(AmountForWithdrawalFreezeFailedEvent),
+                    typeof(UnfreezeMarginOnFailSucceededWithdrawalEvent))
                 .With(EventsRoute);
         }
 

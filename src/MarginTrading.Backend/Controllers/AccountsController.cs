@@ -25,7 +25,8 @@ namespace MarginTrading.Backend.Controllers
     [Authorize]
     [Route("api/accounts")]
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-    public class AccountsController : Controller, IAccountsApi
+    [ApiController]
+    public class AccountsController : ControllerBase, IAccountsApi
     {
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountsProvider _accountsProvider;

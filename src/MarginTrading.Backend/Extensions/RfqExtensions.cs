@@ -1,6 +1,9 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using MarginTrading.Backend.Contracts.Rfq;
 using MarginTrading.Backend.Core.Rfq;
 
@@ -8,6 +11,21 @@ namespace MarginTrading.Backend.Extensions
 {
     public static class RfqExtensions
     {
+        public static bool TryParseAsEnumList<T>(this IEnumerable<string> src, out List<T> result) where T : struct
+        {
+            result = new List<T>();
+            
+            foreach (var s in src)
+            {
+                if (Enum.TryParse<T>(s, out var parsed))
+                {
+                    result.Add(parsed);
+                }
+            }
+            
+            return result.Any();
+        }
+        
         public static RfqFilter ToFilter(this ListRfqRequest request)
         {
             return request != null

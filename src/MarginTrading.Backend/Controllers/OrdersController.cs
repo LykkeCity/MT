@@ -33,7 +33,8 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/orders")]
-    public class OrdersController : Controller, IOrdersApi
+    [ApiController]
+    public class OrdersController : ControllerBase, IOrdersApi
     {
         private readonly ITradingEngine _tradingEngine;
         private readonly IOperationsLogService _operationsLogService;
@@ -213,7 +214,7 @@ namespace MarginTrading.Backend.Controllers
             }
             else
             {
-                throw new Exception($"Couldn't update related order for position {positionId}");
+                throw new OrderValidationException("Related order not found", OrderValidationError.OrderNotFound);
             }
         }
 

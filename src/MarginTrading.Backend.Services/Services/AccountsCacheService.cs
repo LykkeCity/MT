@@ -10,6 +10,7 @@ using Common.Log;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Services;
@@ -211,7 +212,6 @@ namespace MarginTrading.Backend.Services
             try
             {
                 var account = _accounts[accountId];
-
                 if (account.LastUpdateTime > eventTime)
                 {
                     await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
