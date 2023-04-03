@@ -106,7 +106,7 @@ namespace MarginTrading.Backend.Services.Modules
             {
                 Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
-            var engine = new RabbitMqCqrsEngine(ctx.Resolve<ILoggerFactory>(),
+            var engine = new RabbitMqCqrsEngine(loggerFactory,
                 ctx.Resolve<IDependencyResolver>(),
                 new DefaultEndpointProvider(),
                 rabbitMqSettings.Endpoint.ToString(),
@@ -275,7 +275,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .WithCommandsHandler<WithdrawalCommandsHandler>()
                 .PublishingEvents(
                     typeof(AmountForWithdrawalFrozenEvent),
-                    typeof(AmountForWithdrawalFreezeFailedEvent))
+                    typeof(AmountForWithdrawalFreezeFailedEvent),
+                    typeof(UnfreezeMarginOnFailSucceededWithdrawalEvent))
                 .With(EventsRoute);
         }
 
