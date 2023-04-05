@@ -28,6 +28,6 @@ namespace MarginTrading.AccountMarginEventsBroker
     [UsedImplicitly]
     public class RabbitMqQueues
     {
-        public RabbitMqQueueInfo AccountMarginEvents { get; set; }
+        public RabbitMqPublisherInfo AccountMarginEvents { get; set; }
     }
 }

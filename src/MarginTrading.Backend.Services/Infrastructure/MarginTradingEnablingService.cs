@@ -3,31 +3,30 @@
 
 using System.Threading.Tasks;
 using Autofac;
-using Lykke.RabbitMqBroker.Publisher;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Services;
-using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Infrastructure
 {
     public class MarginTradingEnablingService : IMarginTradingEnablingService, IStartable
     {
-        private IMessageProducer<MarginTradingEnabledChangedMessage> _eventsPublisher;
         private readonly IClientAccountService _clientAccountService;
         private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
-        private readonly IRabbitMqService _rabbitMqService;
+        private readonly IRabbitMqProducerContainer _producerContainer;
         private readonly MarginTradingSettings _marginSettings;
 
-        public MarginTradingEnablingService(IClientAccountService clientAccountService, IRabbitMqService rabbitMqService,
+        public MarginTradingEnablingService(IClientAccountService clientAccountService,
             MarginTradingSettings settings,
-            IMarginTradingSettingsCacheService marginTradingSettingsCacheService)
+            IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
+            IRabbitMqProducerContainer producerContainer)
         {
             _marginSettings = settings;
-            _rabbitMqService = rabbitMqService;
             _clientAccountService = clientAccountService;
             _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
+            _producerContainer = producerContainer;
         }
 
         public async Task SetMarginTradingEnabled(string clientId, bool enabled)
@@ -48,18 +47,13 @@ namespace MarginTrading.Backend.Services
             };
 
             _marginTradingSettingsCacheService.OnMarginTradingEnabledChanged(marginEnabledChangedMessage);
-            await _eventsPublisher.ProduceAsync(marginEnabledChangedMessage);
+            var (_, producer) = _producerContainer.GetProducer<MarginTradingEnabledChangedMessage>();
+            await producer.ProduceAsync(marginEnabledChangedMessage);
         }
 
         public void Start()
         {
-            _eventsPublisher = _rabbitMqService.GetProducer(
-                new RabbitMqSettings
-                {
-                    ConnectionString = _marginSettings.MtRabbitMqConnString,
-                    ExchangeName = _marginSettings.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName
-                },
-                _rabbitMqService.GetJsonSerializer<MarginTradingEnabledChangedMessage>());
+            _producerContainer.RegisterProducer<MarginTradingEnabledChangedMessage>(_marginSettings.RabbitMqPublishers.MarginTradingEnabledChanged);
         }
     }
 }

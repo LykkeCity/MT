@@ -66,7 +66,7 @@ namespace MarginTrading.Backend.Modules
                 .SingleInstance();
 
             builder.Register<ITemplateGenerator>(ctx =>
-                new MustacheTemplateGenerator(_environment, Path.Combine("Email","Templates"))
+                new MustacheTemplateGenerator(_environment, Path.Combine("Email", "Templates"))
             ).SingleInstance();
 
             var consoleWriter = new ConsoleLWriter(Console.WriteLine);
@@ -77,10 +77,10 @@ namespace MarginTrading.Backend.Modules
 
             if (_settings.WriteOperationLog && _settings.UseSerilog)
             {
-                _log.WriteWarning(nameof(BackendServicesModule), nameof(Load), 
+                _log.WriteWarning(nameof(BackendServicesModule), nameof(Load),
                     $"Operations log will not be written, because {nameof(_settings.UseSerilog)} is enabled.");
             }
-            
+
             builder.RegisterType<OperationsLogService>()
                 .As<IOperationsLogService>()
                 .WithParameter(new TypedParameter(typeof(bool), _settings.WriteOperationLog && !_settings.UseSerilog))
@@ -130,7 +130,7 @@ namespace MarginTrading.Backend.Modules
                 .SingleInstance();
 
             builder.RegisterChaosKitty(_settings.ChaosKitty);
-            
+
             builder.RegisterType<PublishingQueueRepository>()
                 .As<IPublishingQueueRepository>()
                 .SingleInstance();
@@ -143,49 +143,9 @@ namespace MarginTrading.Backend.Modules
                 .As<IRfqPauseService>()
                 .SingleInstance();
 
-            RegisterPublishers(builder, consoleWriter);
-
             builder.RegisterType<ValidationExceptionHandler>()
                 .AsSelf()
                 .SingleInstance();
-        }
-
-        private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)
-        {
-            var publishers = new List<string>
-            {
-                _settings.RabbitMqQueues.OrderHistory.ExchangeName,
-                _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
-                _settings.RabbitMqQueues.AccountStats.ExchangeName,
-                _settings.RabbitMqQueues.Trades.ExchangeName,
-                _settings.RabbitMqQueues.PositionHistory.ExchangeName,
-                _settings.RabbitMqQueues.ExternalOrder.ExchangeName,
-            };
-
-            var bytesSerializer = new BytesStringSerializer();
-
-            foreach (var exchangeName in publishers)
-            {
-                builder
-                    .Register(ctx =>
-                    {
-                        var pub = new RabbitMqPublisher<string>(ctx.Resolve<ILoggerFactory>(), new RabbitMqSubscriptionSettings
-                            {
-                                ConnectionString = _settings.MtRabbitMqConnString,
-                                ExchangeName = exchangeName
-                            })
-                            .SetSerializer(bytesSerializer)
-                            .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
-                            .DisableInMemoryQueuePersistence()
-                            .SetWriteHeadersFunc(ctx.Resolve<RabbitMqCorrelationManager>().BuildCorrelationHeadersIfExists);
-                        pub.Start();
-                        return pub;
-                    })
-                    .Named<IMessageProducer<string>>(exchangeName)
-                    .As<IStartStop>()
-                    .SingleInstance();
-            }
         }
     }
 }
