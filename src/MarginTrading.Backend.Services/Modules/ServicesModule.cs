@@ -5,8 +5,8 @@ using Autofac;
 using Common.Log;
 using Autofac.Features.Variance;
 using Lykke.RabbitMqBroker.Publisher;
-using Lykke.SettingsReader;
 using Lykke.Snow.Common.Correlation.RabbitMq;
+using MarginTrading.AssetService.Contracts;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
@@ -18,6 +18,7 @@ using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Services;
@@ -25,6 +26,7 @@ using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Telemetry;
 using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Logging;
@@ -33,6 +35,13 @@ namespace MarginTrading.Backend.Services.Modules
 {
 	public class ServicesModule : Module
 	{
+		private readonly MarginTradingSettings _settings;
+
+		public ServicesModule(MarginTradingSettings settings)
+		{
+			_settings = settings;
+		}
+
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<QuoteCacheService>()
@@ -105,7 +114,8 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<OrderRejectedEventArgs>>()
 				.SingleInstance();
 
-			builder.RegisterType<TradesConsumer>()
+			builder.Register(c => new TradesConsumer(c.Resolve<IRabbitMqNotifyService>(),
+					_settings.TradeContractPublishing))
 				.As<IEventConsumer<OrderExecutedEventArgs>>()
 				.SingleInstance();
 			
@@ -154,20 +164,22 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IContextFactory>()
 				.SingleInstance();
 
-			builder.Register(c =>
-				{
-					var settings = c.Resolve<IReloadingManager<MarginTradingSettings>>();
-					return new RabbitMqService(
-						c.Resolve<ILoggerFactory>(),
-						c.Resolve<ILog>(),
-						settings.CurrentValue.Env,
-						c.Resolve<IPublishingQueueRepository>(),
-						c.Resolve<RabbitMqCorrelationManager>());
-				})
+			builder.Register(c => new RabbitMqService(
+					c.Resolve<ILoggerFactory>(),
+					c.Resolve<ILog>(),
+					_settings.Env,
+					c.Resolve<IPublishingQueueRepository>(),
+					c.Resolve<RabbitMqCorrelationManager>()))
 				.As<IRabbitMqService>()
 				.SingleInstance();
 
-			builder.RegisterType<ScheduleSettingsCacheService>()
+			builder.Register(c => new ScheduleSettingsCacheService(c.Resolve<ICqrsSender>(),
+					c.Resolve<IScheduleSettingsApi>(),
+					c.Resolve<IAssetPairsCache>(),
+					c.Resolve<IDateService>(),
+					c.Resolve<ILog>(),
+					c.Resolve<OvernightMarginSettings>(),
+					_settings.CompiledSchedulePublishing))
 				.As<IScheduleSettingsCacheService>()
 				.SingleInstance();
 
@@ -223,6 +235,10 @@ namespace MarginTrading.Backend.Services.Modules
 
             builder.RegisterType<PositionHistoryHandler>()
 	            .As<IPositionHistoryHandler>()
+	            .SingleInstance();
+
+            builder.Register(c => new ConfigurationValidator(_settings,
+		            c.Resolve<ILogger<ConfigurationValidator>>())).As<IConfigurationValidator>()
 	            .SingleInstance();
 		}
 	}
