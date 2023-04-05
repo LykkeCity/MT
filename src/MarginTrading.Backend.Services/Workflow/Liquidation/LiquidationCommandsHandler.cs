@@ -185,7 +185,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
             
-            _accountUpdateService.RemoveLiquidationStateIfNeeded(executionInfo.Data.AccountId,
+            await _accountUpdateService.RemoveLiquidationStateIfNeeded(executionInfo.Data.AccountId,
                 $"Liquidation [{command.OperationId}] failed ({command.Reason})", command.OperationId,
                 executionInfo.Data.LiquidationType);
             
@@ -233,7 +233,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
             
-            _accountUpdateService.RemoveLiquidationStateIfNeeded(executionInfo.Data.AccountId,
+            await _accountUpdateService.RemoveLiquidationStateIfNeeded(executionInfo.Data.AccountId,
                 $"Liquidation [{command.OperationId}] finished ({command.Reason})", command.OperationId,
                 executionInfo.Data.LiquidationType);
             

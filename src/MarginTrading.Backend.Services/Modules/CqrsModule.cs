@@ -80,8 +80,6 @@ namespace MarginTrading.Backend.Services.Modules
 
         private CqrsEngine CreateEngine(IComponentContext ctx)
         {
-            var loggerFactory = ctx.Resolve<ILoggerFactory>();
-            
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
                     environment: _settings.EnvironmentName);
