@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Http;
 namespace MarginTrading.Backend.Middleware
 {
     /// <summary>
-    /// Handles exceptions - inheritors from <see cref="ValidationException"/>
+    /// Handles exceptions - inheritors from <see cref="ValidationException{T}"/>
     /// and returns responses as RFC 7807 compliant Problem Details with
     /// corresponding business error code.
     /// To add new exception following steps are required:
@@ -27,7 +27,7 @@ namespace MarginTrading.Backend.Middleware
     /// 3. Add mapping from domain error code to public error code
     /// to <see cref="PublicErrorCodeMap"/> class.
     /// 4. Finally, add new exception class - inheritor
-    /// from <see cref="ValidationException"/>
+    /// from <see cref="ValidationException{T}"/>
     /// </summary>
     public class ValidationExceptionHandler
     {
