@@ -2,13 +2,13 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Extensions;
 using MarginTrading.Common.Helpers;
+using MarginTrading.Common.Settings;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
@@ -18,13 +18,16 @@ namespace MarginTrading.Backend.Middleware
         private readonly ILog _log;
         private readonly RequestDelegate _next;
         private readonly ValidationExceptionHandler _validationExceptionHandler;
+        private readonly RequestLoggerSettings _settings;
 
         public GlobalErrorHandlerMiddleware(RequestDelegate next,
             ILog log,
-            ValidationExceptionHandler validationExceptionHandler)
+            ValidationExceptionHandler validationExceptionHandler,
+            RequestLoggerSettings settings)
         {
             _log = log;
             _validationExceptionHandler = validationExceptionHandler;
+            _settings = settings;
             _next = next;
         }
 
@@ -43,28 +46,31 @@ namespace MarginTrading.Backend.Middleware
                     return;
                 }
 
-                await Log(ex, asInfo: ex is LogInfoOnlyException);
+                await LogWithRequest(context.Request, ex, ex is LogInfoOnlyException);
 
                 await context.Response.WriteDefaultMtErrorAsync(ex.Message);
             }
         }
         
-        private async Task Log(Exception ex, bool asInfo)
+        private async Task LogWithRequest(HttpRequest request, Exception ex, bool asInfo)
         {
-            string bodyPart;
-
-            using (var ms = new MemoryStream())
-            {
-                bodyPart = await StreamHelpers.GetStreamPart(ms, 1024);
-            }
+            var bytes = await request.Body.ReadBytes((uint)_settings.MaxPartSize);
+            var bodyPart = bytes == null ? null : System.Text.Encoding.UTF8.GetString(bytes);
 
             if (asInfo)
             {
-                await _log.WriteInfoAsync(nameof(GlobalErrorHandlerMiddleware), bodyPart, ex.Message);
+                await _log.WriteInfoAsync(nameof(GlobalErrorHandlerMiddleware), $"Body: {bodyPart}", ex.Message);
                 return;
             }
+            
+            if (ex.InnerException != null)
+            {
+                await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), 
+                    $"Body: {bodyPart}", 
+                    ex.InnerException);
+            }
 
-            await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), bodyPart, ex);
+            await _log.WriteErrorAsync(nameof(GlobalErrorHandlerMiddleware), $"Body: {bodyPart}", ex);
         }
     }
 }

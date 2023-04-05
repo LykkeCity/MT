@@ -70,7 +70,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
             
-            _accountUpdateService.RemoveLiquidationStateIfNeeded(accountId, reason, operationId, executionInfo.Data.LiquidationType);
+            await _accountUpdateService.RemoveLiquidationStateIfNeeded(accountId, reason, operationId, executionInfo.Data.LiquidationType);
 
             var account = _accountsCache.Get(accountId);
 

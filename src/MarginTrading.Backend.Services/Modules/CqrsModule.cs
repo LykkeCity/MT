@@ -51,11 +51,12 @@ namespace MarginTrading.Backend.Services.Modules
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly long _defaultRetryDelayMs;
 
-        public CqrsModule(CqrsSettings settings, MarginTradingSettings marginTradingSettings)
+        public CqrsModule(CqrsSettings settings,
+            MarginTradingSettings marginTradingSettings)
         {
             _settings = settings;
             _marginTradingSettings = marginTradingSettings;
-            _defaultRetryDelayMs = (long) _settings.RetryDelay.TotalMilliseconds;
+            _defaultRetryDelayMs = (long)_settings.RetryDelay.TotalMilliseconds;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -79,12 +80,12 @@ namespace MarginTrading.Backend.Services.Modules
 
         private CqrsEngine CreateEngine(IComponentContext ctx)
         {
-            var loggerFactory = ctx.Resolve<ILoggerFactory>();
-            
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
                     environment: _settings.EnvironmentName);
 
+            var loggerFactory = ctx.Resolve<ILoggerFactory>();
+            
             var registrations = new List<IRegistration>
             {
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),

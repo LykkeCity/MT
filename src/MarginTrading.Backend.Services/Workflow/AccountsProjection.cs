@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Services.Workflow
                                     DateTimeExtensions.MaxDateTime(e.Account.ModificationTimestamp, e.Account.ClientModificationTimestamp),
                                     updatedAccount.AdditionalInfo))
                             {
-                                _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
+                                await _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
                                     "Trading conditions changed");
                             }
                             break;
@@ -139,7 +139,7 @@ namespace MarginTrading.Backend.Services.Workflow
                                         e.BalanceChange.ReasonType.ToType<AccountBalanceChangeReasonType>(),
                                         e.ChangeTimestamp);
 
-                                    _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
+                                    await _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
                                         "Balance updated");
 
                                     _accountBalanceChangedEventChannel.SendEvent(this,

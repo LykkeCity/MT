@@ -24,7 +24,6 @@ namespace MarginTrading.Backend.Services.Notifications
     {
         private readonly IDateService _dateService;
         private readonly MarginTradingSettings _settings;
-        private readonly Dictionary<string, Lykke.RabbitMqBroker.Publisher.IMessageProducer<string>> _publishers;
         private readonly ILog _log;
         private readonly IOrderReader _orderReader;
         private readonly IRabbitMqProducerContainer _producerContainer;
@@ -113,7 +112,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 if (publisherInfo.LogEventPublishing)
                 {
                     var messageStr =  message.ToJson();
-                    _log.WriteInfoAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr,
+                    await _log.WriteInfoAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr,
                         "Published RabbitMqEvent");
                 }
             }
