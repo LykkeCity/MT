@@ -143,17 +143,19 @@ namespace MarginTrading.Backend.Services.Services
 
             var fxRate = GetFxRate(orderFulfillmentPlan.Order, pnlInTradingCurrency);
 
+            // orderFulfillmentPlan.Order.Volume is OrderSize in this case that's why price is included
             var entryCost = new EntryCost(new EntryCommissionCost(clientProfileSettings.ExecutionFeesFloor,
                     new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate), 
                     clientProfileSettings.ExecutionFeesCap, 
-                    new FxRate(fxRate), 
-                    orderFulfillmentPlan.Order.Volume));
+                    fxRate, 
+                    orderFulfillmentPlan.Order.Volume * openPrice));
             
+            // orderFulfillmentPlan.UnfulfilledVolume is OrderSize in this case that's why price is included
             var exitCost = new ExitCost(new ExitCommissionCost(clientProfileSettings.ExecutionFeesFloor,
                 new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate),
                 clientProfileSettings.ExecutionFeesCap,
-                new FxRate(fxRate),
-                orderFulfillmentPlan.UnfulfilledVolume));
+                fxRate,
+                orderFulfillmentPlan.UnfulfilledVolume * openPrice));
 
             var marginAvailable = account.GetMarginAvailable() + (orderFulfillmentPlan.OppositePositionsState?.Margin ?? 0);
             
