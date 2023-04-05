@@ -5,6 +5,6 @@ namespace MarginTrading.Backend.Services.Infrastructure
 {
     public interface IConfigurationValidator
     {
-        void WarnOrThrowIfInvalid();
+        void WarnIfInvalid();
     }
 }

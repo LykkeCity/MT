@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _logger = logger;
         }
 
-        public void WarnOrThrowIfInvalid()
+        public void WarnIfInvalid()
         {
             if (_marginTradingSettings.CompiledSchedulePublishing.IsEnabled)
             {

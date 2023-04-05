@@ -195,7 +195,7 @@ namespace MarginTrading.Backend
                 {
                     ApplicationContainer
                         .Resolve<IConfigurationValidator>()
-                        .WarnOrThrowIfInvalid();
+                        .WarnIfInvalid();
                     
                     ApplicationContainer
                         .Resolve<IClientProfileSettingsCache>()
