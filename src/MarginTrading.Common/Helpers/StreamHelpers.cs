@@ -16,7 +16,7 @@ namespace MarginTrading.Common.Helpers
         /// <param name="stream"></param>
         /// <param name="maxBytes"></param>
         /// <returns></returns>
-        public static async Task<byte[]> ReadBytes(this Stream stream, int maxBytes)
+        public static async Task<byte[]> ReadBytes(this Stream stream, uint maxBytes)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace MarginTrading.Common.Helpers
                 throw;
             }
 
-            if (maxBytes <= 0)
+            if (maxBytes == 0)
             {
                 return Array.Empty<byte>();
             }
@@ -48,7 +48,7 @@ namespace MarginTrading.Common.Helpers
             return await Impl(stream, maxBytes);
         }
 
-        private static async Task<byte[]> Impl(Stream stream, int maxBytes)
+        private static async Task<byte[]> Impl(Stream stream, uint maxBytes)
         {
             stream.Seek(0, SeekOrigin.Begin);
             try
@@ -58,7 +58,7 @@ namespace MarginTrading.Common.Helpers
 
                 ms.Seek(0, SeekOrigin.Begin);
 
-                int bytesToRead = Math.Min((int)ms.Length, maxBytes);
+                int bytesToRead = Math.Min((int)ms.Length, (int)maxBytes);
                 int bytesRead = 0;
                 byte[] buffer = new byte[bytesToRead];
                 do

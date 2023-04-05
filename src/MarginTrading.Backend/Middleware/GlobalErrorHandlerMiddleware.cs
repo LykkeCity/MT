@@ -46,8 +46,6 @@ namespace MarginTrading.Backend.Middleware
                     return;
                 }
 
-                
-
                 await LogWithRequest(context.Request, ex, ex is LogInfoOnlyException);
 
                 await context.Response.WriteDefaultMtErrorAsync(ex.Message);
@@ -56,7 +54,7 @@ namespace MarginTrading.Backend.Middleware
         
         private async Task LogWithRequest(HttpRequest request, Exception ex, bool asInfo)
         {
-            var bytes = await request.Body.ReadBytes(_settings.MaxPartSize);
+            var bytes = await request.Body.ReadBytes((uint)_settings.MaxPartSize);
             var bodyPart = bytes == null ? null : System.Text.Encoding.UTF8.GetString(bytes);
 
             if (asInfo)

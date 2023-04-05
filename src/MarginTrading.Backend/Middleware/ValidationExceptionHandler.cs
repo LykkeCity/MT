@@ -114,7 +114,7 @@ namespace MarginTrading.Backend.Middleware
                 return;
             }
             
-            var bytes = await _httpContextAccessor.HttpContext.Request.Body.ReadBytes(_settings.MaxPartSize);
+            var bytes = await _httpContextAccessor.HttpContext.Request.Body.ReadBytes((uint)_settings.MaxPartSize);
             string bodyPart = bytes == null ? null : System.Text.Encoding.UTF8.GetString(bytes);
 
             var requestUri = _httpContextAccessor.HttpContext.Request.GetUri().AbsoluteUri;
