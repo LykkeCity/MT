@@ -12,7 +12,7 @@
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Lykke.Snow.Common.Startup" Version="3.6.0" />
     <PackageReference Include="LykkeBiz.HttpClientGenerator" Version="5.5.0" />
-    <PackageReference Include="LykkeBiz.MarginTrading.BrokerBase" Version="7.0.2" />
+    <PackageReference Include="LykkeBiz.MarginTrading.BrokerBase" Version="6.0.4" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.4.0" />
     <PackageReference Include="LykkeBiz.SettingsReader" Version="7.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="6.0.0" />
