@@ -2,12 +2,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using JetBrains.Annotations;
-using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using Microsoft.FeatureManagement;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
@@ -18,18 +18,22 @@ namespace MarginTrading.Backend.Services.EventsConsumers
     public class TradesConsumer: IEventConsumer<OrderExecutedEventArgs>
     {
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly ObsoleteFeature _compiledSchedulePublishingFeature;
+        private readonly IFeatureManager _featureManager;
 
         public TradesConsumer(IRabbitMqNotifyService rabbitMqNotifyService, 
-            [CanBeNull] ObsoleteFeature compiledSchedulePublishingFeature)
+            IFeatureManager featureManager)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
-            _compiledSchedulePublishingFeature = compiledSchedulePublishingFeature ?? ObsoleteFeature.Default;
+            _featureManager = featureManager;
         }
 
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
-            if (!_compiledSchedulePublishingFeature.IsEnabled)
+            var publishingEnabled = _featureManager
+                .IsEnabledAsync(Feature.TradeContractPublishing.ToString("G"))
+                .GetAwaiter()
+                .GetResult();
+            if (!publishingEnabled)
                 return;
 
             var tradeType = ea.Order.Direction.ToType<TradeType>();

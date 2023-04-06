@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
@@ -20,6 +19,7 @@ using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Scheduling;
+using Microsoft.FeatureManagement;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services.AssetPairs
@@ -48,8 +48,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private DateTime _lastCacheRecalculationTime = DateTime.MinValue;
 
         private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
-
-        private readonly ObsoleteFeature _compiledSchedulePublishingFeature;
+        private readonly IFeatureManager _featureManager;
 
         public ScheduleSettingsCacheService(
             ICqrsSender cqrsSender,
@@ -58,7 +57,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             IDateService dateService,
             ILog log,
             OvernightMarginSettings overnightMarginSettings,
-            [CanBeNull] ObsoleteFeature compiledSchedulePublishingFeature)
+            IFeatureManager featureManager)
         {
             _cqrsSender = cqrsSender;
             _scheduleSettingsApi = scheduleSettingsApi;
@@ -66,7 +65,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _dateService = dateService;
             _log = log;
             _overnightMarginSettings = overnightMarginSettings;
-            _compiledSchedulePublishingFeature = compiledSchedulePublishingFeature ?? ObsoleteFeature.Default;
+            _featureManager = featureManager;
         }
 
         public async Task UpdateAllSettingsAsync()
@@ -491,7 +490,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 _compiledAssetPairScheduleCache[assetPairId] = resultingTimeIntervals;
 
-                if (_compiledSchedulePublishingFeature.IsEnabled)
+                var publishingEnabled = _featureManager
+                    .IsEnabledAsync(Feature.CompiledSchedulePublishing.ToString("G"))
+                    .GetAwaiter()
+                    .GetResult();
+                if (publishingEnabled)
                 {
                     _cqrsSender.PublishEvent(new CompiledScheduleChangedEvent
                     {

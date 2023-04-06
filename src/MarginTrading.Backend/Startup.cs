@@ -23,12 +23,12 @@ using Lykke.Snow.Common.Correlation.Serilog;
 using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
-using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Binders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Extensions;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
@@ -122,8 +122,8 @@ namespace MarginTrading.Backend
                     s.MtBackend.Env = Configuration.ServerType();
                     return s;
                 });
-
-            services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend.BrokerId);
+            
+            services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend);
 
             services.Configure<RabbitMqRetryPolicyOptions>(opt =>
             {
@@ -189,13 +189,13 @@ namespace MarginTrading.Backend
             
             var application = app.ApplicationServices.GetService<Application>();
 
-            appLifetime.ApplicationStarted.Register(() =>
+            appLifetime.ApplicationStarted.Register(async () =>
             {
                 try
                 {
-                    ApplicationContainer
+                    await ApplicationContainer
                         .Resolve<IConfigurationValidator>()
-                        .WarnIfInvalid();
+                        .WarnIfInvalidAsync();
                     
                     ApplicationContainer
                         .Resolve<IClientProfileSettingsCache>()
