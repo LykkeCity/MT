@@ -10,6 +10,7 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Extensions;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Settings;
 using Microsoft.AspNetCore.Http;
 

@@ -207,10 +207,6 @@ namespace MarginTrading.Backend
                         .WarnIfInvalidAsync();
                     
                     ApplicationContainer
-                        .Resolve<IConfigurationValidator>()
-                        .WarnOrThrowIfInvalid();
-                    
-                    ApplicationContainer
                         .Resolve<IClientProfileSettingsCache>()
                         .Start();
                 
