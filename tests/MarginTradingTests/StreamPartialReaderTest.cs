@@ -25,14 +25,12 @@ namespace MarginTradingTests
             Assert.AreEqual(0, result.Length);
         }
 
-        [TestCase(-1)]
-        [TestCase(0)]
-        public async Task ReadBytes_When_Read_Size_Invalid_Returns_Empty(int readSize)
+        public async Task ReadBytes_When_Read_Size_Invalid_Returns_Empty()
         {
             byte[] buffer = CreateBuffer(100);
             using var stream = new MemoryStream(buffer);
             
-            var result = await stream.ReadBytes(readSize);
+            var result = await stream.ReadBytes(0);
             
             Assert.AreEqual(0, result.Length);
         }
@@ -48,7 +46,7 @@ namespace MarginTradingTests
                     byte[] buffer = CreateBuffer(t.bufferSize);
                     using var stream = new MemoryStream(buffer);
             
-                    var result = stream.ReadBytes(t.requestedSize).GetAwaiter().GetResult();
+                    var result = stream.ReadBytes((uint)t.requestedSize).GetAwaiter().GetResult();
             
                     Assert.AreEqual(t.bufferSize, result.Length);
                 });
@@ -65,7 +63,7 @@ namespace MarginTradingTests
                     byte[] buffer = CreateBuffer(t.bufferSize);
                     using var stream = new MemoryStream(buffer);
                     
-                    var result = stream.ReadBytes(t.requestedSize).GetAwaiter().GetResult();
+                    var result = stream.ReadBytes((uint)t.requestedSize).GetAwaiter().GetResult();
                     
                     Assert.AreEqual(t.requestedSize, result.Length);
                     Assert.True(result.SequenceEqual(buffer.Take(t.requestedSize)));

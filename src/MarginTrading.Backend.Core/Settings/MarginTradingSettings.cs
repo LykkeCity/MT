@@ -125,13 +125,9 @@ namespace MarginTrading.Backend.Core.Settings
         
         public RabbitMqRetryPolicySettings RabbitMqRetryPolicy { get; set; }
 
-        [Optional] 
-        public ObsoleteFeature CompiledSchedulePublishing { get; set; } = ObsoleteFeature.Default;
-
-        [Optional]
-        public ObsoleteFeature TradeContractPublishing { get; set; } = ObsoleteFeature.Default;
-        
         [Optional]
         public MonitoringSettings Monitoring { get; set; }
+
+        [Optional] public FeatureManagement FeatureManagement { get; set; } = new FeatureManagement();
     }
 }

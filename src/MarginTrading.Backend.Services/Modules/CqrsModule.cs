@@ -52,11 +52,12 @@ namespace MarginTrading.Backend.Services.Modules
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly long _defaultRetryDelayMs;
 
-        public CqrsModule(CqrsSettings settings, MarginTradingSettings marginTradingSettings)
+        public CqrsModule(CqrsSettings settings,
+            MarginTradingSettings marginTradingSettings)
         {
             _settings = settings;
             _marginTradingSettings = marginTradingSettings;
-            _defaultRetryDelayMs = (long) _settings.RetryDelay.TotalMilliseconds;
+            _defaultRetryDelayMs = (long)_settings.RetryDelay.TotalMilliseconds;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -106,7 +107,7 @@ namespace MarginTrading.Backend.Services.Modules
             {
                 Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
-            var engine = new RabbitMqCqrsEngine(loggerFactory,
+            var engine = new RabbitMqCqrsEngine(ctx.Resolve<ILoggerFactory>(),
                 ctx.Resolve<IDependencyResolver>(),
                 new DefaultEndpointProvider(),
                 rabbitMqSettings.Endpoint.ToString(),

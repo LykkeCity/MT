@@ -15,6 +15,7 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Scheduling;
+using Microsoft.FeatureManagement;
 using Moq;
 using NUnit.Framework;
 
@@ -320,14 +321,14 @@ namespace MarginTradingTests
                 .ReturnsAsync(withDayOffSchedules.Concat(new[] {AlwaysOnMarketSchedule}).ToList());
             scheduleSettingsApiMock.Setup(s => s.StateList(It.IsAny<string[]>()))
                 .ReturnsAsync(new List<CompiledScheduleContract>());
-            
-            var scheduleSettingsCacheService = new ScheduleSettingsCacheService(Mock.Of<ICqrsSender>(), 
+
+            var scheduleSettingsCacheService = new ScheduleSettingsCacheService(Mock.Of<ICqrsSender>(),
                 scheduleSettingsApiMock.Object,
-                assetPairsCacheMock.Object, 
-                dateService.Object, 
-                new EmptyLog(), 
+                assetPairsCacheMock.Object,
+                dateService.Object,
+                new EmptyLog(),
                 new OvernightMarginSettings(),
-                ObsoleteFeature.Default);
+                Mock.Of<IFeatureManager>());
             
             scheduleSettingsCacheService.UpdateAllSettingsAsync().GetAwaiter().GetResult();
             return new AssetPairDayOffService(scheduleSettingsCacheService);
