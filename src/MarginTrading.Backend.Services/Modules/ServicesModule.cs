@@ -114,8 +114,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<OrderRejectedEventArgs>>()
 				.SingleInstance();
 
-			builder.Register(c => new TradesConsumer(c.Resolve<IRabbitMqNotifyService>(),
-					_settings.TradeContractPublishing))
+			builder.RegisterType<TradesConsumer>()
 				.As<IEventConsumer<OrderExecutedEventArgs>>()
 				.SingleInstance();
 			
@@ -173,13 +172,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IRabbitMqService>()
 				.SingleInstance();
 
-			builder.Register(c => new ScheduleSettingsCacheService(c.Resolve<ICqrsSender>(),
-					c.Resolve<IScheduleSettingsApi>(),
-					c.Resolve<IAssetPairsCache>(),
-					c.Resolve<IDateService>(),
-					c.Resolve<ILog>(),
-					c.Resolve<OvernightMarginSettings>(),
-					_settings.CompiledSchedulePublishing))
+			builder.RegisterType<ScheduleSettingsCacheService>()
 				.As<IScheduleSettingsCacheService>()
 				.SingleInstance();
 
@@ -237,8 +230,8 @@ namespace MarginTrading.Backend.Services.Modules
 	            .As<IPositionHistoryHandler>()
 	            .SingleInstance();
 
-            builder.Register(c => new ConfigurationValidator(_settings,
-		            c.Resolve<ILogger<ConfigurationValidator>>())).As<IConfigurationValidator>()
+            builder.RegisterType<ConfigurationValidator>()
+	            .As<IConfigurationValidator>()
 	            .SingleInstance();
 		}
 	}
