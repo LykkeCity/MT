@@ -94,7 +94,15 @@ namespace MarginTrading.Backend.Core
         /// </summary>
         bool IsTradingDisabled { get; }
 
+        /// <summary>
+        /// The asset type
+        /// </summary>
         string AssetType { get; }
+        
+        /// <summary>
+        /// The contract size
+        /// </summary>
+        int ContractSize { get; }
     }
 
     public class AssetPair : IAssetPair
@@ -102,11 +110,11 @@ namespace MarginTrading.Backend.Core
         public AssetPair(string id, string name, string baseAssetId, string quoteAssetId, int accuracy, string marketId,
             string legalEntity, [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode,
             decimal stpMultiplierMarkupBid, decimal stpMultiplierMarkupAsk, bool isSuspended, bool isFrozen,
-            bool isDiscontinued, string assetType, bool isTradingDisabled)
+            bool isDiscontinued, string assetType, bool isTradingDisabled, int contractSize)
             : this(id, name, baseAssetId, quoteAssetId, accuracy, marketId,
                 legalEntity, basePairId, matchingEngineMode,
                 stpMultiplierMarkupBid, stpMultiplierMarkupAsk, isSuspended, isFrozen,
-                isDiscontinued, assetType)
+                isDiscontinued, assetType, contractSize)
         {
             IsTradingDisabled = isTradingDisabled;
         }
@@ -114,7 +122,7 @@ namespace MarginTrading.Backend.Core
         public AssetPair(string id, string name, string baseAssetId, string quoteAssetId, int accuracy, string marketId,
             string legalEntity, [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode,
             decimal stpMultiplierMarkupBid, decimal stpMultiplierMarkupAsk, bool isSuspended, bool isFrozen,
-            bool isDiscontinued, string assetType)
+            bool isDiscontinued, string assetType, int contractSize)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -127,11 +135,11 @@ namespace MarginTrading.Backend.Core
             MatchingEngineMode = matchingEngineMode.RequiredEnum(nameof(matchingEngineMode));
             StpMultiplierMarkupBid = stpMultiplierMarkupBid.RequiredGreaterThan(0, nameof(stpMultiplierMarkupBid));
             StpMultiplierMarkupAsk = stpMultiplierMarkupAsk.RequiredGreaterThan(0, nameof(stpMultiplierMarkupAsk));
-
             IsSuspended = isSuspended;
             IsFrozen = isFrozen;
             IsDiscontinued = isDiscontinued;
             AssetType = assetType;
+            ContractSize = contractSize;
         }
 
         public string Id { get; }
@@ -152,6 +160,8 @@ namespace MarginTrading.Backend.Core
         public bool IsDiscontinued { get; }
         public bool IsTradingDisabled { get; }
         public string AssetType { get; }
+        
+        public int ContractSize { get; }
 
         protected bool Equals(AssetPair other)
         {
@@ -162,9 +172,9 @@ namespace MarginTrading.Backend.Core
                    StpMultiplierMarkupBid == other.StpMultiplierMarkupBid &&
                    StpMultiplierMarkupAsk == other.StpMultiplierMarkupAsk && IsSuspended == other.IsSuspended &&
                    IsFrozen == other.IsFrozen && IsDiscontinued == other.IsDiscontinued &&
-                   AssetType == other.AssetType
-                   && IsTradingDisabled == other.IsTradingDisabled
-                ;
+                   AssetType == other.AssetType && 
+                   IsTradingDisabled == other.IsTradingDisabled && 
+                   ContractSize == other.ContractSize;
         }
 
         public override bool Equals(object obj)
@@ -198,7 +208,8 @@ namespace MarginTrading.Backend.Core
                 isFrozen: product.IsFrozen,
                 isDiscontinued: product.IsDiscontinued,
                 assetType: product.AssetType,
-                isTradingDisabled: product.IsTradingDisabled
+                isTradingDisabled: product.IsTradingDisabled,
+                contractSize: product.ContractSize
             );
         }
 
@@ -222,7 +233,8 @@ namespace MarginTrading.Backend.Core
                 isFrozen: false,
                 isDiscontinued: false,
                 assetType: null,
-                isTradingDisabled: false
+                isTradingDisabled: false,
+                contractSize: 1
             );
         }
     }

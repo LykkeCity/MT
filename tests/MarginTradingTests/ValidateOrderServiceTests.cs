@@ -48,7 +48,7 @@ namespace MarginTradingTests
         [TestCase(-1, true)]
         [TestCase(-10, true)]
         [TestCase(-11, false)]
-        public void Is_Volume_Ivalid(decimal volume, bool isValid)
+        public void Is_Volume_Invalid(decimal volume, bool isValid)
         {
             const string instrument = "BTCUSD";
 
@@ -753,19 +753,18 @@ namespace MarginTradingTests
         }
 
         private void SetupAssetPair(string id, bool isDiscontinued = false, bool isFrozen = false,
-            bool isSuspended = false, bool tradingDisabled = false)
+            bool isSuspended = false, bool tradingDisabled = false, int contractSize = 1)
         {
             var pair = _assetPairsCache.GetAssetPairById(id);
-            
+
             _assetPairsCache.AddOrUpdate(
                 new AssetPair(pair.Id, pair.Name, pair.BaseAssetId, pair.QuoteAssetId,
                     pair.Accuracy, pair.MarketId, pair.LegalEntity, pair.BaseAssetId, pair.MatchingEngineMode,
                     pair.StpMultiplierMarkupAsk, pair.StpMultiplierMarkupBid,
-                    isSuspended, isFrozen, isDiscontinued, pair.AssetType, tradingDisabled));
+                    isSuspended, isFrozen, isDiscontinued, pair.AssetType, tradingDisabled, contractSize));
             
             var quote = new InstrumentBidAskPair { Instrument = id, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
         }
-//
     }
 }
