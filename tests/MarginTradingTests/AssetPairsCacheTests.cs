@@ -45,7 +45,7 @@ namespace MarginTradingTests
             Assert.AreEqual(default(IAssetPair), result);
         }
 
-        private IAssetPair CreateAssetPair(string id, string baseAsset, string quoteAsset)
+        private IAssetPair CreateAssetPair(string id, string baseAsset, string quoteAsset, int contractSize = 1)
         {
             return new AssetPair(
                 id: id,
@@ -63,7 +63,8 @@ namespace MarginTradingTests
                 isFrozen: false,
                 isDiscontinued: false,
                 assetType: null,
-                isTradingDisabled: false
+                isTradingDisabled: false,
+                contractSize: contractSize
             );
         }
     }
