@@ -2,9 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using Autofac;
-using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -38,6 +36,100 @@ namespace MarginTradingTests
             _ordersCache = Container.Resolve<OrdersCache>();
             _assetPairsCache = Container.Resolve<IAssetPairsCache>();
             _me = new FakeMatchingEngine(1);
+        }
+
+        [Test]
+        [TestCase(9, true)]
+        [TestCase(10, true)]
+        [TestCase(11, false)]
+        public void ContractSize_Considered_When_ValidateTradeLimits_For_DealMaxLimit(decimal volume, bool isValid)
+        {
+            const string instrument = "BLINDR";
+            const int contractSize = 100;
+            
+            SetupAssetPair(instrument, contractSize: contractSize);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                // this is the actual volume which comes from donut, already multiplied by contract size
+                Volume = volume * contractSize
+            };
+
+            if (isValid)
+            {
+                Assert.DoesNotThrow(
+                    () =>
+                    {
+                        var order = _orderValidator.ValidateRequestAndCreateOrders(request).Result.order;
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me);
+                    });
+            }
+            else
+            {
+                var ex = Assert.ThrowsAsync<OrderRejectionException>(
+                    async () =>
+                    {
+                        var order = (await _orderValidator.ValidateRequestAndCreateOrders(request)).order;
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me);
+
+                    });
+
+                Assert.That(ex?.RejectReason == OrderRejectReason.MaxOrderSizeLimit);
+            }
+        }
+
+        [Test]
+        [TestCase(4, true)]
+        [TestCase(5, true)]
+        [TestCase(6, false)]
+        public void ContractSize_Considered_When_ValidateTradeLimits_For_PositionLimit(decimal additionalVolume, bool isValid)
+        {
+            const string instrument = "BLINDR";
+            const int contractSize = 100;
+            
+            SetupAssetPair(instrument, contractSize: contractSize);
+            
+            // emulate existing position which already holds 95% of position limit
+            var existingLong = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 95 * contractSize, 0.1M);
+            _ordersCache.Positions.Add(existingLong);
+            
+            // request to open new position and potentially overcome the position limit in total
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                // this is the actual volume which comes from donut, already multiplied by contract size
+                Volume = additionalVolume * contractSize
+            };
+            
+            if (isValid)
+            {
+                Assert.DoesNotThrow(
+                    () =>
+                    {
+                        var order = _orderValidator.ValidateRequestAndCreateOrders(request).Result.order;
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me);
+                    });
+            }
+            else
+            {
+                var ex = Assert.ThrowsAsync<OrderRejectionException>(
+                    async () =>
+                    {
+                        var order = (await _orderValidator.ValidateRequestAndCreateOrders(request)).order;
+                        _orderValidator.PreTradeValidate(OrderFulfillmentPlan.Force(order, true), _me);
+
+                    });
+
+                Assert.That(ex?.RejectReason == OrderRejectReason.MaxPositionLimit);
+            }
         }
 
         [Test]
@@ -83,7 +175,7 @@ namespace MarginTradingTests
 
                     });
 
-                Assert.That(ex.RejectReason ==
+                Assert.That(ex?.RejectReason ==
                             (volume == 0 ? OrderRejectReason.InvalidVolume : OrderRejectReason.MaxOrderSizeLimit));
             }
         }
