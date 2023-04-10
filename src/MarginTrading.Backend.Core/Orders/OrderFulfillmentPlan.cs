@@ -45,6 +45,11 @@ namespace MarginTrading.Backend.Core.Orders
         /// Designates if new position has to be opened to fulfill the order
         /// </summary>
         public bool RequiresPositionOpening { get; }
+        
+        /// <summary>
+        /// Designates if the order will open short position
+        /// </summary>
+        public bool WillOpenShortPosition => RequiresPositionOpening && Order.Direction == OrderDirection.Sell;
 
         /// <summary>
         /// Opposite direction matched positions state
