@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core.TradingConditions;
 
 namespace MarginTrading.Backend.Services.TradingConditions
@@ -12,6 +13,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
         void UpdateCache(ITradingInstrument tradingInstrument);
         
+        [NotNull]
         ITradingInstrument GetTradingInstrument(string tradingConditionId, string instrument);
 
         (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument,

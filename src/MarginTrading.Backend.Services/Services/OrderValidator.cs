@@ -581,16 +581,49 @@ namespace MarginTrading.Backend.Services
         
         public void PreTradeValidate(OrderFulfillmentPlan orderFulfillmentPlan, IMatchingEngineBase matchingEngine)
         {
-            GetAssetPairIfAvailableForTrading(orderFulfillmentPlan.Order.AssetPairId, 
-                orderFulfillmentPlan.Order.OrderType, 
-                orderFulfillmentPlan.RequiresPositionOpening, 
-                true);
-
-            ValidateTradeLimits(orderFulfillmentPlan);
-
+            // fail fast if balance is not enough
             if (orderFulfillmentPlan.RequiresPositionOpening)
             {
                 _accountUpdateService.CheckBalance(orderFulfillmentPlan, matchingEngine);
+            }
+
+            var tradingInstrument = _tradingInstrumentsCache.GetTradingInstrument(
+                orderFulfillmentPlan.Order.TradingConditionId,
+                orderFulfillmentPlan.Order.AssetPairId);
+            
+            if (orderFulfillmentPlan.WillOpenShortPosition && !tradingInstrument.ShortPosition)
+            {
+                throw new OrderRejectionException(OrderRejectReason.ShortPositionsDisabled,
+                    $"Short positions are disabled for {tradingInstrument.Instrument}.");
+            }
+
+            var assetPair = GetAssetPairIfAvailableForTrading(orderFulfillmentPlan.Order.AssetPairId, 
+                orderFulfillmentPlan.Order.OrderType, 
+                orderFulfillmentPlan.RequiresPositionOpening, 
+                true);
+            
+            var existingPositions = _ordersCache
+                .Positions
+                .GetPositionsByInstrumentAndAccount(
+                    orderFulfillmentPlan.Order.AssetPairId,
+                    orderFulfillmentPlan.Order.AccountId);
+            
+            var limitsValidationResult = new DealManager(orderFulfillmentPlan).SatisfiesLimits(
+                tradingInstrument.DealMaxLimit,
+                tradingInstrument.PositionLimit,
+                assetPair.ContractSize,
+                existingPositions);
+
+            if (limitsValidationResult.Error == OrderLimitValidationError.OneTimeLimit)
+            {
+                throw new OrderRejectionException(OrderRejectReason.MaxOrderSizeLimit,
+                    $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument} but was {orderFulfillmentPlan.UnfulfilledVolume}. Order id = [{orderFulfillmentPlan.Order.Id}]");
+            }
+
+            if (limitsValidationResult.Error == OrderLimitValidationError.TotalLimit)
+            {
+                throw new OrderRejectionException(OrderRejectReason.MaxPositionLimit,
+                    $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
         }
 
@@ -673,55 +706,6 @@ namespace MarginTrading.Backend.Services
             }
 
             return assetPair;
-        }
-
-        private void ValidateTradeLimits(OrderFulfillmentPlan orderFulfillmentPlan)
-        {
-            var tradingInstrument = _tradingInstrumentsCache.GetTradingInstrument(
-                    orderFulfillmentPlan.Order.TradingConditionId,
-                    orderFulfillmentPlan.Order.AssetPairId);
-
-            var assetPair = _assetPairsCache.GetAssetPairById(orderFulfillmentPlan.Order.AssetPairId);
-
-            if (tradingInstrument == null)
-            {
-                throw new OrderRejectionException(OrderRejectReason.InvalidInstrument,
-                    $"The instrument is not found for the trading condition {orderFulfillmentPlan.Order.TradingConditionId} and asset pair {orderFulfillmentPlan.Order.AssetPairId}");
-            }
-
-            var unfulfilledAbsVolume = Math.Abs(orderFulfillmentPlan.UnfulfilledVolume);
-            
-            if (tradingInstrument.DealMaxLimit > 0 &&
-                unfulfilledAbsVolume > (tradingInstrument.DealMaxLimit * assetPair.ContractSize) &&
-                orderFulfillmentPlan.RequiresPositionOpening)
-            {
-                throw new OrderRejectionException(OrderRejectReason.MaxOrderSizeLimit,
-                    $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument} but was {orderFulfillmentPlan.UnfulfilledVolume}. Order id = [{orderFulfillmentPlan.Order.Id}]");
-            }
-
-            var positionsAbsVolume = _ordersCache.Positions
-                .GetPositionsByInstrumentAndAccount(orderFulfillmentPlan.Order.AssetPairId, orderFulfillmentPlan.Order.AccountId)
-                .Sum(o => Math.Abs(o.Volume));
-
-            var oppositePositionsToBeClosedAbsVolume =
-                Math.Abs(orderFulfillmentPlan.Order.Volume) - unfulfilledAbsVolume;
-
-            if (tradingInstrument.PositionLimit > 0 &&
-                orderFulfillmentPlan.RequiresPositionOpening &&
-                (positionsAbsVolume - oppositePositionsToBeClosedAbsVolume + unfulfilledAbsVolume) >
-                (tradingInstrument.PositionLimit * assetPair.ContractSize))
-            {
-                throw new OrderRejectionException(OrderRejectReason.MaxPositionLimit,
-                    $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
-            }
-
-            if (orderFulfillmentPlan.RequiresPositionOpening &&
-                orderFulfillmentPlan.Order.Direction == OrderDirection.Sell &&
-                !tradingInstrument.ShortPosition)
-            {
-                throw new OrderRejectionException(OrderRejectReason.ShortPositionsDisabled,
-                    $"Short positions are disabled for {tradingInstrument.Instrument}.");
-            }
         }
 
         private List<Order> GetRelatedOrders(Order baseOrder)
