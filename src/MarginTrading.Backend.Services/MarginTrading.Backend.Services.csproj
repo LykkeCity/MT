@@ -6,7 +6,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>2.24.9</Version>
+    <Version>2.24.11</Version>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -37,8 +37,8 @@
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
-    <PackageReference Include="Lykke.Snow.Common" Version="1.59.0" />
     <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="3.0.4" />
+    <PackageReference Include="Lykke.Snow.Common" Version="1.60.0" />
     <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="3.43.2" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />

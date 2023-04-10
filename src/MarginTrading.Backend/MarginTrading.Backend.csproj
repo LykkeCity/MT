@@ -8,7 +8,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>2.24.9</Version>
+    <Version>2.24.11</Version>
     <LangVersion>8.0</LangVersion>
     <AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>
     <AspNetCoreModuleName>AspNetCoreModuleV2</AspNetCoreModuleName>
@@ -45,7 +45,7 @@
     <PackageReference Include="LykkeBiz.Logs.Serilog" Version="3.3.1" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.4.0" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
-    <PackageReference Include="Lykke.Snow.Common" Version="1.59.0" />
+    <PackageReference Include="Lykke.Snow.Common" Version="1.60.0" />
     <PackageReference Include="Lykke.Snow.Common.Startup" Version="3.0.1" />
     <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="7.8.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.9" />
