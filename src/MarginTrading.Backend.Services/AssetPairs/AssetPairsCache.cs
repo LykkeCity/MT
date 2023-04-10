@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _readerWriterLockSlim.EnterReadLock();
 
             try
-            {
+            { 
                 return _assetPairs.TryGetValue(assetPairId, out var result)
                     ? result
                     : throw new AssetPairNotFoundException(assetPairId,
@@ -108,6 +108,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
         /// <returns>true if added, false if updated</returns>
         public bool AddOrUpdate(IAssetPair assetPair)
         {
+            if (assetPair == null)
+                throw new ArgumentNullException(nameof(assetPair));
+            
             _readerWriterLockSlim.EnterWriteLock();
             var itemExists = _assetPairs.ContainsKey(assetPair.Id);
 
@@ -196,7 +199,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                _assetPairs = instruments;
+                _assetPairs = instruments.Where(kvp => kvp.Value != null).ToDictionary();
             }
             finally
             {

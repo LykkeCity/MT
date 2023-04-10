@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -22,6 +23,7 @@ namespace MarginTrading.Backend.Services
 
         Task<OrderInitialParameters> GetOrderInitialParameters(string assetPairId, string accountId);
 
+        [NotNull]
         IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType,
             bool shouldOpenNewPosition, bool isPreTradeValidation, bool validateForEdit = false);
         

@@ -120,7 +120,7 @@ namespace MarginTradingTests
                     ShortPosition = true,
                     InitLeverage = 10,
                     MaintenanceLeverage = 15,
-                    MarginRatePercent = 6.67M,
+                    MarginRatePercent = 6.67M
                 },
                 new TradingInstrumentContract
                 {
@@ -166,7 +166,7 @@ namespace MarginTradingTests
                     PositionLimit = 100,
                     InitLeverage = 10,
                     MaintenanceLeverage = 15,
-                    MarginRatePercent = 6.67M,
+                    MarginRatePercent = 6.67M
                 },
                 new TradingInstrumentContract
                 {
@@ -217,6 +217,18 @@ namespace MarginTradingTests
                     InitLeverage = 100,
                     MaintenanceLeverage = 150,
                     MarginRatePercent = 0.67M,
+                },
+                new TradingInstrumentContract
+                {
+                    TradingConditionId = TradingConditionId,
+                    Instrument = "BLINDR",
+                    Delta = 30,
+                    ShortPosition = true,
+                    DealMaxLimit = 10,
+                    PositionLimit = 100,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M
                 }
             };
 
@@ -261,7 +273,8 @@ namespace MarginTradingTests
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "USD",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -270,7 +283,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "EUR",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -279,7 +293,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "USD",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -288,7 +303,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "CHF",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -297,7 +313,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "CHF",
                     QuoteAssetId = "JPY",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -306,7 +323,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "USD",
                     QuoteAssetId = "CHF",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -315,7 +333,8 @@ namespace MarginTradingTests
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "CHF",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -324,7 +343,8 @@ namespace MarginTradingTests
                     Accuracy = 5,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "JPY",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -333,7 +353,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "JPY",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -342,7 +363,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "JPY",
                     QuoteAssetId = "USD",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -351,7 +373,8 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "GBP",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
                 new AssetPairContract
                 {
@@ -360,8 +383,19 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "GBP",
                     QuoteAssetId = "USD",
-                    MarketId = DefaultMarket
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
                 },
+                new AssetPairContract
+                {
+                    Id = "BLINDR",
+                    Name = "BLINDR",
+                    Accuracy = 5,
+                    BaseAssetId = "BLINDR",
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
+                }
             };
 
             foreach (var pair in assetPairs)

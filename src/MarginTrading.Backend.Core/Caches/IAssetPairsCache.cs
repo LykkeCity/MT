@@ -9,6 +9,7 @@ namespace MarginTrading.Backend.Core
 {
     public interface IAssetPairsCache
     {
+        [NotNull]
         IAssetPair GetAssetPairById(string assetPairId);
         /// <summary>
         /// Tries to get an asset pair, if it is not found null is returned.
