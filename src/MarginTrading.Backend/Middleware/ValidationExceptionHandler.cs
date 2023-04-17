@@ -39,9 +39,9 @@ namespace MarginTrading.Backend.Middleware
             ILog log,
             RequestLoggerSettings settings)
         {
-            _httpContextAccessor = httpContextAccessor;
-            _log = log;
-            _settings = settings;
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
         }
         
         public static bool CanHandleException(Exception ex)
