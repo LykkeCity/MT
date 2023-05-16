@@ -16,6 +16,7 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
@@ -105,6 +106,10 @@ namespace MarginTrading.Backend.Services.Quotes
                 }
             }
             
+            // TODO: added for debugging purposes, to be removed
+            if(SnapshotService.IsMakingSnapshotInProgress)
+                _log.WriteInfo(nameof(FxRateCacheService), nameof(SetQuote), $"Setting new fx quote for {orderBookMessage.AssetPairId} - {orderBookMessage.ToJson()}");
+
             var bidAskPair = CreatePair(orderBookMessage);
 
             if (bidAskPair == null)

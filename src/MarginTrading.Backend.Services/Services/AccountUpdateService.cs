@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -223,6 +224,15 @@ namespace MarginTrading.Backend.Services.Services
             var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
             var pendingOrdersMargin = 0;
+            
+            // TODO: added for debugging purposes, to be removed
+            if(account.AccountName == "AA20231" && SnapshotService.IsMakingSnapshotInProgress)
+            {
+                _log.WriteInfo(nameof(AccountUpdateService), "AA20231",
+                    "Freezing the thread for one minute...");
+
+                Thread.Sleep(new TimeSpan(0, 1, 0));
+            }
 
             account.AccountFpl.PnL = Math.Round(positions.Sum(x => x.GetTotalFpl()), accuracy);
             account.AccountFpl.UnrealizedDailyPnl =
