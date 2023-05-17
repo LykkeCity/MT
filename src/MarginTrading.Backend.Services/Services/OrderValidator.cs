@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.Backend.Contracts.Orders;
@@ -169,7 +170,8 @@ namespace MarginTrading.Backend.Services
                 initialParameters.FxPrice, initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection,
                 OrderStatus.Placed, request.AdditionalInfo);
 
-            ValidateBaseOrderPrice(baseOrder, baseOrder.Price);
+            _quoteCashService.TryGetQuoteById(baseOrder.AssetPairId, out var quote);
+            ValidateBaseOrderPrice(baseOrder, baseOrder.Price, quote);
 
             var relatedOrders = new List<Order>();
 
@@ -298,7 +300,8 @@ namespace MarginTrading.Backend.Services
             
             if (order.IsBasicOrder())
             {
-                ValidateBaseOrderPrice(order, newPrice);
+                _quoteCashService.TryGetQuoteById(order.AssetPairId, out var quote);
+                ValidateBaseOrderPrice(order, newPrice, quote);
                 
                 var relatedOrders = GetRelatedOrders(order);
 
@@ -429,49 +432,39 @@ namespace MarginTrading.Backend.Services
             };
         }
 
-        private void ValidateBaseOrderPrice(Order order, decimal? orderPrice)
+        private static void ValidateBaseOrderPrice(Order order,
+            decimal? orderPrice,
+            [CanBeNull] InstrumentBidAskPair quote)
         {
-            if (!_quoteCashService.TryGetQuoteById(order.AssetPairId, out var quote))
+            if (quote is null)
             {
                 throw new OrderRejectionException(OrderRejectReason.NoLiquidity, "Quote not found");
             }
 
-            if (order.OrderType == OrderType.Limit)
+            switch (order.OrderType)
             {
-                if (order.Direction == OrderDirection.Buy && quote.Ask <= orderPrice)
-                {
+                case OrderType.Limit when order.Direction == OrderDirection.Buy && quote.Ask <= orderPrice:
                     throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                         string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                } 
-            
-                if (order.Direction == OrderDirection.Sell && quote.Bid >= orderPrice)
-                {
+                case OrderType.Limit when order.Direction == OrderDirection.Sell && quote.Bid >= orderPrice:
                     throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice, 
                         string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                }
-            }
-
-            if (order.OrderType == OrderType.Stop)
-            {
-                if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice)
-                {
+                case OrderType.Stop when order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice:
                     throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice,
                         string.Format(MtMessages.Validation_PriceBelowAsk, orderPrice, quote.Ask),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                } 
-            
-                if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice)
-                {
+                case OrderType.Stop when order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice:
                     throw new OrderRejectionException(OrderRejectReason.InvalidExpectedOpenPrice, 
                         string.Format(MtMessages.Validation_PriceAboveBid, orderPrice, quote.Bid),
                         $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                }
             }
         }
 
-        private void ValidateBaseOrderPriceAgainstRelated(Order baseOrder, List<Order> relatedOrders, decimal newPrice)
+        private static void ValidateBaseOrderPriceAgainstRelated(Order baseOrder,
+            List<Order> relatedOrders,
+            decimal newPrice)
         {
             //even if price is defined for market - ignore it
             if (baseOrder.OrderType == OrderType.Market)
