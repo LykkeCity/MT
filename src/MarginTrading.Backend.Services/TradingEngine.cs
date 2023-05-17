@@ -1052,9 +1052,20 @@ namespace MarginTrading.Backend.Services
             var assetPair = _orderValidator.GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType,
                 order.ForceOpen, false, true);
             price = Math.Round(price, assetPair.Accuracy);
+            await _log.WriteInfoAsync(
+                nameof(TradingEngine),
+                nameof(ChangeOrderAsync),
+                new { Order = order, Price = price, ForceOpen = forceOpen }.ToJson(),
+                "BUGS-2954: Changing order price");
 
             _orderValidator.ValidateOrderPriceChange(order, price);
             _orderValidator.ValidateForceOpenChange(order, forceOpen);
+            
+            await _log.WriteInfoAsync(
+                nameof(TradingEngine),
+                nameof(ChangeOrderAsync),
+                new { Order = order, Price = price, Forceopen = forceOpen }.ToJson(),
+                "BUGS-2954: Order price change accepted");
 
             if (order.Price != price)
             {
