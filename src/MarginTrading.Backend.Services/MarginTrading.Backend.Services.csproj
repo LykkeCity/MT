@@ -32,6 +32,7 @@
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
+    <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="4.1.0" />
     <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="3.0.4" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.4.0" />
     <PackageReference Include="LykkeBiz.Messaging.RabbitMq" Version="6.0.7" />
@@ -39,7 +40,6 @@
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.Snow.Common" Version="2.5.0" />
-    <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="4.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.24" />
