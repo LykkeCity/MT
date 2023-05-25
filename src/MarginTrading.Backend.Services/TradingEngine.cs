@@ -518,7 +518,7 @@ namespace MarginTrading.Backend.Services
                         await ExecutePendingOrder(order);
                     });
                 }
-            });
+            }, quote?.Instrument);
         }
 
         private IEnumerable<Order> GetPendingOrdersToBeExecuted(InstrumentBidAskPair quote)
