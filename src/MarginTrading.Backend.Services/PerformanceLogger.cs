@@ -39,19 +39,10 @@ namespace MarginTrading.Backend.Services
             var sb = new StringBuilder();
             sb.AppendLine();
             sb.AppendLine("=======-Performance statistics-==========");
-            
             foreach (var stat in PerformanceTracker.Statistics)
             {
-                var totalExecutionTimeFormatted = FormatMilliseconds(stat.Value.TotalExecutionMs);
-                var averageExecutionTimeFormatted =
-                    FormatMilliseconds(stat.Value.TotalExecutionMs / stat.Value.CallsCounter);
-                
-                var methodInfo = $"Method: {stat.Key}".PadRight(120);
-                var callsInfo = $"Calls: {stat.Value.CallsCounter}".PadRight(20);
-                var totalExecutionTimeInfo = $"Total execution time: {totalExecutionTimeFormatted}".PadRight(40);
-                var averageExecutionTimeInfo = $"Average execution time: {averageExecutionTimeFormatted}".PadRight(40);
-
-                sb.AppendLine($"{methodInfo} | {callsInfo} | {totalExecutionTimeInfo} | {averageExecutionTimeInfo}");
+                var line = PerformanceInfoFormatter.FormatMethodStatistics(stat.Key, stat.Value);
+                sb.AppendLine(line);
             }
             sb.AppendLine("====-Performance statistics (end)-=======");
             return sb.ToString();
@@ -66,37 +57,11 @@ namespace MarginTrading.Backend.Services
                          .GetPositions()
                          .GroupBy(p => p.AssetPairId))
             {
-                var assetInfo = $"Asset: {positions.Key}".PadRight(100);
-                var countInfo = $"Count: {positions.Count()}".PadRight(20);
-                
-                sb.AppendLine($"{assetInfo} | {countInfo}");
+                var line = PerformanceInfoFormatter.FormatPositionStatistics(positions.Key, positions.Count());
+                sb.AppendLine(line);
             }
             sb.AppendLine("======-Positions statistics (end)-=======");
             return sb.ToString();
-        }
-
-        private static string FormatMilliseconds(long milliseconds)
-        {
-            var time = TimeSpan.FromMilliseconds(milliseconds);
-            string formattedTime;
-            if (time.TotalSeconds < 1)
-            {
-                formattedTime = $"{time.TotalMilliseconds:0.##} ms";
-            }
-            else if (time.TotalMinutes < 1)
-            {
-                formattedTime = $"{time.TotalSeconds:0.##} sec";
-            }
-            else if (time.TotalHours < 1)
-            {
-                formattedTime = $"{time.TotalMinutes:0.##} min";
-            }
-            else
-            {
-                formattedTime = $"{time.TotalHours:0.##} hours";
-            }
-
-            return formattedTime;
         }
     }
 }
