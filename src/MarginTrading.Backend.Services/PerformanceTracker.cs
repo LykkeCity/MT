@@ -5,71 +5,69 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Common.Log;
+using JetBrains.Annotations;
 
 namespace MarginTrading.Backend.Services
 {
     internal static class PerformanceTracker
     {
-        private static readonly ConcurrentDictionary<string, int> MethodCounter =
-            new ConcurrentDictionary<string, int>();
-
-        public static void Track(string methodName, Action action, ILog logger)
+        public struct MethodStatistics
         {
-            var t = TrackInternalAsync(methodName, () =>
+            public MethodStatistics(int callsCounter, long totalExecutionMs)
+            {
+                CallsCounter = callsCounter;
+                TotalExecutionMs = totalExecutionMs;
+            }
+
+            public int CallsCounter { get; }
+            public long TotalExecutionMs { get; }
+        }
+        
+        public static readonly ConcurrentDictionary<string, MethodStatistics> Statistics =
+            new ConcurrentDictionary<string, MethodStatistics>();
+
+        public static void Track(string methodName,
+            Action action,
+            [CanBeNull] string assetPair = null)
+        {
+            var key = GetKey(methodName, assetPair);
+
+            var t = TrackInternalAsync(key, () =>
             {
                 action();
                 return Task.CompletedTask;
-            }, logger);
+            });
 
             t.GetAwaiter().GetResult();
         }
         
-        public static Task TrackAsync(string methodName, Func<Task> action, ILog logger)
+        public static Task TrackAsync(string methodName,
+            Func<Task> action,
+            [CanBeNull] string assetPair = null)
         {
-            return TrackInternalAsync(methodName, action, logger);
+            var key = GetKey(methodName, assetPair);
+
+            return TrackInternalAsync(key, action);
         }
 
-        private static async Task TrackInternalAsync(string methodName, Func<Task> action, ILog logger)
+        private static async Task TrackInternalAsync(string key, Func<Task> action)
         {
             var watch = Stopwatch.StartNew();
-            
-            MethodCounter.AddOrUpdate(methodName, 1, (_, count) => count + 1);
 
             await action();
             
             watch.Stop();
             
             var elapsedMs = watch.ElapsedMilliseconds;
-            var callsCounter = MethodCounter[methodName];
-            
-            Log(methodName, elapsedMs, callsCounter, logger);
-        }
-        
-        private static void Log(string methodName, long elapsedMs, int callsCounter, ILog logger)
-        {
-            var time = TimeSpan.FromMilliseconds(elapsedMs);
-            string formattedTime;
-            if (time.TotalSeconds < 1)
-            {
-                formattedTime = $"{time.TotalMilliseconds:0.##} ms";
-            }
-            else if (time.TotalMinutes < 1)
-            {
-                formattedTime = $"{time.TotalSeconds:0.##} sec";
-            }
-            else if (time.TotalHours < 1)
-            {
-                formattedTime = $"{time.TotalMinutes:0.##} min";
-            }
-            else
-            {
-                formattedTime = $"{time.TotalHours:0.##} hours";
-            }
 
-            var message =
-                $"[Performance tracker]: Method {methodName} took {formattedTime}. Calls count {callsCounter}";
-            logger.WriteInfo(nameof(PerformanceTracker), null, message);
+            Statistics.AddOrUpdate(key, new MethodStatistics(1, elapsedMs),
+                (_, stats) => new MethodStatistics(stats.CallsCounter + 1, stats.TotalExecutionMs + elapsedMs));
+        }
+
+        private static string GetKey(string methodName, [CanBeNull] string assetPair)
+        {
+            var assetPairStr = assetPair ?? "AssetPairNotApplicable";
+            return $"{methodName}:{assetPairStr}";   
         }
     }
 }

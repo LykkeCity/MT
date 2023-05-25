@@ -508,7 +508,7 @@ namespace MarginTrading.Backend.Services
 
             var correlationContext = _correlationContextAccessor.CorrelationContext;
 
-            PerformanceTracker.Track("ExecutePendingOrder cycle", () =>
+            PerformanceTracker.Track("ExecutePendingOrder(cycle)", () =>
             {
                 foreach (var order in orders)
                 {
@@ -518,7 +518,7 @@ namespace MarginTrading.Backend.Services
                         await ExecutePendingOrder(order);
                     });
                 }
-            }, _log);
+            });
         }
 
         private IEnumerable<Order> GetPendingOrdersToBeExecuted(InstrumentBidAskPair quote)
@@ -1159,10 +1159,10 @@ namespace MarginTrading.Backend.Services
         {
             PerformanceTracker.TrackAsync(nameof(ProcessPositions),
                 async () => await ProcessPositions(ea.BidAskPair, !ea.IsEod), 
-                _log).GetAwaiter().GetResult();
+                ea.BidAskPair.Instrument).GetAwaiter().GetResult();
             PerformanceTracker.Track(nameof(ProcessOrdersWaitingForExecution),
                 () => ProcessOrdersWaitingForExecution(ea.BidAskPair), 
-                _log);
+                ea.BidAskPair.Instrument);
         }
 
         void IEventConsumer<FxBestPriceChangeEventArgs>.ConsumeEvent(object sender, FxBestPriceChangeEventArgs ea)
