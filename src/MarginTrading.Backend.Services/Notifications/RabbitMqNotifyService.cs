@@ -109,7 +109,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 exchangeName = publisherInfo.ExchangeName;
                 await producer.ProduceAsync(message);
 
-                if (publisherInfo.LogEventPublishing)
+                if (publisherInfo.LogEventPublishing && publisherInfo.LoggingStrategy.CanLog())
                 {
                     var messageStr =  message.ToJson();
                     await _log.WriteInfoAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr,

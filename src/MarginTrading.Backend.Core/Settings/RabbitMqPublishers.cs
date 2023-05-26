@@ -8,7 +8,7 @@ namespace MarginTrading.Backend.Core.Settings
     public class RabbitMqPublishers
     {
         public RabbitMqPublisherInfoWithLogging OrderHistory { get; set; }
-        public RabbitMqPublisherInfo OrderbookPrices { get; set; }
+        public RabbitMqPublisherInfoWithOccasionalLogging OrderbookPrices { get; set; }
         public RabbitMqPublisherInfoWithLogging AccountMarginEvents { get; set; }
         public RabbitMqPublisherInfoWithLogging AccountStats { get; set; }
         public RabbitMqPublisherInfoWithLogging Trades { get; set; }
