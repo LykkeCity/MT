@@ -318,9 +318,17 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             if (executionInfo?.Data != null)
             {
-                if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested
-                    || executionInfo.Data.RequestNumber > command.RequestNumber)
+                if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested)
                 {
+                    await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler), nameof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
+                        $"Price for special liquidation {command.OperationId} has already been requested. State: {executionInfo.Data.State.ToString()}. Skipping timeout event.");
+                    return CommandHandlingResult.Ok();
+                }
+                
+                if (executionInfo.Data.RequestNumber > command.RequestNumber)
+                {
+                    await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler), nameof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
+                        $"Price for special liquidation {command.OperationId} has already been requested. Request number: {executionInfo.Data.RequestNumber} and command reequest number: {command.RequestNumber}. Skipping timeout event.");
                     return CommandHandlingResult.Ok();
                 }
 
