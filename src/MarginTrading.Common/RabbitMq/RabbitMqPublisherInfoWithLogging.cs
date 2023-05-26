@@ -9,7 +9,7 @@ namespace MarginTrading.Common.RabbitMq
     public class RabbitMqPublisherInfoWithLogging : RabbitMqPublisherInfo
     {
         [Optional]
-        public bool LogEventPublishing { get; } = true;
+        public bool LogEventPublishing { get; set; } = true;
 
         public virtual IRabbitMqPublisherLoggingStrategy LoggingStrategy { get; } = new AlwaysOnLoggingStrategy();
     }

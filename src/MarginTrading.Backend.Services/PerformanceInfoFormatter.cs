@@ -1,40 +1,15 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
-
 namespace MarginTrading.Backend.Services
 {
     internal static class PerformanceInfoFormatter
     {
-        private static string FormatMilliseconds(long milliseconds)
-        {
-            var time = TimeSpan.FromMilliseconds(milliseconds);
-            string formattedTime;
-            if (time.TotalSeconds < 1)
-            {
-                formattedTime = $"{time.TotalMilliseconds:0.##} ms";
-            }
-            else if (time.TotalMinutes < 1)
-            {
-                formattedTime = $"{time.TotalSeconds:0.##} sec";
-            }
-            else if (time.TotalHours < 1)
-            {
-                formattedTime = $"{time.TotalMinutes:0.##} min";
-            }
-            else
-            {
-                formattedTime = $"{time.TotalHours:0.##} hours";
-            }
-
-            return formattedTime;
-        }
-        
         public static string FormatMethodStatistics(string methodKey, PerformanceTracker.MethodStatistics stat)
         {
-            var totalExecutionTimeFormatted = FormatMilliseconds(stat.TotalExecutionMs);
-            var averageExecutionTimeFormatted = FormatMilliseconds(stat.TotalExecutionMs / stat.CallsCounter);
+            var totalExecutionTimeFormatted = FormattingUtils.FormatMilliseconds(stat.TotalExecutionMs);
+            var averageExecutionTimeFormatted =
+                FormattingUtils.FormatMilliseconds(stat.TotalExecutionMs / stat.CallsCounter);
             
             var methodInfo = $"Method: {methodKey}".PadRight(120);
             var callsInfo = $"Calls: {stat.CallsCounter}".PadRight(20);

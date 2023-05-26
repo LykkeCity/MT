@@ -68,6 +68,9 @@ namespace MarginTrading.Backend.Services.Notifications
 
         public Task OrderBookPrice(InstrumentBidAskPair quote, bool isEod)
         {
+            var deviation = new QuoteTimeDeviationTracker.QuoteTimeDeviation(_dateService.Now(), quote.Date);
+            QuoteTimeDeviationTracker.Track(quote.Instrument, deviation);
+            
             return TryProduceMessageAsync(quote.ToRabbitMqContract(isEod));
         }
 
