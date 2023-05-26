@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
@@ -117,7 +118,7 @@ namespace MarginTrading.Backend.Services.Quotes
             }
         }
 
-        public bool TryGetQuoteById(string instrument, out InstrumentBidAskPair result)
+        public bool TryGetQuoteById(string instrument, [CanBeNull] out InstrumentBidAskPair result)
         {
             _lockSlim.EnterReadLock();
             try
