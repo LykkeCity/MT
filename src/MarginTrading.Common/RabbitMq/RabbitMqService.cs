@@ -119,19 +119,22 @@ namespace MarginTrading.Common.RabbitMq
                 return new Lazy<IStartStop>(() =>
                 {
                     var isBestPricePublisher = s.ExchangeName == "lykke.mt.pricefeed";
-                    var publisher = isBestPricePublisher
-                        ? new RabbitMqPublisher<TMessage>(_loggerFactory, s).PublishSynchronously()
-                        : new RabbitMqPublisher<TMessage>(_loggerFactory, s);
+
+                    RabbitMqPublisher<TMessage> publisher;
                     if (isBestPricePublisher)
                     {
+                        publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s).PublishSynchronously();
                         _logger.WriteInfo(nameof(CreateProducer), null,
                             $"Created synchronous RabbitMqPublisher for {s.ExchangeName}");
                     }
-
-                    if (s.IsDurable && _publishingQueueRepository != null)
-                        publisher.SetQueueRepository(_publishingQueueRepository);
                     else
-                        publisher.DisableInMemoryQueuePersistence();
+                    {
+                        publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s);
+                        if (s.IsDurable && _publishingQueueRepository != null)
+                            publisher.SetQueueRepository(_publishingQueueRepository);
+                        else
+                            publisher.DisableInMemoryQueuePersistence();
+                    }
 
                     var result = publisher
                         .SetSerializer(serializer)
