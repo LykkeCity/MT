@@ -118,7 +118,15 @@ namespace MarginTrading.Common.RabbitMq
                 // https://andrewlock.net/making-getoradd-on-concurrentdictionary-thread-safe-using-lazy/
                 return new Lazy<IStartStop>(() =>
                 {
-                    var publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s);
+                    var isBestPricePublisher = s.ExchangeName == "lykke.mt.pricefeed";
+                    var publisher = isBestPricePublisher
+                        ? new RabbitMqPublisher<TMessage>(_loggerFactory, s).PublishSynchronously()
+                        : new RabbitMqPublisher<TMessage>(_loggerFactory, s);
+                    if (isBestPricePublisher)
+                    {
+                        _logger.WriteInfo(nameof(CreateProducer), null,
+                            $"Created synchronous RabbitMqPublisher for {s.ExchangeName}");
+                    }
 
                     if (s.IsDurable && _publishingQueueRepository != null)
                         publisher.SetQueueRepository(_publishingQueueRepository);
