@@ -123,7 +123,7 @@ namespace MarginTrading.Common.RabbitMq
                     RabbitMqPublisher<TMessage> publisher;
                     if (isBestPricePublisher)
                     {
-                        s = s.UseBufferType(PublisherBufferTypes.Experimental);
+                        s = s.UseBufferType(PublisherBufferTypes.LockFree);
                         publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s).PublishSynchronously();
                         _logger.WriteInfo(nameof(CreateProducer), null,
                             $"Created synchronous RabbitMqPublisher for {s.ExchangeName}");
