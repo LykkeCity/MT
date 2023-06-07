@@ -12,8 +12,6 @@ using Lykke.Cqrs;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
-using Lykke.Messaging.RabbitMq;
-using Lykke.Messaging.RabbitMq.Retry;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Cqrs;
@@ -124,15 +122,6 @@ namespace MarginTrading.Backend
                 });
             
             services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend);
-
-            services.Configure<RabbitMqRetryPolicyOptions>(opt =>
-            {
-                opt.InitialConnectionSleepIntervals = _mtSettingsManager.CurrentValue.MtBackend.RabbitMqRetryPolicy
-                    .InitialConnectionSleepIntervals;
-                opt.RegularSleepIntervals =
-                    _mtSettingsManager.CurrentValue.MtBackend.RabbitMqRetryPolicy.RegularSleepIntervals;
-            });
-            services.AddRabbitMqMessaging();
 
             SetupLoggers(Configuration, services, _mtSettingsManager, correlationContextAccessor);
         }
@@ -247,7 +236,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
-            builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, settings.CurrentValue));
+            builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, settings.CurrentValue, LogLocator.CommonLog));
 
             builder.RegisterBuildCallback(c =>
             {
