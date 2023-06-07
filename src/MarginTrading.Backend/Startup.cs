@@ -6,15 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Common.Log; 
+using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
-using Lykke.Messaging.RabbitMq;
-using Lykke.Messaging.RabbitMq.Retry;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Cqrs;
@@ -67,7 +65,7 @@ namespace MarginTrading.Backend
     public class Startup
     {
         private IReloadingManager<MtBackendSettings> _mtSettingsManager;
-        
+
         public IConfigurationRoot Configuration { get; }
         public IWebHostEnvironment Environment { get; }
         public ILifetimeScope ApplicationContainer { get; set; }
@@ -79,7 +77,7 @@ namespace MarginTrading.Backend
                 .AddSerilogJson(env)
                 .AddEnvironmentVariables()
                 .Build();
-            
+
             Environment = env;
         }
 
@@ -91,7 +89,7 @@ namespace MarginTrading.Backend
             services.AddSingleton<RabbitMqCorrelationManager>();
             services.AddSingleton<CqrsCorrelationManager>();
             services.AddTransient<HttpCorrelationHandler>();
-            
+
             services.AddApplicationInsightsTelemetry();
 
             services.AddSingleton(Configuration);
@@ -113,7 +111,7 @@ namespace MarginTrading.Backend
             {
                 options.SwaggerDoc("v1",
                     new OpenApiInfo
-                        { Title = $"MarginTradingEngine_Api_{Configuration.ServerType()}", Version = "v1" });
+                    { Title = $"MarginTradingEngine_Api_{Configuration.ServerType()}", Version = "v1" });
                 options.AddApiKeyAwareness();
             }).AddSwaggerGenNewtonsoftSupport();
 
@@ -127,15 +125,6 @@ namespace MarginTrading.Backend
                 });
 
             services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend);
-            
-            services.Configure<RabbitMqRetryPolicyOptions>(opt =>
-            {
-                opt.InitialConnectionSleepIntervals = _mtSettingsManager.CurrentValue.MtBackend.RabbitMqRetryPolicy
-                    .InitialConnectionSleepIntervals;
-                opt.RegularSleepIntervals =
-                    _mtSettingsManager.CurrentValue.MtBackend.RabbitMqRetryPolicy.RegularSleepIntervals;
-            });
-            services.AddRabbitMqMessaging();
 
             SetupLoggers(Configuration, services, _mtSettingsManager, correlationContextAccessor);
         }
@@ -148,11 +137,11 @@ namespace MarginTrading.Backend
             builder.Register(c => redis)
                 .As<IConnectionMultiplexer>()
                 .SingleInstance();
-            
+
             var deduplicationService = RunHealthChecks(redis, _mtSettingsManager.CurrentValue.MtBackend);
 
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
-            
+
             RegisterModules(builder, _mtSettingsManager, Environment);
         }
 
@@ -195,7 +184,7 @@ namespace MarginTrading.Backend
                     });
             });
             app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Trading Engine API Swagger"));
-            
+
             var application = app.ApplicationServices.GetService<Application>();
 
             appLifetime.ApplicationStarted.Register(async () =>
@@ -205,11 +194,11 @@ namespace MarginTrading.Backend
                     await ApplicationContainer
                         .Resolve<IConfigurationValidator>()
                         .WarnIfInvalidAsync();
-                    
+
                     ApplicationContainer
                         .Resolve<IClientProfileSettingsCache>()
                         .Start();
-                
+
                     ApplicationContainer
                         .Resolve<ICqrsEngine>()
                         .StartAll();
@@ -230,7 +219,7 @@ namespace MarginTrading.Backend
                     application.StopApplication();
                 }
             );
-            
+
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
         }
 
@@ -256,11 +245,11 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
-            builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, settings.CurrentValue));
+            builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, settings.CurrentValue, LogLocator.CommonLog));
 
             builder.RegisterBuildCallback(c =>
             {
-                void StartService<T>() where T: IStartable
+                void StartService<T>() where T : IStartable
                 {
                     LogLocator.CommonLog.WriteInfo("RegisterModules", "Start services",
                         $"Starting {typeof(T)}");
@@ -277,7 +266,7 @@ namespace MarginTrading.Backend
                 StartService<IExternalOrderbookService>();
                 StartService<QuoteCacheService>();
                 StartService<FxRateCacheService>();
-                
+
                 StartService<AccountManager>();
                 StartService<OrderCacheManager>();
                 StartService<PendingOrdersCleaningService>();
@@ -303,7 +292,7 @@ namespace MarginTrading.Backend
 
             if (settings.CurrentValue.UseSerilog)
             {
-                LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration, 
+                LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration,
                     new List<Func<(string Name, object Value)>>
                     {
                         () => ("BrokerId", settings.CurrentValue.BrokerId)
@@ -345,7 +334,7 @@ namespace MarginTrading.Backend
 
             JobManager.AddJob(() => ApplicationContainer.Resolve<ScheduleSettingsCacheWarmUpJob>().Execute(),
                 s => s.NonReentrant().ToRunEvery(1).Days().At(0, 0));
-            
+
             JobManager.AddJob(ApplicationContainer.Resolve<AccountsCacheService>().ResetTodayProps, s => s
                 .WithName(nameof(AccountManager)).NonReentrant().ToRunEvery(1).Days().At(0, 0));
 
@@ -355,10 +344,10 @@ namespace MarginTrading.Backend
 
         private StartupDeduplicationService RunHealthChecks(IConnectionMultiplexer redis, MarginTradingSettings marginTradingSettings)
         {
-            var deduplicationService = new StartupDeduplicationService(Environment, 
-                marginTradingSettings, 
+            var deduplicationService = new StartupDeduplicationService(Environment,
+                marginTradingSettings,
                 redis);
-            
+
             deduplicationService.HoldLock();
 
             new QueueValidationService(marginTradingSettings.StartupQueuesChecker.ConnectionString,
