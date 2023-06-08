@@ -631,14 +631,6 @@ namespace MarginTrading.Backend.Services
 
                 foreach (var position in accountPositions.Value)
                 {
-                    // TODO: added for debugging purposes, will be removed
-                    if(account.Id == "AA20231" && quote.Bid == 54.78m)
-                    {
-                        _log.WriteInfo(nameof(TradingEngine), nameof(UpdateClosePriceAndDetectStopout), $"Freezing the thread for 30 secs Account {account.Id}");;
-
-                        Thread.Sleep(new TimeSpan(0, 0, 30));
-                    }
-
                     var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
                     var closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
 
