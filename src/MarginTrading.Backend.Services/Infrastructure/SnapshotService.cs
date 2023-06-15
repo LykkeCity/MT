@@ -17,7 +17,6 @@ using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Services;
-using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Infrastructure
 {
@@ -145,13 +144,6 @@ namespace MarginTrading.Backend.Services.Infrastructure
                             @$"Account {accountStat.Id}, TotalBlockedMargin {margin}, {accountStat.LogInfo}");
                     }
                 }
-
-
-                // TODO: Added for debugging purposes will be removed
-                accountStats.ForEach(a => a.CacheNeedsToBeUpdated());
-
-                _log.WriteInfo(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
-                    @$"Total Accounts {accountStats.Count}, Cache will be updated for {accountStats.Where(a => a.AccountFpl.ActualHash != a.AccountFpl.CalculatedHash).Count()} accounts");
 
                 var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
                 var accountsJson = accountStats
