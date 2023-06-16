@@ -22,5 +22,6 @@ namespace MarginTrading.Backend.Core
         
         public int CalculatedHash { get; set; }
         public int ActualHash { get; set; }
+        public string LogInfo { get; set; }
     }
 }
