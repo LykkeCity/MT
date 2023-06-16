@@ -118,24 +118,12 @@ namespace MarginTrading.Common.RabbitMq
                 // https://andrewlock.net/making-getoradd-on-concurrentdictionary-thread-safe-using-lazy/
                 return new Lazy<IStartStop>(() =>
                 {
-                    var isBestPricePublisher = s.ExchangeName == "lykke.mt.pricefeed";
+                    var publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s);
 
-                    RabbitMqPublisher<TMessage> publisher;
-                    if (isBestPricePublisher)
-                    {
-                        s = s.UseBufferType(PublisherBufferTypes.LockFree);
-                        publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s).PublishSynchronously();
-                        _logger.WriteInfo(nameof(CreateProducer), null,
-                            $"Created synchronous RabbitMqPublisher for {s.ExchangeName}");
-                    }
+                    if (s.IsDurable && _publishingQueueRepository != null)
+                        publisher.SetQueueRepository(_publishingQueueRepository);
                     else
-                    {
-                        publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s);
-                        if (s.IsDurable && _publishingQueueRepository != null)
-                            publisher.SetQueueRepository(_publishingQueueRepository);
-                        else
-                            publisher.DisableInMemoryQueuePersistence();
-                    }
+                        publisher.DisableInMemoryQueuePersistence();
 
                     var result = publisher
                         .SetSerializer(serializer)
@@ -164,8 +152,8 @@ namespace MarginTrading.Common.RabbitMq
                     RoutingKey = settings.RoutingKey,
                 };
                 
-                var rabbitMqSubscriber = new RabbitMqPullingSubscriber<TMessage>(
-                        _loggerFactory.CreateLogger<RabbitMqPullingSubscriber<TMessage>>(),
+                var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(
+                        _loggerFactory.CreateLogger<RabbitMqSubscriber<TMessage>>(),
                         subscriptionSettings)
                     .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(_loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()))
                     .SetMessageDeserializer(deserializer)

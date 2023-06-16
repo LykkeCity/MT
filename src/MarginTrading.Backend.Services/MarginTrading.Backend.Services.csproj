@@ -6,7 +6,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>2.24.13</Version>
+    <Version>2.25.2</Version>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -33,9 +33,9 @@
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="4.1.0" />
-    <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="3.0.4" />
-    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.7.0" />
-    <PackageReference Include="LykkeBiz.Messaging.RabbitMq" Version="6.0.7" />
+    <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="1.2.0" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
+    <PackageReference Include="LykkeBiz.Messaging.RabbitMq" Version="3.0.1" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="3.2.0" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
