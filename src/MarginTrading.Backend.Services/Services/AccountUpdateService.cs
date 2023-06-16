@@ -219,7 +219,9 @@ namespace MarginTrading.Backend.Services.Services
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
 
             var accuracy = AssetsConstants.DefaultAssetAccuracy;
-            var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
+            var positionsMaintenanceMarginValues = positions.Select(item => item.GetMarginMaintenance());
+            var positionsMaintenanceMargin = positionsMaintenanceMarginValues.Sum();
+
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
             var pendingOrdersMargin = 0;
 
@@ -232,7 +234,9 @@ namespace MarginTrading.Backend.Services.Services
             if (_marginTradingSettings.LogBlockedMarginCalculation)
             {
                 var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => $"posId: {item.Id}, {item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)}"));
-                account.LogInfo = $"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog} - LastUpdate: {DateTime.UtcNow}";
+
+                account.LogInfo = @$"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog}. 
+                    Summed values: {positionsMaintenanceMargin.ToJson()} - LastUpdate: {DateTime.UtcNow}";
             }
             
             account.AccountFpl.MarginInit = Math.Round(positionsInitMargin + pendingOrdersMargin, accuracy);
