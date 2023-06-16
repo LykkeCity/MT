@@ -102,24 +102,16 @@ namespace MarginTrading.Backend.Services
 
             var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck, position.Id);
 
-            if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
+            if (_marginTradingSettings.LogBlockedMarginCalculation)
             {
-                _log.WriteInfo(nameof(FplService), 
-                    new { 
-                        position.Id,
-                        position.AssetPairId,
-                        position.Volume,
-                        position.AccountId,
-                        position.TradingConditionId,
-                        position.OpenPrice,
-                        position.OpenFxPrice,
-                        position.ClosePrice,
-                        position.CloseFxPrice
-                    }.ToJson(), 
-                    @$"Margin calculation for position {position.Id}
+                var marginRates = _tradingInstrumentsCache.GetMarginRates(tradingInstrument, isWarnCheck);
+
+                var logInfo = @$"Margin calculation for position {position.Id}
                     ClosePrice: {position.ClosePrice}, CloseFxPrice: {position.CloseFxPrice},
-                    MarginRate = {fplData.MarginRate} calc: ({position.ClosePrice} * {position.CloseFxPrice})
-                    MarginInit = {marginInit}, MarginMaintenance = {marginMaintenance}");
+                    MarginRateInit = {marginRates.MarginInit} MarginRateMaintenance = {marginRates.MarginMaintenance} 
+                    MarginInit = {marginInit}, MarginMaintenance = {marginMaintenance} - LastUpdate {DateTime.UtcNow}";
+
+                fplData.LogInfo = logInfo;
             }
 
             fplData.MarginInit = Math.Round(marginInit, fplData.AccountBaseAssetAccuracy);
@@ -137,21 +129,6 @@ namespace MarginTrading.Backend.Services
 
             var marginInit = volumeForCalculation * marginRate * marginRateInit;
             var marginMaintenance = volumeForCalculation * marginRate * marginRateMaintenance;
-
-            if (_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
-            {
-                _log.WriteInfo(nameof(FplService), new {
-                        tradingInstrument.Instrument, 
-                        tradingInstrument.InitLeverage, 
-                        tradingInstrument.MaintenanceLeverage,
-                        tradingInstrument.OvernightMarginMultiplier
-                        }.ToJson(), 
-                    @$"Margin values for instrument [{position}] - {tradingInstrument.Instrument}
-                    MarginInit = volumeForCalculation * (closePrice * closePriceFx) * marginRateInit 
-                    MarginInit = {marginInit} ({volumeForCalculation} * {marginRate} * {marginRateInit}) 
-                    MarginMaintenance = volumeForCalculation * (closePrice * closePriceFx) * marginRateMaintenance 
-                    MarginMaintenance = {marginMaintenance} ({volumeForCalculation} * {marginRate} * {marginRateMaintenance}).");
-            }
 
             return (
                 marginInit, marginMaintenance
