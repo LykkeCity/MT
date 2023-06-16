@@ -236,7 +236,7 @@ namespace MarginTrading.Backend.Services.Services
                 var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => $"posId: {item.Id}, {item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)}"));
 
                 account.LogInfo = @$"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog}. 
-                    Summed values: {positionsMaintenanceMargin.ToJson()} - LastUpdate: {DateTime.UtcNow}";
+                    Summed values: {positionsMaintenanceMarginValues.ToJson()} - LastUpdate: {DateTime.UtcNow}";
             }
             
             account.AccountFpl.MarginInit = Math.Round(positionsInitMargin + pendingOrdersMargin, accuracy);
