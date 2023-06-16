@@ -143,6 +143,14 @@ namespace MarginTrading.Backend.Services.Infrastructure
                         if (margin == 0) continue;
                         await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                             @$"Account {accountStat.Id}, TotalBlockedMargin {margin}, {accountStat.LogInfo}");
+
+                        var accountPositions = positions.Where(p => p.AccountId == accountStat.Id);
+                        
+                        foreach(var p in accountPositions)
+                        {
+                            await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                                @$"Account {accountStat.Id}, Position {p.Id}, {p.FplData.LogInfo}");
+                        }
                     }
                 }
 
