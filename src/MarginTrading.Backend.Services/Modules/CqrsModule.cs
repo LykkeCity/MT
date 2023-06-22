@@ -38,7 +38,8 @@ using MarginTrading.AssetService.Contracts.Products;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
-using Common.Log;
+using Lykke.Messaging.RabbitMq.Retry;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Modules
 {
@@ -52,9 +53,7 @@ namespace MarginTrading.Backend.Services.Modules
         private readonly long _defaultRetryDelayMs;
         private readonly ILog _log;
 
-        public CqrsModule(CqrsSettings settings,
-            MarginTradingSettings marginTradingSettings,
-            ILog log)
+        public CqrsModule(CqrsSettings settings, MarginTradingSettings marginTradingSettings)
         {
             _settings = settings;
             _marginTradingSettings = marginTradingSettings;
@@ -86,6 +85,8 @@ namespace MarginTrading.Backend.Services.Modules
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
                     environment: _settings.EnvironmentName);
+            
+            var loggerFactory = ctx.Resolve<ILoggerFactory>();
 
             var registrations = new List<IRegistration>
             {

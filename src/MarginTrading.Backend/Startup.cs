@@ -122,6 +122,15 @@ namespace MarginTrading.Backend
                 });
             
             services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend);
+            
+            services.Configure<RabbitMqRetryPolicyOptions>(opt =>
+            {
+                opt.InitialConnectionSleepIntervals = _mtSettingsManager.CurrentValue.MtBackend.RabbitMqRetryPolicy
+                    .InitialConnectionSleepIntervals;
+                opt.RegularSleepIntervals =
+                    _mtSettingsManager.CurrentValue.MtBackend.RabbitMqRetryPolicy.RegularSleepIntervals;
+            });
+            services.AddRabbitMqMessaging();
 
             SetupLoggers(Configuration, services, _mtSettingsManager, correlationContextAccessor);
         }
