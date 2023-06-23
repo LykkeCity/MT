@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 
 namespace MarginTrading.Backend.Services
 {
-    internal static class PerformanceTracker
+    public static class PerformanceTracker
     {
         public struct MethodStatistics
         {
@@ -25,11 +25,15 @@ namespace MarginTrading.Backend.Services
         
         public static readonly ConcurrentDictionary<string, MethodStatistics> Statistics =
             new ConcurrentDictionary<string, MethodStatistics>();
+        
+        public static bool Enabled { get; set; }
 
         public static void Track(string methodName,
             Action action,
             [CanBeNull] string assetPair = null)
         {
+            if (!Enabled) return;
+
             var key = GetKey(methodName, assetPair);
 
             var t = TrackInternalAsync(key, () =>
@@ -45,6 +49,8 @@ namespace MarginTrading.Backend.Services
             Func<Task> action,
             [CanBeNull] string assetPair = null)
         {
+            if (!Enabled) return Task.CompletedTask;
+            
             var key = GetKey(methodName, assetPair);
 
             return TrackInternalAsync(key, action);

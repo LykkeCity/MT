@@ -318,8 +318,12 @@ namespace MarginTrading.Backend
             }
 
             services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(LogLocator.CommonLog));
-            services.AddHostedService<PerformanceLogger>();
-            services.AddHostedService<QuotesDeviationLogger>();
+
+            PerformanceTracker.Enabled = settings.CurrentValue.PerformanceTrackerEnabled;
+            if (PerformanceTracker.Enabled)
+            {
+                services.AddHostedService<PerformanceLogger>();
+            }
         }
 
         /// <summary>
