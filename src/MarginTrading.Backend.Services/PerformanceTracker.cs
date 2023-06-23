@@ -32,8 +32,6 @@ namespace MarginTrading.Backend.Services
             Action action,
             [CanBeNull] string assetPair = null)
         {
-            if (!Enabled) return;
-
             var key = GetKey(methodName, assetPair);
 
             var t = TrackInternalAsync(key, () =>
@@ -49,8 +47,6 @@ namespace MarginTrading.Backend.Services
             Func<Task> action,
             [CanBeNull] string assetPair = null)
         {
-            if (!Enabled) return Task.CompletedTask;
-            
             var key = GetKey(methodName, assetPair);
 
             return TrackInternalAsync(key, action);
@@ -58,6 +54,12 @@ namespace MarginTrading.Backend.Services
 
         private static async Task TrackInternalAsync(string key, Func<Task> action)
         {
+            if (!Enabled)
+            {
+                await action();
+                return;
+            }
+            
             var watch = Stopwatch.StartNew();
 
             await action();
