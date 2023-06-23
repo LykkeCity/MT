@@ -25,6 +25,8 @@ namespace MarginTrading.Backend.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Performance logger started");
+            
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation(PrintPerformanceStatistics());
