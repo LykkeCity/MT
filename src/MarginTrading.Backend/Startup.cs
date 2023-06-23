@@ -317,7 +317,6 @@ namespace MarginTrading.Backend
 
             services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(LogLocator.CommonLog));
             services.AddHostedService<PerformanceLogger>();
-            services.AddHostedService<QuotesDeviationLogger>();
         }
 
         /// <summary>
