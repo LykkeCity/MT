@@ -38,7 +38,6 @@ using MarginTrading.AssetService.Contracts.Products;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
-using Lykke.Messaging.RabbitMq.Retry;
 using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Modules
