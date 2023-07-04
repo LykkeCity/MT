@@ -118,9 +118,8 @@ namespace MarginTrading.Common.RabbitMq
                 // https://andrewlock.net/making-getoradd-on-concurrentdictionary-thread-safe-using-lazy/
                 return new Lazy<IStartStop>(() =>
                 {
-                    s.UseBufferType(PublisherBufferTypes.Experimental);
                     var publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s);
-                    
+
                     if (s.IsDurable && _publishingQueueRepository != null)
                         publisher.SetQueueRepository(_publishingQueueRepository);
                     else
