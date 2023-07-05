@@ -224,6 +224,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 TodayOtherAmount = account.TodayOtherAmount,
                 AdditionalInfo = account.AdditionalInfo,
                 AccountIsDeleted = account.IsDeleted,
+                UnconfirmedMargin = account.GetUnconfirmedMargin()
             };
         }
 
@@ -253,6 +254,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 IsInLiquidation = isInLiquidation,
                 MarginNotificationLevel = account.GetAccountLevel().ToString(),
                 TemporaryCapital = account.TemporaryCapital,
+                UnconfirmedMargin = account.GetUnconfirmedMargin()
             };
         }
 

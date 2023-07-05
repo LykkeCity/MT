@@ -111,5 +111,7 @@ namespace MarginTrading.Backend.Contracts.Account
         public string MarginNotificationLevel { get; set; }
 
         public decimal TemporaryCapital { get; set; }
+
+        public decimal UnconfirmedMargin { get; set; }
     }
 }
