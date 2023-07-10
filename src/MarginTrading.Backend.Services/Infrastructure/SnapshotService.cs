@@ -17,6 +17,7 @@ using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Services;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Infrastructure
 {
@@ -142,8 +143,20 @@ namespace MarginTrading.Backend.Services.Infrastructure
                         if (margin == 0) continue;
                         await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                             @$"Account {accountStat.Id}, TotalBlockedMargin {margin}, {accountStat.LogInfo}");
+
+                        var accountPositions = positions.Where(p => p.AccountId == accountStat.Id);
+                        
+                        foreach(var p in accountPositions)
+                        {
+                            await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                                @$"Account {accountStat.Id}, Position {p.Id}, {p.FplData.LogInfo}");
+                        }
                     }
                 }
+
+                // Forcing all account caches to be updated after trading is closed - after all events have been processed
+                // To ensure all cache data is updated with most up-to date data for all accounts.
+                accountStats.ForEach(a => a.CacheNeedsToBeUpdated());
 
                 var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
                 var accountsJson = accountStats

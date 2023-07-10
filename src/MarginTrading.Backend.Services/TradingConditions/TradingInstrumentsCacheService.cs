@@ -101,12 +101,6 @@ namespace MarginTrading.Backend.Services.TradingConditions
             decimal marginInit = tradingInstrument.GetMarginInitByLeverage(_overnightMarginParameterOn, isWarnCheck);
             decimal marginMaintenance = tradingInstrument.GetMarginMaintenanceByLeverage(_overnightMarginParameterOn, isWarnCheck);
 
-            if(_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
-            {
-                _log.WriteInfo(nameof(TradingInstrumentsCacheService), tradingInstrument.ToJson(), 
-                    "Getting marginInit and marginMaintenance values by leverage");
-            }
-
             return (marginInit, marginMaintenance);
         }
         

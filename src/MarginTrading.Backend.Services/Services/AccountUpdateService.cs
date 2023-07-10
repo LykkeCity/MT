@@ -11,7 +11,6 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Common.Costs;
 using Lykke.Snow.Common.Percents;
-using Lykke.Snow.Common.Quotes;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -220,7 +219,9 @@ namespace MarginTrading.Backend.Services.Services
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
 
             var accuracy = AssetsConstants.DefaultAssetAccuracy;
-            var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
+            var positionsMaintenanceMarginValues = positions.Select(item => item.GetMarginMaintenance());
+            var positionsMaintenanceMargin = positionsMaintenanceMarginValues.Sum();
+
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
             var pendingOrdersMargin = 0;
 
@@ -233,7 +234,9 @@ namespace MarginTrading.Backend.Services.Services
             if (_marginTradingSettings.LogBlockedMarginCalculation)
             {
                 var positionsMaintenanceMarginLog = string.Join(" + ", positions.Select(item => $"posId: {item.Id}, {item.GetMarginMaintenance().ToString(CultureInfo.InvariantCulture)}"));
-                account.LogInfo = $"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog}";
+
+                account.LogInfo = @$"PositionsMaintenanceMargin: {positionsMaintenanceMargin} = {positionsMaintenanceMarginLog}. 
+                    Summed values: {positionsMaintenanceMarginValues.ToJson()} - LastUpdate: {DateTime.UtcNow}";
             }
             
             account.AccountFpl.MarginInit = Math.Round(positionsInitMargin + pendingOrdersMargin, accuracy);
@@ -253,7 +256,7 @@ namespace MarginTrading.Backend.Services.Services
             if(_marginTradingSettings.LogBlockedMarginCalculation && SnapshotService.IsMakingSnapshotInProgress)
             {
                 _log.WriteInfo(nameof(AccountUpdateService), positions?.Select(p => new { p.Id, p.AssetPairId, p.ClosePrice, p.CloseFxPrice }).ToJson(), 
-                    $"Position array from position provider");
+                    $"Account {accountId} - Position array from position provider");
             }
 
             return positions;
