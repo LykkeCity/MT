@@ -12,6 +12,8 @@ using Lykke.Cqrs;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
+using Lykke.Messaging.RabbitMq;
+using Lykke.Messaging.RabbitMq.Retry;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Cqrs;
@@ -245,7 +247,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
-            builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, settings.CurrentValue, LogLocator.CommonLog));
+            builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, settings.CurrentValue));
 
             builder.RegisterBuildCallback(c =>
             {
