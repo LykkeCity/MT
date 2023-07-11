@@ -13,8 +13,6 @@ using JetBrains.Annotations;
 using Lykke.Common;
 using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Activities;
-using MarginTrading.Backend.Contracts.Orders;
-using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -33,7 +31,6 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
@@ -175,7 +172,7 @@ namespace MarginTrading.Backend.Services
 
                     position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
                 }
-
+                
                 return await ExecuteOrderByMatchingEngineAsync(order, me, true);
             }
             catch (Exception ex)
@@ -510,14 +507,18 @@ namespace MarginTrading.Backend.Services
                 return;
 
             var correlationContext = _correlationContextAccessor.CorrelationContext;
-            foreach (var order in orders)
+
+            PerformanceTracker.Track("ExecutePendingOrder(cycle)", () =>
             {
-                _threadSwitcher.SwitchThread(async () =>
+                foreach (var order in orders)
                 {
-                    _correlationContextAccessor.CorrelationContext = correlationContext;
-                    await ExecutePendingOrder(order);
-                });
-            }
+                    _threadSwitcher.SwitchThread(async () =>
+                    {
+                        _correlationContextAccessor.CorrelationContext = correlationContext;
+                        await ExecutePendingOrder(order);
+                    });
+                }
+            }, quote?.Instrument);
         }
 
         private IEnumerable<Order> GetPendingOrdersToBeExecuted(InstrumentBidAskPair quote)
@@ -1167,8 +1168,12 @@ namespace MarginTrading.Backend.Services
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            ProcessPositions(ea.BidAskPair, !ea.IsEod).GetAwaiter().GetResult();
-            ProcessOrdersWaitingForExecution(ea.BidAskPair);
+            PerformanceTracker.TrackAsync(nameof(ProcessPositions),
+                async () => await ProcessPositions(ea.BidAskPair, !ea.IsEod), 
+                ea.BidAskPair.Instrument).GetAwaiter().GetResult();
+            PerformanceTracker.Track(nameof(ProcessOrdersWaitingForExecution),
+                () => ProcessOrdersWaitingForExecution(ea.BidAskPair), 
+                ea.BidAskPair.Instrument);
         }
 
         void IEventConsumer<FxBestPriceChangeEventArgs>.ConsumeEvent(object sender, FxBestPriceChangeEventArgs ea)

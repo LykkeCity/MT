@@ -55,7 +55,7 @@ namespace MarginTrading.Backend.Services.Notifications
             var type = typeof(TMessage);
             return (
                 _producerSettings[type],
-                _producers[typeof(TMessage)] as IMessageProducer<TMessage>
+                _producers[type] as IMessageProducer<TMessage>
             );
         }
     }

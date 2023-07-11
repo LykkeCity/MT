@@ -10,9 +10,7 @@ namespace MarginTrading.Backend.Services.Quotes
     {
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
-        public PricesUpdateRabbitMqNotifier(
-            IRabbitMqNotifyService rabbitMqNotifyService
-        )
+        public PricesUpdateRabbitMqNotifier(IRabbitMqNotifyService rabbitMqNotifyService)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
         }
@@ -20,7 +18,9 @@ namespace MarginTrading.Backend.Services.Quotes
         int IEventConsumer.ConsumerRank => 110;
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            _rabbitMqNotifyService.OrderBookPrice(ea.BidAskPair, ea.IsEod);
+            PerformanceTracker.TrackAsync("PublishBestPrice",
+                async () => await _rabbitMqNotifyService.OrderBookPrice(ea.BidAskPair, ea.IsEod), 
+                ea.BidAskPair.Instrument).GetAwaiter().GetResult();
         }
     }
 }
