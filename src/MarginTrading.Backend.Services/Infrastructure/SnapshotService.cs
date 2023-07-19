@@ -17,6 +17,7 @@ using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Services;
+using Microsoft.Extensions.Hosting;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Infrastructure
@@ -37,6 +38,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly ILog _log;
         private readonly IFinalSnapshotCalculator _finalSnapshotCalculator;
         private readonly MarginTradingSettings _settings;
+        private readonly IHostEnvironment _environment;
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
         public static bool IsMakingSnapshotInProgress => Lock.CurrentCount == 0;
@@ -54,7 +56,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             IMarginTradingBlobRepository blobRepository,
             ILog log,
             IFinalSnapshotCalculator finalSnapshotCalculator,
-            MarginTradingSettings settings)
+            MarginTradingSettings settings,
+            IHostEnvironment environment)
         {
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _accountsCacheService = accountsCacheService;
@@ -69,6 +72,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _log = log;
             _finalSnapshotCalculator = finalSnapshotCalculator;
             _settings = settings;
+            _environment = environment;
         }
 
         /// <inheritdoc />
@@ -100,6 +104,12 @@ namespace MarginTrading.Backend.Services.Infrastructure
             // If one or more queues contain not delivered messages the snapshot can not be created.  
             _queueValidationService.ThrowExceptionIfQueuesNotEmpty(true);
 
+            // If we are in development environment we should wait for a minute to give QA team a chance to react
+            if (_environment.IsEnvironment("Development"))
+            {
+                await Task.Delay(TimeSpan.FromMinutes(1));
+            }
+            
             // Before starting snapshot creation the current state should be validated.
             var validationResult = await _snapshotValidationService.ValidateCurrentStateAsync();
 
