@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Contracts.Responses;
 using MarginTrading.Backend.Contracts.Account;
-using MarginTrading.Backend.Contracts.Common;
 using Refit;
 
 namespace MarginTrading.Backend.Contracts
@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Contracts
         /// Returns all accounts stats, optionally paginated. Both skip and take must be set or unset.
         /// </summary>
         [Get("/api/accounts/stats/by-pages")]
-        Task<PaginatedResponseContract<AccountStatContract>> GetAllAccountStatsByPages(
+        Task<PaginatedResponse<AccountStatContract>> GetAllAccountStatsByPages(
             [Query, CanBeNull] int? skip = null, [Query, CanBeNull] int? take = null);
 
         /// <summary>

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Contracts.Responses;
 using MarginTrading.Backend.Contracts.Orders;
 using Refit;
 
@@ -92,7 +92,7 @@ namespace MarginTrading.Backend.Contracts
         /// Get open orders with optional filtering and pagination. Sorted descending by default.
         /// </summary>
         [Get("/api/orders/by-pages")]
-        Task<PaginatedResponseContract<OrderContract>> ListAsyncByPages([Query] [CanBeNull] string accountId = null,
+        Task<PaginatedResponse<OrderContract>> ListAsyncByPages([Query] [CanBeNull] string accountId = null,
             [Query] [CanBeNull] string assetPairId = null, [Query] [CanBeNull] string parentPositionId = null,
             [Query] [CanBeNull] string parentOrderId = null,
             [Query] [CanBeNull] int? skip = null, [Query] [CanBeNull] int? take = null,
