@@ -2,10 +2,10 @@
 // See the LICENSE file in the project root for more information.
 
 using JetBrains.Annotations;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Rfq;
 using Refit;
 using System.Threading.Tasks;
+using Lykke.Contracts.Responses;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 
 namespace MarginTrading.Backend.Contracts
@@ -20,7 +20,7 @@ namespace MarginTrading.Backend.Contracts
         /// Returns RFQs
         /// </summary>
         [Get("/api/rfq")]
-        Task<PaginatedResponseContract<RfqContract>> GetAsync([Query, CanBeNull] ListRfqRequest listRfqRequest, [Query] int skip = 0, [Query] int take = 20);
+        Task<PaginatedResponse<RfqContract>> GetAsync([Query, CanBeNull] ListRfqRequest listRfqRequest, [Query] int skip = 0, [Query] int take = 20);
 
         /// <summary>
         /// Pauses RFQ workflow

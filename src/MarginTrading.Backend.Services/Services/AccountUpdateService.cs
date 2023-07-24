@@ -11,6 +11,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Common.Costs;
 using Lykke.Snow.Common.Percents;
+using Lykke.Snow.Domain.Costs;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;

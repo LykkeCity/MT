@@ -3,7 +3,6 @@
 
 using System;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core.Rfq;
 
 namespace MarginTrading.SqlRepositories.Entities
