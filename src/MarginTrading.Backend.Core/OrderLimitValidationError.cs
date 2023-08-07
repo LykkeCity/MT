@@ -8,6 +8,6 @@ namespace MarginTrading.Backend.Core
         None,
         OneTimeLimit,
         TotalLimit,
-        MaxPositionNotional
+        MaxPositionNotionalLimit
     }
 }

@@ -628,9 +628,9 @@ namespace MarginTrading.Backend.Services
                     $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
 
-            if (limitsValidationResult.Error == OrderLimitValidationError.MaxPositionNotional)
+            if (limitsValidationResult.Error == OrderLimitValidationError.MaxPositionNotionalLimit)
             {
-                throw new OrderRejectionException(OrderRejectReason.MaxPositionNotional,
+                throw new OrderRejectionException(OrderRejectReason.MaxPositionNotionalLimit,
                     $"The max position notional is limited to {tradingInstrument.MaxPositionNotional} {tradingInstrument.Instrument}.");
             }
         }
