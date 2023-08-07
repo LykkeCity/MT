@@ -125,6 +125,11 @@ namespace MarginTrading.Backend.Core
             return orderType == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
         }
         
+        public static PositionDirection GetOpenPositionDirection(this OrderDirection orderType)
+        {
+            return orderType == OrderDirection.Buy ? PositionDirection.Long : PositionDirection.Short;
+        }
+        
         public static PositionDirection GetClosePositionDirection(this OrderDirection orderType)
         {
             return orderType == OrderDirection.Buy ? PositionDirection.Short : PositionDirection.Long;

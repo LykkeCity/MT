@@ -31,8 +31,10 @@ namespace MarginTrading.Backend.Core
         [Pure]
         public Result<bool, OrderLimitValidationError> SatisfiesLimits(decimal oneTimeLimit,
             decimal totalLimit,
+            decimal? maxPositionNotional,
             int assetContractSize,
-            ICollection<Position> existingPositions)
+            ICollection<Position> existingPositions,
+            InstrumentBidAskPair quote)
         {
             // TODO: this validation is probably not related to limits validation
             if (!_orderFulfillmentPlan.RequiresPositionOpening)
@@ -43,15 +45,36 @@ namespace MarginTrading.Backend.Core
             {
                 return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.OneTimeLimit);
             }
-
+            
+            var order = _orderFulfillmentPlan.Order;
             var positionsAbsVolume = existingPositions.Sum(o => Math.Abs(o.Volume));
             var oppositePositionsToBeClosedAbsVolume =
-                Math.Abs(_orderFulfillmentPlan.Order.Volume) - unfulfilledAbsVolume;
+                Math.Abs(order.Volume) - unfulfilledAbsVolume;
             if (totalLimit > 0 &&
                 (positionsAbsVolume - oppositePositionsToBeClosedAbsVolume + unfulfilledAbsVolume) >
                 (totalLimit * assetContractSize))
             {
                 return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.TotalLimit);
+            }
+
+            if (maxPositionNotional.HasValue)
+            {
+                var sameAsOrderDirectionPositionsAbsVolume = existingPositions
+                    .Where(o => o.Direction == order.Direction.GetOpenPositionDirection())
+                    .Sum(o => Math.Abs(o.Volume));
+                var oppositeAsOrderDirectionPositionsAbsVolume = existingPositions
+                    .Where(o => o.Direction == order.Direction.GetClosePositionDirection())
+                    .Sum(o => Math.Abs(o.Volume));
+                var fxRate = order.FxRate;
+                var sameDirectionTotalAbsVolume = sameAsOrderDirectionPositionsAbsVolume + unfulfilledAbsVolume;
+                var oppositeDirectionTotalAbsVolume = oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume;
+                var priceSameDirection = quote.GetPriceForOrderDirection(order.Direction);
+                var priceOppositeDirection = quote.GetPriceForOrderDirection(order.Direction.GetOpositeDirection());
+                if (sameDirectionTotalAbsVolume * priceSameDirection + oppositeDirectionTotalAbsVolume * priceOppositeDirection
+                    > (maxPositionNotional * assetContractSize) / fxRate)
+                {
+                    return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotional);
+                }
             }
 
             return new Result<bool, OrderLimitValidationError>(true);
