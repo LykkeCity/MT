@@ -6,7 +6,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>2.25.14</Version>
+    <Version>2.25.16</Version>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -27,12 +27,12 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="FluentScheduler" Version="5.5.1" />
     <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="7.8.0" />
-    <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" Version="11.3.0" />
+    <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" Version="11.7.3" />
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="1.5.2" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
-    <PackageReference Include="Lykke.Snow.Domain" Version="2.0.0" />
+    <PackageReference Include="Lykke.Snow.Domain" Version="2.0.2" />
     <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="4.1.0" />
     <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="3.0.4" />
     <PackageReference Include="LykkeBiz.Messaging.RabbitMq" Version="6.0.7" />
