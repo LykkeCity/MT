@@ -73,7 +73,7 @@ namespace MarginTrading.Backend.Core
                 if (sameDirectionTotalAbsVolume * priceSameDirection + oppositeDirectionTotalAbsVolume * priceOppositeDirection
                     > (maxPositionNotional * assetContractSize) / fxRate)
                 {
-                    return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotional);
+                    return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
             }
 

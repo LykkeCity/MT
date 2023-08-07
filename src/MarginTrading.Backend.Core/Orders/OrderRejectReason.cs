@@ -27,6 +27,6 @@ namespace MarginTrading.Backend.Core.Orders
         MaxPositionLimit,
         MinOrderSizeLimit,
         MaxOrderSizeLimit,
-        MaxPositionNotional
+        MaxPositionNotionalLimit
     }
 }
