@@ -70,8 +70,11 @@ namespace MarginTrading.Backend.Core
                 var oppositeDirectionTotalAbsVolume = oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume;
                 var priceSameDirection = quote.GetPriceForOrderDirection(order.Direction);
                 var priceOppositeDirection = quote.GetPriceForOrderDirection(order.Direction.GetOpositeDirection());
-                if (sameDirectionTotalAbsVolume * priceSameDirection + oppositeDirectionTotalAbsVolume * priceOppositeDirection
-                    > (maxPositionNotional * assetContractSize) / fxRate)
+                var notionalBefore = (sameAsOrderDirectionPositionsAbsVolume * priceSameDirection +
+                                      oppositeAsOrderDirectionPositionsAbsVolume * priceOppositeDirection) * fxRate;
+                var notionalAfter = (sameDirectionTotalAbsVolume * priceSameDirection +
+                                     oppositeDirectionTotalAbsVolume * priceOppositeDirection) * fxRate;
+                if (notionalAfter > maxPositionNotional && notionalAfter >= notionalBefore)
                 {
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
