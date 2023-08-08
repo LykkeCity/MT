@@ -130,6 +130,7 @@ namespace MarginTradingTests
                     ShortPosition = true,
                     DealMaxLimit = 1000000,
                     PositionLimit = 10000000,
+                    MaxPositionNotional = 1000,
                     InitLeverage = 100,
                     MaintenanceLeverage = 150,
                     MarginRatePercent = 0.67M,
