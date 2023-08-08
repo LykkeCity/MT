@@ -631,7 +631,7 @@ namespace MarginTrading.Backend.Services
             if (limitsValidationResult.Error == OrderLimitValidationError.MaxPositionNotionalLimit)
             {
                 throw new OrderRejectionException(OrderRejectReason.MaxPositionNotionalLimit,
-                    $"The max position notional is limited to {tradingInstrument.MaxPositionNotional} {tradingInstrument.Instrument}.");
+                    $"The max positions notional is limited to {tradingInstrument.MaxPositionNotional} {tradingInstrument.Instrument}.");
             }
         }
 
