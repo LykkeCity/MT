@@ -858,7 +858,7 @@ namespace MarginTradingTests
             decimal volume,
             bool isValid)
         {
-            const string instrument = "EURUSD";
+            const string instrument = "BYNUSD";
 
             var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 45, Ask = 55};
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
@@ -890,7 +890,7 @@ namespace MarginTradingTests
             decimal volume,
             bool isValid)
         {
-            const string instrument = "EURUSD";
+            const string instrument = "BYNUSD";
 
             var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 45, Ask = 55};
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
@@ -922,7 +922,7 @@ namespace MarginTradingTests
             decimal volume,
             bool isValid)
         {
-            const string instrument = "EURUSD";
+            const string instrument = "BYNUSD";
 
             var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 45, Ask = 55};
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
@@ -937,7 +937,7 @@ namespace MarginTradingTests
             decimal volume,
             bool isValid)
         {
-            const string instrument = "EURUSD";
+            const string instrument = "BYNUSD";
 
             var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 50, Ask = 60};
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
