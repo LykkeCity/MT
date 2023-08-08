@@ -7,6 +7,8 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Orders;
+using Newtonsoft.Json;
+using Serilog;
 
 namespace MarginTrading.Backend.Core
 {
@@ -74,8 +76,24 @@ namespace MarginTrading.Backend.Core
                                       oppositeAsOrderDirectionPositionsAbsVolume * priceOppositeDirection) * fxRate;
                 var notionalAfter = (sameDirectionTotalAbsVolume * priceSameDirection +
                                      oppositeDirectionTotalAbsVolume * priceOppositeDirection) * fxRate;
+                var tempLogObj = new
+                {
+                    sameAsOrderDirectionPositionsAbsVolume,
+                    oppositeAsOrderDirectionPositionsAbsVolume,
+                    fxRate,
+                    sameDirectionTotalAbsVolume,
+                    oppositeDirectionTotalAbsVolume,
+                    priceSameDirection,
+                    priceOppositeDirection,
+                    notionalBefore,
+                    notionalAfter
+                };
+                Log.Logger.Information($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
                 if (notionalAfter > maxPositionNotional && notionalAfter >= notionalBefore)
                 {
+                    Log.Logger.Warning($"Temp log for MaxPositionNotional: " +
+                                       "notionalAfter > maxPositionNotional = {notionalAfter > maxPositionNotional}, " +
+                                       "notionalAfter >= notionalBefore = {notionalAfter >= notionalBefore}");
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
             }
