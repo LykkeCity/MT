@@ -7,8 +7,8 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Orders;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace MarginTrading.Backend.Core
 {
@@ -36,7 +36,8 @@ namespace MarginTrading.Backend.Core
             decimal? maxPositionNotional,
             int assetContractSize,
             ICollection<Position> existingPositions,
-            InstrumentBidAskPair quote)
+            InstrumentBidAskPair quote,
+            ILogger logger)
         {
             // TODO: this validation is probably not related to limits validation
             if (!_orderFulfillmentPlan.RequiresPositionOpening)
@@ -68,32 +69,31 @@ namespace MarginTrading.Backend.Core
                     .Where(o => o.Direction == order.Direction.GetClosePositionDirection())
                     .Sum(o => Math.Abs(o.Volume));
                 var fxRate = order.FxRate;
-                var sameDirectionTotalAbsVolume = sameAsOrderDirectionPositionsAbsVolume + unfulfilledAbsVolume;
-                var oppositeDirectionTotalAbsVolume = oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume;
                 var priceSameDirection = quote.GetPriceForOrderDirection(order.Direction);
                 var priceOppositeDirection = quote.GetPriceForOrderDirection(order.Direction.GetOpositeDirection());
-                var notionalBefore = (sameAsOrderDirectionPositionsAbsVolume * priceSameDirection +
-                                      oppositeAsOrderDirectionPositionsAbsVolume * priceOppositeDirection) * fxRate;
-                var notionalAfter = (sameDirectionTotalAbsVolume * priceSameDirection +
-                                     oppositeDirectionTotalAbsVolume * priceOppositeDirection) * fxRate;
+                
+                var notionalBefore = (sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
+                                      oppositeAsOrderDirectionPositionsAbsVolume * priceSameDirection) * fxRate;
+                var notionalAfter = (
+                            sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
+                            (unfulfilledAbsVolume + oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume) * priceSameDirection
+                        ) * fxRate;
                 var tempLogObj = new
                 {
                     sameAsOrderDirectionPositionsAbsVolume,
                     oppositeAsOrderDirectionPositionsAbsVolume,
                     fxRate,
-                    sameDirectionTotalAbsVolume,
-                    oppositeDirectionTotalAbsVolume,
                     priceSameDirection,
                     priceOppositeDirection,
                     notionalBefore,
                     notionalAfter
                 };
-                Log.Logger.Information($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
+                logger.LogInformation($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
                 if (notionalAfter > maxPositionNotional && notionalAfter >= notionalBefore)
                 {
-                    Log.Logger.Warning($"Temp log for MaxPositionNotional: " +
-                                       "notionalAfter > maxPositionNotional = {notionalAfter > maxPositionNotional}, " +
-                                       "notionalAfter >= notionalBefore = {notionalAfter >= notionalBefore}");
+                    logger.LogWarning($"Temp log for MaxPositionNotional: " +
+                                      $"notionalAfter > maxPositionNotional = {notionalAfter > maxPositionNotional}, " +
+                                      $"notionalAfter >= notionalBefore = {notionalAfter >= notionalBefore}");
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
             }
