@@ -23,7 +23,6 @@ using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.FeatureManagement;
 
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
@@ -44,10 +43,8 @@ namespace MarginTrading.Backend.Services
         private readonly MarginTradingSettings _marginSettings;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IFeatureManager _featureManager;
-        private readonly ILogger<OrderValidator> _logger;
 
         public OrderValidator(
-            ILogger<OrderValidator> logger,
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
@@ -61,7 +58,6 @@ namespace MarginTrading.Backend.Services
             ICfdCalculatorService cfdCalculatorService, 
             IFeatureManager featureManager)
         {
-            _logger = logger;
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
             _accountsCacheService = accountsCacheService;
@@ -618,8 +614,7 @@ namespace MarginTrading.Backend.Services
                 tradingInstrument.MaxPositionNotional,
                 assetPair.ContractSize,
                 existingPositions,
-                quote,
-                _logger);
+                quote);
 
             if (limitsValidationResult.Error == OrderLimitValidationError.OneTimeLimit)
             {

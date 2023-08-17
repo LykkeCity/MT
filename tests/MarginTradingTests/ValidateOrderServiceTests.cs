@@ -3,6 +3,7 @@
 
 using System;
 using Autofac;
+using Common.Log;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -11,6 +12,7 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Common.Services;
 using MarginTradingTests.Helpers;
 using MarginTradingTests.Services;
 using Moq;
@@ -39,6 +41,7 @@ namespace MarginTradingTests
             _assetPairsCache = Container.Resolve<IAssetPairsCache>();
             _me = new FakeMatchingEngine(1);
             _tradingEngine = Container.Resolve<ITradingEngine>();
+            LogLocator.CommonLog = Mock.Of<ILog>();
         }
 
         [Test]
@@ -880,10 +883,10 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(OrderDirectionContract.Buy, 16, true)]
-        [TestCase(OrderDirectionContract.Sell, 24, true)]
-        [TestCase(OrderDirectionContract.Buy, 17, false)]
-        [TestCase(OrderDirectionContract.Sell, 25, false)]
+        [TestCase(OrderDirectionContract.Buy, 18, true)]
+        [TestCase(OrderDirectionContract.Sell, 22, true)]
+        [TestCase(OrderDirectionContract.Buy, 19, false)]
+        [TestCase(OrderDirectionContract.Sell, 23, false)]
         
         public void MaxPositionNotionalLimit_Validation_Works_As_Expected_For_Not_ForceOpen_With_Opposite_Positions(
             OrderDirectionContract direction,
@@ -931,8 +934,8 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(21, true)]
-        [TestCase(22, false)]
+        [TestCase(19, true)]
+        [TestCase(20, false)]
         public void MaxPositionNotionalLimit_Validation_When_Both_Notionals_Before_And_After_Over_Limit(
             decimal volume,
             bool isValid)

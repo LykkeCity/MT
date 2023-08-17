@@ -5,9 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using Lykke.Common.Log;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Orders;
-using Microsoft.Extensions.Logging;
+using MarginTrading.Common.Services;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
@@ -36,8 +37,7 @@ namespace MarginTrading.Backend.Core
             decimal? maxPositionNotional,
             int assetContractSize,
             ICollection<Position> existingPositions,
-            InstrumentBidAskPair quote,
-            ILogger logger)
+            InstrumentBidAskPair quote)
         {
             // TODO: this validation is probably not related to limits validation
             if (!_orderFulfillmentPlan.RequiresPositionOpening)
@@ -88,12 +88,12 @@ namespace MarginTrading.Backend.Core
                     notionalBefore,
                     notionalAfter
                 };
-                logger.LogInformation($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
+                LogLocator.CommonLog.Info($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
                 if (notionalAfter > maxPositionNotional && notionalAfter >= notionalBefore)
                 {
-                    logger.LogWarning($"Temp log for MaxPositionNotional: " +
-                                      $"notionalAfter > maxPositionNotional = {notionalAfter > maxPositionNotional}, " +
-                                      $"notionalAfter >= notionalBefore = {notionalAfter >= notionalBefore}");
+                    LogLocator.CommonLog.Warning($"Temp log for MaxPositionNotional: " +
+                                              $"notionalAfter > maxPositionNotional = {notionalAfter > maxPositionNotional}, " +
+                                              $"notionalAfter >= notionalBefore = {notionalAfter >= notionalBefore}");
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
             }
