@@ -44,6 +44,8 @@ namespace MarginTrading.Backend.Contracts.ErrorCodes
         /// There is no liquidity for the instrument
         /// </summary>
         public const string InstrumentNoLiquidity = "NO_LIQUIDITY";
+
+        public const string MaxPositionNotionalLimit = "MAX_POSITION_NOTIONAL_LIMIT";
         
         /// <summary>
         /// Multiple reasons with internal error code

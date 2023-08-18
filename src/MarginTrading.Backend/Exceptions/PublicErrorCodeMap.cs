@@ -60,6 +60,7 @@ namespace MarginTrading.Backend.Exceptions
             {
                 OrderRejectReason.InstrumentTradingDisabled => ValidationErrorCodes.InstrumentTradingDisabled,
                 OrderRejectReason.NoLiquidity => ValidationErrorCodes.InstrumentNoLiquidity,
+                OrderRejectReason.MaxPositionNotionalLimit => ValidationErrorCodes.MaxPositionNotionalLimit,
                 _ => ValidationErrorCodes.InvalidInstrument
             };
 
