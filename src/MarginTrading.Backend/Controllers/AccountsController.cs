@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Account;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Services;
@@ -67,7 +66,7 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         [HttpGet]
         [Route("stats/by-pages")]
-        public Task<PaginatedResponseContract<AccountStatContract>> GetAllAccountStatsByPages(
+        public Task<Lykke.Contracts.Responses.PaginatedResponse<AccountStatContract>> GetAllAccountStatsByPages(
             int? skip = null, int? take = null)
         {
             if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
@@ -203,11 +202,11 @@ namespace MarginTrading.Backend.Controllers
             });
         }
 
-        private async Task<PaginatedResponseContract<AccountStatContract>> Convert(PaginatedResponse<MarginTradingAccount> accounts)
+        private async Task<Lykke.Contracts.Responses.PaginatedResponse<AccountStatContract>> Convert(PaginatedResponse<MarginTradingAccount> accounts)
         {
             var accountsInLiquidation = await _accountsCacheService.GetAllInLiquidation().ToListAsync();
             
-            return new PaginatedResponseContract<AccountStatContract>(
+            return new Lykke.Contracts.Responses.PaginatedResponse<AccountStatContract>(
                 contents: accounts.Contents
                     .Select(x => x.ConvertToContract(accountsInLiquidation.Contains(x)))
                     .ToList(),

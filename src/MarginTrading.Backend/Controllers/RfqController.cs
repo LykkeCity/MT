@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using MarginTrading.Backend.Contracts;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Rfq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,14 +29,14 @@ namespace MarginTrading.Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<PaginatedResponseContract<RfqContract>> GetAsync(
+        public async Task<Lykke.Contracts.Responses.PaginatedResponse<RfqContract>> GetAsync(
             [FromQuery] ListRfqRequest listRfqRequest,
             [FromQuery] int skip = 0,
             [FromQuery] int take = 20)
         {
             var result = await _rfqService.GetAsync(listRfqRequest.ToFilter(), skip, take);
 
-            return new PaginatedResponseContract<RfqContract>(
+            return new Lykke.Contracts.Responses.PaginatedResponse<RfqContract>(
                 result.Contents.Select(rfq => rfq.ToContract()).ToList(),
                 skip,
                 result.Contents.Count,

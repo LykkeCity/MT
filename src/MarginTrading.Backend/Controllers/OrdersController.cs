@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
@@ -501,7 +500,7 @@ namespace MarginTrading.Backend.Controllers
         /// Get open orders with optional filtering and pagination. Sorted descending by default.
         /// </summary>
         [HttpGet, Route("by-pages")]
-        public Task<PaginatedResponseContract<OrderContract>> ListAsyncByPages(
+        public Task<Lykke.Contracts.Responses.PaginatedResponse<OrderContract>> ListAsyncByPages(
             [FromQuery] string accountId = null,
             [FromQuery] string assetPairId = null, [FromQuery] string parentPositionId = null,
             [FromQuery] string parentOrderId = null,
@@ -539,7 +538,7 @@ namespace MarginTrading.Backend.Controllers
             var filtered = (take == null ? orderList : orderList.Skip(skip.Value))
                 .Take(PaginationHelper.GetTake(take)).ToList();
 
-            return Task.FromResult(new PaginatedResponseContract<OrderContract>(
+            return Task.FromResult(new Lykke.Contracts.Responses.PaginatedResponse<OrderContract>(
                 contents: filtered.Select(o => o.ConvertToContract(_ordersCache)).ToList(),
                 start: skip ?? 0,
                 size: filtered.Count,
