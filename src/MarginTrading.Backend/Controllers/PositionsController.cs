@@ -9,7 +9,6 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
@@ -183,7 +182,7 @@ namespace MarginTrading.Backend.Controllers
         /// Get positions with optional filtering and pagination
         /// </summary>
         [HttpGet, Route("by-pages")]
-        public Task<PaginatedResponseContract<OpenPositionContract>> ListAsyncByPages(string accountId = null,
+        public Task<Lykke.Contracts.Responses.PaginatedResponse<OpenPositionContract>> ListAsyncByPages(string accountId = null,
             string assetPairId = null, int? skip = null, int? take = null)
         {
             if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
@@ -208,7 +207,7 @@ namespace MarginTrading.Backend.Controllers
             var filtered = (take == null ? positionList : positionList.Skip(skip.Value))
                 .Take(PaginationHelper.GetTake(take)).ToList();
 
-            return Task.FromResult(new PaginatedResponseContract<OpenPositionContract>(
+            return Task.FromResult(new Lykke.Contracts.Responses.PaginatedResponse<OpenPositionContract>(
                 contents: filtered.Select(x => x.ConvertToContract(_ordersCache)).ToList(),
                 start: skip ?? 0,
                 size: filtered.Count,
