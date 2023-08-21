@@ -5,11 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Lykke.Common.Log;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Common.Services;
-using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
 {
@@ -28,8 +25,10 @@ namespace MarginTrading.Backend.Core
         /// </summary>
         /// <param name="oneTimeLimit">Configured limit for the deal on asset level</param>
         /// <param name="totalLimit">Configured limit for total positions on asset level</param>
+        /// <param name="maxPositionNotional">Configured limit for max position notional</param>
         /// <param name="assetContractSize">Asset contract size</param>
         /// <param name="existingPositions">Existing open positions for the asset</param>
+        /// <param name="quote">Quote with bid/ask prices</param>
         /// <returns></returns>
         [Pure]
         public Result<bool, OrderLimitValidationError> SatisfiesLimits(decimal oneTimeLimit,
@@ -78,22 +77,8 @@ namespace MarginTrading.Backend.Core
                             sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
                             (unfulfilledAbsVolume + oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume) * priceSameDirection
                         ) * fxRate;
-                var tempLogObj = new
-                {
-                    sameAsOrderDirectionPositionsAbsVolume,
-                    oppositeAsOrderDirectionPositionsAbsVolume,
-                    fxRate,
-                    priceSameDirection,
-                    priceOppositeDirection,
-                    notionalBefore,
-                    notionalAfter
-                };
-                LogLocator.CommonLog.Info($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
                 if (notionalAfter > maxPositionNotional && notionalAfter >= notionalBefore)
                 {
-                    LogLocator.CommonLog.Warning($"Temp log for MaxPositionNotional: " +
-                                              $"notionalAfter > maxPositionNotional = {notionalAfter > maxPositionNotional}, " +
-                                              $"notionalAfter >= notionalBefore = {notionalAfter >= notionalBefore}");
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
             }
