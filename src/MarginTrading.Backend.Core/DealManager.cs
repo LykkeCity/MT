@@ -67,7 +67,7 @@ namespace MarginTrading.Backend.Core
                 var oppositeAsOrderDirectionPositionsAbsVolume = existingPositions
                     .Where(o => o.Direction == order.Direction.GetClosePositionDirection())
                     .Sum(o => Math.Abs(o.Volume));
-                var fxRate = 1 / order.FxRate;
+                var fxRate = order.FxRate;
                 var priceSameDirection = quote.GetPriceForOrderDirection(order.Direction);
                 var priceOppositeDirection = quote.GetPriceForOrderDirection(order.Direction.GetOpositeDirection());
                 
