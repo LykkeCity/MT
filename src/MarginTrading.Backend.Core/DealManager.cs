@@ -70,21 +70,17 @@ namespace MarginTrading.Backend.Core
                 var oppositeAsOrderDirectionPositionsAbsVolume = existingPositions
                     .Where(o => o.Direction == order.Direction.GetClosePositionDirection())
                     .Sum(o => Math.Abs(o.Volume));
-                var fxRate = 1 / order.FxRate;
                 var priceSameDirection = quote.GetPriceForOrderDirection(order.Direction);
                 var priceOppositeDirection = quote.GetPriceForOrderDirection(order.Direction.GetOpositeDirection());
                 
-                var notionalBefore = (sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
-                                      oppositeAsOrderDirectionPositionsAbsVolume * priceSameDirection) * fxRate;
-                var notionalAfter = (
-                            sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
-                            (unfulfilledAbsVolume + oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume) * priceSameDirection
-                        ) * fxRate;
+                var notionalBefore = sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
+                                      oppositeAsOrderDirectionPositionsAbsVolume * priceSameDirection;
+                var notionalAfter = sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
+                            (unfulfilledAbsVolume + oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume) * priceSameDirection;
                 var tempLogObj = new
                 {
                     sameAsOrderDirectionPositionsAbsVolume,
                     oppositeAsOrderDirectionPositionsAbsVolume,
-                    fxRate,
                     priceSameDirection,
                     priceOppositeDirection,
                     notionalBefore,
