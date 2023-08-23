@@ -70,14 +70,12 @@ namespace MarginTrading.Backend.Core
                 var fxRate = order.FxRate;
                 var priceSameDirection = quote.GetPriceForOrderDirection(order.Direction);
                 var priceOppositeDirection = quote.GetPriceForOrderDirection(order.Direction.GetOpositeDirection());
-                
-                var notionalBefore = (sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
+                var notionalBeforeEur = (sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
                                       oppositeAsOrderDirectionPositionsAbsVolume * priceSameDirection) * fxRate;
-                var notionalAfter = (
-                            sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
-                            (unfulfilledAbsVolume + oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume) * priceSameDirection
-                        ) * fxRate;
-                if (notionalAfter > maxPositionNotional && notionalAfter >= notionalBefore)
+                var notionalDeltaEur = (unfulfilledAbsVolume * priceOppositeDirection -
+                                        oppositePositionsToBeClosedAbsVolume * priceSameDirection) * fxRate;
+                var notionalAfterEur = notionalBeforeEur + notionalDeltaEur;
+                if (notionalAfterEur > maxPositionNotional && notionalAfterEur >= notionalBeforeEur)
                 {
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
