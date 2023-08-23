@@ -851,10 +851,10 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(OrderDirectionContract.Buy, 9, true)]
-        [TestCase(OrderDirectionContract.Sell, 11, true)]
-        [TestCase(OrderDirectionContract.Buy, 10, false)]
-        [TestCase(OrderDirectionContract.Sell, 12, false)]
+        [TestCase(OrderDirectionContract.Buy, 11, true)]
+        [TestCase(OrderDirectionContract.Sell, 9, true)]
+        [TestCase(OrderDirectionContract.Buy, 12, false)]
+        [TestCase(OrderDirectionContract.Sell, 10, false)]
         
         public void MaxPositionNotionalLimit_Validation_Works_As_Expected_For_ForceOpen(
             OrderDirectionContract direction,
@@ -883,10 +883,10 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(OrderDirectionContract.Buy, 18, true)]
-        [TestCase(OrderDirectionContract.Sell, 22, true)]
-        [TestCase(OrderDirectionContract.Buy, 19, false)]
-        [TestCase(OrderDirectionContract.Sell, 23, false)]
+        [TestCase(OrderDirectionContract.Buy, 20, true)]
+        [TestCase(OrderDirectionContract.Sell, 20, true)]
+        [TestCase(OrderDirectionContract.Buy, 21, false)]
+        [TestCase(OrderDirectionContract.Sell, 21, false)]
         
         public void MaxPositionNotionalLimit_Validation_Works_As_Expected_For_Not_ForceOpen_With_Opposite_Positions(
             OrderDirectionContract direction,
@@ -915,10 +915,10 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(OrderDirectionContract.Buy, 18, true)]
-        [TestCase(OrderDirectionContract.Sell, 22, true)]
-        [TestCase(OrderDirectionContract.Buy, 19, false)]
-        [TestCase(OrderDirectionContract.Sell, 23, false)]
+        [TestCase(OrderDirectionContract.Buy, 22, true)]
+        [TestCase(OrderDirectionContract.Sell, 18, true)]
+        [TestCase(OrderDirectionContract.Buy, 23, false)]
+        [TestCase(OrderDirectionContract.Sell, 19, false)]
         
         public void MaxPositionNotionalLimit_Validation_Works_As_Expected_For_Not_ForceOpen_Without_Opposite_Positions(
             OrderDirectionContract direction,
@@ -934,8 +934,8 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(19, true)]
-        [TestCase(20, false)]
+        [TestCase(18, true)]
+        [TestCase(19, false)]
         public void MaxPositionNotionalLimit_Validation_When_Both_Notionals_Before_And_After_Over_Limit(
             decimal volume,
             bool isValid)
