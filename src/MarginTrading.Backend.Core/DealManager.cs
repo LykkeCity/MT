@@ -70,28 +70,30 @@ namespace MarginTrading.Backend.Core
                 var oppositeAsOrderDirectionPositionsAbsVolume = existingPositions
                     .Where(o => o.Direction == order.Direction.GetClosePositionDirection())
                     .Sum(o => Math.Abs(o.Volume));
+                var fxRate = order.FxRate;
                 var priceSameDirection = quote.GetPriceForOrderDirection(order.Direction);
                 var priceOppositeDirection = quote.GetPriceForOrderDirection(order.Direction.GetOpositeDirection());
-                
-                var notionalBefore = sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
-                                      oppositeAsOrderDirectionPositionsAbsVolume * priceSameDirection;
-                var notionalAfter = sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
-                            (unfulfilledAbsVolume + oppositeAsOrderDirectionPositionsAbsVolume - oppositePositionsToBeClosedAbsVolume) * priceSameDirection;
+                var notionalBeforeEur = (sameAsOrderDirectionPositionsAbsVolume * priceOppositeDirection +
+                                      oppositeAsOrderDirectionPositionsAbsVolume * priceSameDirection) * fxRate;
+                var notionalDeltaEur = (unfulfilledAbsVolume * priceOppositeDirection -
+                                        oppositePositionsToBeClosedAbsVolume * priceSameDirection) * fxRate;
+                var notionalAfterEur = notionalBeforeEur + notionalDeltaEur;
                 var tempLogObj = new
                 {
                     sameAsOrderDirectionPositionsAbsVolume,
                     oppositeAsOrderDirectionPositionsAbsVolume,
                     priceSameDirection,
                     priceOppositeDirection,
-                    notionalBefore,
-                    notionalAfter
+                    notionalBeforeEur,
+                    notionalDeltaEur,
+                    notionalAfterEur
                 };
                 LogLocator.CommonLog.Info($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
-                if (notionalAfter > maxPositionNotional && notionalAfter >= notionalBefore)
+                if (notionalAfterEur > maxPositionNotional && notionalAfterEur >= notionalBeforeEur)
                 {
                     LogLocator.CommonLog.Warning($"Temp log for MaxPositionNotional: " +
-                                                 $"notionalAfter > maxPositionNotional = {notionalAfter > maxPositionNotional}, " +
-                                                 $"notionalAfter >= notionalBefore = {notionalAfter >= notionalBefore}");
+                                                 $"notionalAfter > maxPositionNotional = {notionalAfterEur > maxPositionNotional}, " +
+                                                 $"notionalAfter >= notionalBefore = {notionalAfterEur >= notionalBeforeEur}");
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
             }
