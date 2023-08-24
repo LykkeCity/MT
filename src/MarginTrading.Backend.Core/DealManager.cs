@@ -62,6 +62,7 @@ namespace MarginTrading.Backend.Core
             // Validates max position notional from product settings.
             // Cannot overcome after closing opposite positions (if any) and placing unfulfilled ones.
             // The only exception when notional 'after' is less than notional 'before' (can overcome in this case).
+            // For more details read https://lykke-snow.atlassian.net/wiki/spaces/MTT/pages/1229652021/Orders#Trading-volume-Notional-and-Margin
             if (maxPositionNotional.HasValue)
             {
                 var sameAsOrderDirectionPositionsAbsVolume = existingPositions
