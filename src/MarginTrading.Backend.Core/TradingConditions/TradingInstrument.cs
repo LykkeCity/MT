@@ -32,6 +32,7 @@ namespace MarginTrading.Backend.Core.TradingConditions
         // TODO: Probably, MarginRate should be used instead of margin init and margin maintenance. This value comes from
         // asset service and is the source whereas margin init and maring maintenance are calculated based on leverage
         public MarginRate MarginRate { get; set; }
+        public decimal? MaxPositionNotional { get; set; }
 
         public (string, string) GetKey() => (TradingConditionId, Instrument);
 

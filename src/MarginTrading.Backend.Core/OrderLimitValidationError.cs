@@ -7,6 +7,7 @@ namespace MarginTrading.Backend.Core
     {
         None,
         OneTimeLimit,
-        TotalLimit
+        TotalLimit,
+        MaxPositionNotionalLimit
     }
 }

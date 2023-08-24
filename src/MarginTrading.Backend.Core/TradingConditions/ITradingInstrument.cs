@@ -30,6 +30,7 @@ namespace MarginTrading.Backend.Core.TradingConditions
         Leverage InitLeverage { get; }
         Leverage MaintenanceLeverage { get; }
         MarginRate MarginRate { get; }
+        decimal? MaxPositionNotional { get; }
 
         public decimal GetMarginInitByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck);
         public decimal GetMarginMaintenanceByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck);

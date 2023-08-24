@@ -137,6 +137,19 @@ namespace MarginTradingTests
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
+                    Instrument = "BYNUSD",
+                    Delta = 30,
+                    ShortPosition = true,
+                    DealMaxLimit = 1000000,
+                    PositionLimit = 10000000,
+                    MaxPositionNotional = 1000,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
+                },
+                new TradingInstrumentContract
+                {
+                    TradingConditionId = TradingConditionId,
                     Instrument = "EURRUB",
                     Delta = 30,
                     ShortPosition = true,
@@ -266,6 +279,16 @@ namespace MarginTradingTests
         {
             var assetPairs = new List<AssetPairContract>
             {
+                new AssetPairContract
+                {
+                    Id = "BYNUSD",
+                    Name = "BYNUSD",
+                    Accuracy = 5,
+                    BaseAssetId = "BYN",
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket,
+                    ContractSize = 1
+                },
                 new AssetPairContract
                 {
                     Id = "EURUSD",

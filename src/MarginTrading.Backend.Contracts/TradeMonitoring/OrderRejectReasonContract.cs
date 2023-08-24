@@ -27,5 +27,6 @@ namespace MarginTrading.Backend.Contracts.TradeMonitoring
         MaxPositionLimit,
         MinOrderSizeLimit,
         MaxOrderSizeLimit,
+        MaxPositionNotionalLimit,
     }
 }

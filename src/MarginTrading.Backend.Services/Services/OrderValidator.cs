@@ -600,12 +600,16 @@ namespace MarginTrading.Backend.Services
                 .GetPositionsByInstrumentAndAccount(
                     orderFulfillmentPlan.Order.AssetPairId,
                     orderFulfillmentPlan.Order.AccountId);
+
+            var quote = _quoteCashService.GetQuote(orderFulfillmentPlan.Order.AssetPairId);
             
             var limitsValidationResult = new DealManager(orderFulfillmentPlan).SatisfiesLimits(
                 tradingInstrument.DealMaxLimit,
                 tradingInstrument.PositionLimit,
+                tradingInstrument.MaxPositionNotional,
                 assetPair.ContractSize,
-                existingPositions);
+                existingPositions,
+                quote);
 
             if (limitsValidationResult.Error == OrderLimitValidationError.OneTimeLimit)
             {
@@ -617,6 +621,12 @@ namespace MarginTrading.Backend.Services
             {
                 throw new OrderRejectionException(OrderRejectReason.MaxPositionLimit,
                     $"The ABSOLUTE volume of open positions is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
+            }
+
+            if (limitsValidationResult.Error == OrderLimitValidationError.MaxPositionNotionalLimit)
+            {
+                throw new OrderRejectionException(OrderRejectReason.MaxPositionNotionalLimit,
+                    $"The max positions notional is limited to {tradingInstrument.MaxPositionNotional} {tradingInstrument.Instrument}.");
             }
         }
 

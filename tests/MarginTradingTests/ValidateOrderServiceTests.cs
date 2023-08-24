@@ -3,6 +3,7 @@
 
 using System;
 using Autofac;
+using Common.Log;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -11,8 +12,10 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Common.Services;
 using MarginTradingTests.Helpers;
 using MarginTradingTests.Services;
+using Moq;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -26,6 +29,7 @@ namespace MarginTradingTests
         private OrdersCache _ordersCache;
         private IAssetPairsCache _assetPairsCache;
         private IMatchingEngineBase _me;
+        private ITradingEngine _tradingEngine;
 
         [SetUp]
         public void Setup()
@@ -36,6 +40,8 @@ namespace MarginTradingTests
             _ordersCache = Container.Resolve<OrdersCache>();
             _assetPairsCache = Container.Resolve<IAssetPairsCache>();
             _me = new FakeMatchingEngine(1);
+            _tradingEngine = Container.Resolve<ITradingEngine>();
+            LogLocator.CommonLog = Mock.Of<ILog>();
         }
 
         [Test]
@@ -841,6 +847,153 @@ namespace MarginTradingTests
 
                 Assert.That(ex2.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
                 StringAssert.Contains("against related", ex1.Message);
+            }
+        }
+
+        [Test]
+        [TestCase(OrderDirectionContract.Buy, 11, true)]
+        [TestCase(OrderDirectionContract.Sell, 9, true)]
+        [TestCase(OrderDirectionContract.Buy, 12, false)]
+        [TestCase(OrderDirectionContract.Sell, 10, false)]
+        
+        public void MaxPositionNotionalLimit_Validation_Works_As_Expected_For_ForceOpen(
+            OrderDirectionContract direction,
+            decimal volume,
+            bool isValid)
+        {
+            const string instrument = "BYNUSD";
+
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 45, Ask = 55};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var existingLong = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 5, It.IsAny<decimal>());
+
+            var existingShort = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, -5, It.IsAny<decimal>());
+
+            var existingOtherAcc = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 5, It.IsAny<decimal>());
+
+            _ordersCache.Positions.Add(existingLong);
+            _ordersCache.Positions.Add(existingShort);
+            _ordersCache.Positions.Add(existingOtherAcc);
+            
+            ValidateMaxPositionNotionalLimit(instrument, true, direction, volume, isValid);
+        }
+
+        [Test]
+        [TestCase(OrderDirectionContract.Buy, 20, true)]
+        [TestCase(OrderDirectionContract.Sell, 20, true)]
+        [TestCase(OrderDirectionContract.Buy, 21, false)]
+        [TestCase(OrderDirectionContract.Sell, 21, false)]
+        
+        public void MaxPositionNotionalLimit_Validation_Works_As_Expected_For_Not_ForceOpen_With_Opposite_Positions(
+            OrderDirectionContract direction,
+            decimal volume,
+            bool isValid)
+        {
+            const string instrument = "BYNUSD";
+
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 45, Ask = 55};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var existingLong = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 11, It.IsAny<decimal>());
+
+            var existingShort = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, -9, It.IsAny<decimal>());
+
+            var existingOtherAcc = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 12, It.IsAny<decimal>());
+
+            _ordersCache.Positions.Add(existingLong);
+            _ordersCache.Positions.Add(existingShort);
+            _ordersCache.Positions.Add(existingOtherAcc);
+
+            ValidateMaxPositionNotionalLimit(instrument, false, direction, volume, isValid);
+        }
+
+        [Test]
+        [TestCase(OrderDirectionContract.Buy, 22, true)]
+        [TestCase(OrderDirectionContract.Sell, 18, true)]
+        [TestCase(OrderDirectionContract.Buy, 23, false)]
+        [TestCase(OrderDirectionContract.Sell, 19, false)]
+        
+        public void MaxPositionNotionalLimit_Validation_Works_As_Expected_For_Not_ForceOpen_Without_Opposite_Positions(
+            OrderDirectionContract direction,
+            decimal volume,
+            bool isValid)
+        {
+            const string instrument = "BYNUSD";
+
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 45, Ask = 55};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            ValidateMaxPositionNotionalLimit(instrument, false, direction, volume, isValid);
+        }
+
+        [Test]
+        [TestCase(18, true)]
+        [TestCase(19, false)]
+        public void MaxPositionNotionalLimit_Validation_When_Both_Notionals_Before_And_After_Over_Limit(
+            decimal volume,
+            bool isValid)
+        {
+            const string instrument = "BYNUSD";
+
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 50, Ask = 60};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var existingLong = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10, It.IsAny<decimal>());
+
+            var existingShort = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, -10, It.IsAny<decimal>());
+
+            _ordersCache.Positions.Add(existingLong);
+            _ordersCache.Positions.Add(existingShort);
+
+            ValidateMaxPositionNotionalLimit(instrument, false, OrderDirectionContract.Sell, volume, isValid);
+        }
+
+        private void ValidateMaxPositionNotionalLimit(
+            string instrument,
+            bool forceOpen,
+            OrderDirectionContract direction,
+            decimal volume,
+            bool isValid)
+        {
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                Direction = direction,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = volume,
+                ForceOpen = forceOpen
+            };
+
+            if (isValid)
+            {
+                Assert.DoesNotThrow(
+                    () =>
+                    {
+                        var order = _orderValidator.ValidateRequestAndCreateOrders(request).Result.order;
+                        _orderValidator.PreTradeValidate(_tradingEngine.MatchOnExistingPositions(order), _me);
+                    });
+            }
+            else
+            {
+                var ex = Assert.ThrowsAsync<OrderRejectionException>(
+                    async () =>
+                    {
+                        var order = (await _orderValidator.ValidateRequestAndCreateOrders(request)).order;
+                        _orderValidator.PreTradeValidate(_tradingEngine.MatchOnExistingPositions(order), _me);
+
+                    });
+
+                Assert.That(ex?.RejectReason == OrderRejectReason.MaxPositionNotionalLimit);
             }
         }
 
