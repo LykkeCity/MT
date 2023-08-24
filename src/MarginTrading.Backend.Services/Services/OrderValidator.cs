@@ -601,12 +601,7 @@ namespace MarginTrading.Backend.Services
                     orderFulfillmentPlan.Order.AssetPairId,
                     orderFulfillmentPlan.Order.AccountId);
 
-            if (!_quoteCashService.TryGetQuoteById(
-                    orderFulfillmentPlan.Order.AssetPairId,
-                    out var quote))
-            {
-                throw new OrderRejectionException(OrderRejectReason.NoLiquidity, "Quote not found");
-            }
+            var quote = _quoteCashService.GetQuote(orderFulfillmentPlan.Order.AssetPairId);
             
             var limitsValidationResult = new DealManager(orderFulfillmentPlan).SatisfiesLimits(
                 tradingInstrument.DealMaxLimit,
