@@ -5,11 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Lykke.Common.Log;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Common.Services;
-using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
 {
@@ -78,22 +75,8 @@ namespace MarginTrading.Backend.Core
                 var notionalDeltaEur = (unfulfilledAbsVolume * priceOppositeDirection -
                                         oppositePositionsToBeClosedAbsVolume * priceSameDirection) * fxRate;
                 var notionalAfterEur = notionalBeforeEur + notionalDeltaEur;
-                var tempLogObj = new
-                {
-                    sameAsOrderDirectionPositionsAbsVolume,
-                    oppositeAsOrderDirectionPositionsAbsVolume,
-                    priceSameDirection,
-                    priceOppositeDirection,
-                    notionalBeforeEur,
-                    notionalDeltaEur,
-                    notionalAfterEur
-                };
-                LogLocator.CommonLog.Info($"Temp log for MaxPositionNotional: {JsonConvert.SerializeObject(tempLogObj)}");
                 if (notionalAfterEur > maxPositionNotional && notionalAfterEur >= notionalBeforeEur)
                 {
-                    LogLocator.CommonLog.Warning($"Temp log for MaxPositionNotional: " +
-                                                 $"notionalAfter > maxPositionNotional = {notionalAfterEur > maxPositionNotional}, " +
-                                                 $"notionalAfter >= notionalBefore = {notionalAfterEur >= notionalBeforeEur}");
                     return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.MaxPositionNotionalLimit);
                 }
             }
