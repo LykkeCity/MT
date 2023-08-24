@@ -59,6 +59,9 @@ namespace MarginTrading.Backend.Core
                 return new Result<bool, OrderLimitValidationError>(OrderLimitValidationError.TotalLimit);
             }
 
+            // Validates max position notional from product settings.
+            // Cannot overcome after closing opposite positions (if any) and placing unfulfilled ones.
+            // The only exception when notional 'after' is less than notional 'before' (can overcome in this case).
             if (maxPositionNotional.HasValue)
             {
                 var sameAsOrderDirectionPositionsAbsVolume = existingPositions
