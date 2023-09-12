@@ -72,10 +72,10 @@ namespace MarginTrading.Backend.Services
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
             IEventChannel<OrderPlacedEventArgs> orderPlacedEventChannel,
             IEventChannel<OrderExecutedEventArgs> orderClosedEventChannel,
-            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel, 
+            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
             IEventChannel<OrderChangedEventArgs> orderChangedEventChannel,
             IEventChannel<OrderExecutionStartedEventArgs> orderExecutionStartedEventChannel,
-            IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel, 
+            IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel,
             IEventChannel<OrderRejectedEventArgs> orderRejectedEventChannel,
             IOrderValidator orderValidator,
             IAccountsCacheService accountsCacheService,
@@ -126,7 +126,7 @@ namespace MarginTrading.Backend.Services
         public async Task<Order> PlaceOrderAsync(Order order)
         {
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
-            
+
             try
             {
                 if (order.OrderType != OrderType.Market)
@@ -149,7 +149,7 @@ namespace MarginTrading.Backend.Services
                 return order;
             }
         }
-        
+
         private async Task<Order> PlaceOrderByMarketPrice(Order order)
         {
             try
@@ -172,7 +172,7 @@ namespace MarginTrading.Backend.Services
 
                     position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
                 }
-                
+
                 return await ExecuteOrderByMatchingEngineAsync(order, me, true);
             }
             catch (Exception ex)
@@ -210,7 +210,7 @@ namespace MarginTrading.Backend.Services
             if (order.IsBasicPendingOrder() || !string.IsNullOrEmpty(order.ParentPositionId))
             {
                 Position parentPosition = null;
-                
+
                 if (!string.IsNullOrEmpty(order.ParentPositionId))
                 {
                     parentPosition = _ordersCache.Positions.GetPositionById(order.ParentPositionId);
@@ -366,17 +366,17 @@ namespace MarginTrading.Backend.Services
                 order.Expire(now);
                 _orderCancelledEventChannel.SendEvent(this,
                     new OrderCancelledEventArgs(order,
-                        new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
+                        new OrderCancelledMetadata { Reason = OrderCancellationReasonContract.Expired }));
                 return true;
             }
 
             return false;
         }
-        
+
         private void ChangeOrderVolumeIfNeeded(Order order)
         {
             if (!order.PositionsToBeClosed.Any()) return;
-            
+
             var netVolume = 0M;
             var rejectReason = default(OrderRejectReason?);
             foreach (var positionId in order.PositionsToBeClosed)
@@ -421,7 +421,7 @@ namespace MarginTrading.Backend.Services
                 _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
             }
         }
-        
+
         private async Task CheckStopout(Order order)
         {
             var account = _accountsCacheService.Get(order.AccountId);
@@ -456,15 +456,15 @@ namespace MarginTrading.Backend.Services
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
-            if (order.OrderType == OrderType.Market 
+            if (order.OrderType == OrderType.Market
                 || reason != OrderRejectReason.NoLiquidity
                 || order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold)
             {
                 order.Reject(reason, message, comment, _dateService.Now());
 
                 _log.WriteWarning(
-                    nameof(TradingEngine), 
-                    nameof(RejectOrder), 
+                    nameof(TradingEngine),
+                    nameof(RejectOrder),
                     new
                     {
                         order,
@@ -479,16 +479,16 @@ namespace MarginTrading.Backend.Services
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
                 order.CancelExecution(_dateService.Now());
-                
+
                 _ordersCache.Active.Add(order);
 
                 var initialAdditionalInfo = order.AdditionalInfo;
                 //to evade additional OnBehalf fee for this event
                 order.AdditionalInfo = initialAdditionalInfo.MakeNonOnBehalf();
-                
+
                 _orderChangedEventChannel.SendEvent(this,
                     new OrderChangedEventArgs(order,
-                        new OrderChangedMetadata {UpdatedProperty = OrderChangedProperty.None}));
+                        new OrderChangedMetadata { UpdatedProperty = OrderChangedProperty.None }));
 
                 order.AdditionalInfo = initialAdditionalInfo;
             }
@@ -540,7 +540,7 @@ namespace MarginTrading.Backend.Services
                     {
                         var me = _meRouter.GetMatchingEngineForExecution(order);
                         var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, orderFulfillmentPlan.UnfulfilledVolume);
-                        
+
                         if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
                         {
                             _ordersCache.Active.Remove(order);
@@ -558,7 +558,7 @@ namespace MarginTrading.Backend.Services
             {
                 OperationIntervalEnd = operationIntervalEnd,
             });
-            
+
             var pendingOrders = _ordersCache.Active.GetAllOrders();
             var now = _dateService.Now();
 
@@ -572,24 +572,24 @@ namespace MarginTrading.Backend.Services
                         this,
                         new OrderCancelledEventArgs(
                             order,
-                            new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
+                            new OrderCancelledMetadata { Reason = OrderCancellationReasonContract.Expired }));
                 }
             }
         }
 
-//        private void ProcessPendingOrdersMarginRecalc(string instrument)
-//        {
-//            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
-//
-//            foreach (var pendingOrder in pendingOrders)
-//            {
-//                pendingOrder.UpdatePendingOrderMargin();
-//            }
-//        }
+        //        private void ProcessPendingOrdersMarginRecalc(string instrument)
+        //        {
+        //            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
+        //
+        //            foreach (var pendingOrder in pendingOrders)
+        //            {
+        //                pendingOrder.UpdatePendingOrderMargin();
+        //            }
+        //        }
 
         #endregion
 
-        
+
         #region Positions
 
         private void UpdatePositionsFxRates(InstrumentBidAskPair quote)
@@ -606,8 +606,8 @@ namespace MarginTrading.Backend.Services
         private async Task ProcessPositions(InstrumentBidAskPair quote, bool allowCommitStopOut)
         {
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote);
-            
-            if(allowCommitStopOut)
+
+            if (allowCommitStopOut)
             {
                 foreach (var account in stopoutAccounts)
                     await CommitStopOut(account, quote);
@@ -641,7 +641,7 @@ namespace MarginTrading.Backend.Services
                         if (orderbookPrice.HasValue)
                             closePrice = orderbookPrice.Value;
                     }
-                    
+
                     if (closePrice != 0)
                     {
                         position.UpdateClosePriceWithoutAccountUpdate(closePrice);
@@ -649,7 +649,7 @@ namespace MarginTrading.Backend.Services
                         UpdateTrailingStops(position);
                     }
                 }
-                
+
                 account.CacheNeedsToBeUpdated();
 
                 var newAccountLevel = account.GetAccountLevel();
@@ -662,7 +662,7 @@ namespace MarginTrading.Backend.Services
                     _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
                 }
             }
-            
+
             return accountsWithStopout;
         }
 
@@ -673,7 +673,7 @@ namespace MarginTrading.Backend.Services
                 if (_ordersCache.TryGetOrderById(trailingOrderId, out var trailingOrder))
                 {
                     var oldPrice = trailingOrder.Price;
-                    
+
                     trailingOrder.UpdateTrailingStopWithClosePrice(position.ClosePrice, () => _dateService.Now());
 
                     if (oldPrice != trailingOrder.Price)
@@ -691,7 +691,7 @@ namespace MarginTrading.Backend.Services
         {
             if (await _accountsCacheService.IsInLiquidation(account.Id))
                 return;
-                
+
             var liquidationType = account.GetUsedMargin() == account.GetCurrentlyUsedMargin()
                 ? LiquidationType.Normal
                 : LiquidationType.Mco;
@@ -714,11 +714,11 @@ namespace MarginTrading.Backend.Services
             var me = closeData.MatchingEngine ??
                      _meRouter.GetMatchingEngineForClose(closeData.OpenMatchingEngineId);
 
-            var initialParameters = await _orderValidator.GetOrderInitialParameters(closeData.AssetPairId, 
+            var initialParameters = await _orderValidator.GetOrderInitialParameters(closeData.AssetPairId,
                 closeData.AccountId);
 
             var account = _accountsCacheService.Get(closeData.AccountId);
-            
+
             var positionIds = new List<string>();
             var now = _dateService.Now();
             var volume = 0M;
@@ -731,14 +731,14 @@ namespace MarginTrading.Backend.Services
                     .Where(p => p.Value.Status == PositionStatus.Active)
                     .ToSortedList(x => x.Key, x => x.Value);
             }
-            
+
             foreach (var position in positions)
             {
                 var (closingStarted, reasonIfNot) = position.Value.TryStartClosing(now,
                     PositionCloseReason.Close,
                     closeData.Originator,
                     string.Empty);
-                
+
                 closingStarted = closingStarted || position.Value.Status == PositionStatus.Closing;
 
                 if (!closingStarted)
@@ -746,8 +746,8 @@ namespace MarginTrading.Backend.Services
                     _log.WriteWarning(nameof(ClosePositionsAsync), position.ToJson(),
                         $"Couldn't start position closing due to: {reasonIfNot}");
                 }
-                
-                if (closingStarted 
+
+                if (closingStarted
                     ||
                     closeData.Modality == OrderModality.Liquidation_MarginCall
                     ||
@@ -764,10 +764,10 @@ namespace MarginTrading.Backend.Services
                 {
                     return (PositionCloseResult.ClosingIsInProgress, null);
                 }
-                
+
                 throw new Exception("No active positions to close");
             }
-            
+
             var order = new Order(initialParameters.Id,
                 initialParameters.Code,
                 closeData.AssetPairId,
@@ -796,11 +796,11 @@ namespace MarginTrading.Backend.Services
                 closeData.AdditionalInfo,
                 positionIds,
                 closeData.ExternalProviderId);
-            
+
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
 
             order = await ExecuteOrderByMatchingEngineAsync(order, me, true, closeData.Modality);
-            
+
             if (order.IsExecutionNotStarted)
             {
                 if (specialLiquidationEnabled && order.RejectReason == OrderRejectReason.NoLiquidity)
@@ -814,7 +814,7 @@ namespace MarginTrading.Backend.Services
                         AdditionalInfo = order.AdditionalInfo,
                         OriginatorType = order.Originator
                     };
-                    
+
                     _cqrsSender.SendCommandToSelf(command);
 
                     return (PositionCloseResult.ClosingStarted, null);
@@ -823,12 +823,12 @@ namespace MarginTrading.Backend.Services
                 foreach (var position in closeData.Positions)
                 {
                     if (position.Value.Status == PositionStatus.Closing)
-                        position.Value.CancelClosing(_dateService.Now());    
+                        position.Value.CancelClosing(_dateService.Now());
                 }
-                    
+
                 _log.WriteWarning(nameof(ClosePositionsAsync), order,
                     $"Order {order.Id} was not executed. Closing of positions canceled");
-                    
+
                 throw new Exception($"Positions were not closed. Reason: {order.RejectReasonText}");
             }
 
@@ -836,15 +836,15 @@ namespace MarginTrading.Backend.Services
         }
 
         [ItemNotNull]
-        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync( 
-            IList<Position> positions, 
+        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(
+            IList<Position> positions,
             [NotNull] string operationId,
             OriginatorType originator,
             PositionDirection? direction = null,
             string additionalInfo = null)
         {
-            # region Validations
-            
+            #region Validations
+
             if (positions == null || !positions.Any())
             {
                 return new Dictionary<string, (PositionCloseResult, Order)>();
@@ -877,9 +877,9 @@ namespace MarginTrading.Backend.Services
                     "Positions list contains elements of multiple instruments",
                     PositionGroupValidationError.MultipleInstruments);
             }
-            
+
             #endregion
-            
+
             var positionGroups = positions
                 .Where(p => p.Direction == direction)
                 // grouping is required to optimize price requests but in fact we'll always have a SINGLE group here
@@ -894,7 +894,7 @@ namespace MarginTrading.Backend.Services
                     additionalInfo,
                     gr.Key.EquivalentAsset,
                     string.Empty));
-            
+
             var result = new Dictionary<string, (PositionCloseResult, Order)>();
 
             foreach (var positionGroup in positionGroups)
@@ -928,8 +928,8 @@ namespace MarginTrading.Backend.Services
         }
 
         [ItemNotNull]
-        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId, 
-            string assetPairId, 
+        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId,
+            string assetPairId,
             PositionDirection? direction,
             OriginatorType originator,
             string additionalInfo)
@@ -940,13 +940,13 @@ namespace MarginTrading.Backend.Services
             }
 
             bool closeAll = string.IsNullOrEmpty(assetPairId);
-            
+
             var operationId = _identityGenerator.GenerateGuid();
             if (closeAll)
             {
                 return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);
             }
-            
+
             // Closing group of positions (asset and direction are always defined)
             // let's ensure direction is always passed in
             if (!direction.HasValue)
@@ -957,7 +957,7 @@ namespace MarginTrading.Backend.Services
             }
 
             var mandatoryDirection = direction.Value;
-            
+
             var positions = _ordersCache
                 .Positions
                 .GetPositionsByInstrumentAndAccount(assetPairId, accountId)
@@ -972,7 +972,7 @@ namespace MarginTrading.Backend.Services
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
-            
+
             var positionGroups = positionsToClose
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p.OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
                 .Select(gr => new PositionsCloseData(
@@ -987,7 +987,7 @@ namespace MarginTrading.Backend.Services
                     "Special Liquidation",
                     me,
                     modality));
-            
+
             var failedPositionIds = new List<string>();
 
             var closeOrderList = (await Task.WhenAll(positionGroups
@@ -1003,7 +1003,7 @@ namespace MarginTrading.Backend.Services
                         return default;
                     }
                 }))).Where(x => x != default).ToArray();
-            
+
             if (failedPositionIds.Any())
             {
                 throw new Exception($"Special liquidation failed to close these positions: {string.Join(", ", failedPositionIds)}");
@@ -1027,7 +1027,7 @@ namespace MarginTrading.Backend.Services
             }
             else
             {
-                throw new OrderValidationException($"Order in state {order.Status} can not be cancelled", 
+                throw new OrderValidationException($"Order in state {order.Status} can not be cancelled",
                     OrderValidationError.IncorrectStatusWhenCancel);
             }
 
@@ -1058,7 +1058,7 @@ namespace MarginTrading.Backend.Services
 
             _orderValidator.ValidateOrderPriceChange(order, price);
             _orderValidator.ValidateForceOpenChange(order, forceOpen);
-            
+
             await _log.WriteInfoAsync(
                 nameof(TradingEngine),
                 nameof(ChangeOrderAsync),
@@ -1068,7 +1068,7 @@ namespace MarginTrading.Backend.Services
             if (order.Price != price)
             {
                 var oldPrice = order.Price;
-            
+
                 order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, true);
 
                 var metadata = new OrderChangedMetadata
@@ -1076,14 +1076,14 @@ namespace MarginTrading.Backend.Services
                     UpdatedProperty = OrderChangedProperty.Price,
                     OldValue = oldPrice.HasValue ? oldPrice.Value.ToString("F5") : string.Empty
                 };
-            
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
             }
 
             if (forceOpen.HasValue && forceOpen.Value != order.ForceOpen)
             {
                 var oldForceOpen = order.ForceOpen;
-                
+
                 order.ChangeForceOpen(forceOpen.Value, _dateService.Now(), originator, additionalInfo);
 
                 var metadata = new OrderChangedMetadata
@@ -1104,11 +1104,11 @@ namespace MarginTrading.Backend.Services
             var order = _ordersCache.GetOrderById(orderId);
 
             _orderValidator.ValidateValidity(validity, order.OrderType);
-            
+
             if (order.Validity != validity)
             {
                 var oldValidity = order.Validity;
-            
+
                 order.ChangeValidity(validity, _dateService.Now(), originator, additionalInfo);
 
                 var metadata = new OrderChangedMetadata
@@ -1116,13 +1116,13 @@ namespace MarginTrading.Backend.Services
                     UpdatedProperty = OrderChangedProperty.Validity,
                     OldValue = oldValidity.HasValue ? oldValidity.Value.ToString("g") : "GTC"
                 };
-            
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
             }
-            
+
             await ExecutePendingOrderIfNeededAsync(order);
         }
-        
+
         public async Task RemoveOrderValidityAsync(string orderId, OriginatorType originator, string additionalInfo)
         {
             var order = _ordersCache.GetOrderById(orderId);
@@ -1130,7 +1130,7 @@ namespace MarginTrading.Backend.Services
             if (order.Validity != null)
             {
                 var oldValidity = order.Validity;
-            
+
                 order.ChangeValidity(null, _dateService.Now(), originator, additionalInfo);
 
                 var metadata = new OrderChangedMetadata
@@ -1138,10 +1138,10 @@ namespace MarginTrading.Backend.Services
                     UpdatedProperty = OrderChangedProperty.Validity,
                     OldValue = oldValidity.Value.ToString("g")
                 };
-            
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
             }
-            
+
             await ExecutePendingOrderIfNeededAsync(order);
         }
 
