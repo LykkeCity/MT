@@ -13,14 +13,17 @@ namespace MarginTrading.Backend.Services
     {
         public struct MethodStatistics
         {
-            public MethodStatistics(int callsCounter, long totalExecutionMs)
+            public MethodStatistics(int callsCounter, long totalExecutionMs, long maxExecutionMs)
             {
                 CallsCounter = callsCounter;
                 TotalExecutionMs = totalExecutionMs;
+                MaxExecutionMs = maxExecutionMs;
             }
 
             public int CallsCounter { get; }
             public long TotalExecutionMs { get; }
+            
+            public long MaxExecutionMs { get; }
         }
         
         public static readonly ConcurrentDictionary<string, MethodStatistics> Statistics =
@@ -68,8 +71,11 @@ namespace MarginTrading.Backend.Services
             
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            Statistics.AddOrUpdate(key, new MethodStatistics(1, elapsedMs),
-                (_, stats) => new MethodStatistics(stats.CallsCounter + 1, stats.TotalExecutionMs + elapsedMs));
+            Statistics.AddOrUpdate(key, new MethodStatistics(1, elapsedMs, elapsedMs),
+                (_, stats) => new MethodStatistics(
+                    stats.CallsCounter + 1,
+                    stats.TotalExecutionMs + elapsedMs,
+                    elapsedMs > stats.MaxExecutionMs ? elapsedMs : stats.MaxExecutionMs));
         }
 
         private static string GetKey(string methodName, [CanBeNull] string assetPair)
