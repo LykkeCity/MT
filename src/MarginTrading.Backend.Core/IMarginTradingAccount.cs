@@ -143,10 +143,12 @@ namespace MarginTrading.Backend.Core
         {
             if (account is MarginTradingAccount accountInstance)
             {
-                if (accountInstance.AccountFpl.ActualHash != accountInstance.AccountFpl.CalculatedHash)
-                {
-                    ContainerProvider.Container.Resolve<IAccountUpdateService>().UpdateAccount(account);
-                }
+                if (accountInstance.AccountFpl.ActualHash == accountInstance.AccountFpl.CalculatedHash)
+                    return accountInstance.AccountFpl;
+                
+                using var scope = ContainerProvider.Container.BeginLifetimeScope();
+                var svc = scope.Resolve<IAccountUpdateService>();
+                svc.UpdateAccount(accountInstance);
 
                 return accountInstance.AccountFpl;
             }
