@@ -34,11 +34,18 @@ namespace MarginTrading.Backend.Services.Events
             {
                 try
                 {
+                    var consumerName = consumer.GetType().Name;
+                    var eventName = typeof(TEventArgs).Name;
+                    
                     var assetPairId = ea is BestPriceChangeEventArgs bestPriceChangeEventArgs
                         ? bestPriceChangeEventArgs.BidAskPair.Instrument
                         : "N/A";
                     
-                    PerformanceTracker.Track(typeof(TEventArgs).Name, 
+                    assetPairId = ea is FxBestPriceChangeEventArgs fxBestPriceChangeEventArgs
+                        ? fxBestPriceChangeEventArgs.BidAskPair.Instrument
+                        : assetPairId;
+                    
+                    PerformanceTracker.Track($"{consumerName}:{eventName}", 
                         () => consumer.ConsumeEvent(sender, ea), 
                         assetPairId);
                 }
