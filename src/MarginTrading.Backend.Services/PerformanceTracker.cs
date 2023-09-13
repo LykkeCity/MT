@@ -11,6 +11,33 @@ namespace MarginTrading.Backend.Services
 {
     public static class PerformanceTracker
     {
+        public struct MethodIdentity
+        {
+            public string Owner { get; }
+            public string Name { get; }
+            [CanBeNull] public string Parameter { get; }
+            
+            public MethodIdentity(string owner, string name, [CanBeNull] string parameter)
+            {
+                if (string.IsNullOrEmpty(owner))
+                    throw new ArgumentException("Value cannot be null or empty.", nameof(owner));
+                
+                if (string.IsNullOrEmpty(name))
+                    throw new ArgumentException("Value cannot be null or empty.", nameof(name));
+                
+                Owner = owner;
+                Name = name;
+                Parameter = parameter;
+            }
+
+            public override string ToString()
+            {
+                return string.IsNullOrEmpty(Parameter)
+                    ? $"{Owner}:{Name}"
+                    : $"{Owner}:{Name}:{Parameter}";
+            }
+        }
+        
         public struct MethodStatistics
         {
             public MethodStatistics(int callsCounter, long totalExecutionMs, long maxExecutionMs)
@@ -26,18 +53,14 @@ namespace MarginTrading.Backend.Services
             public long MaxExecutionMs { get; }
         }
         
-        public static readonly ConcurrentDictionary<string, MethodStatistics> Statistics =
-            new ConcurrentDictionary<string, MethodStatistics>();
+        public static readonly ConcurrentDictionary<MethodIdentity, MethodStatistics> Statistics =
+            new ConcurrentDictionary<MethodIdentity, MethodStatistics>();
         
         public static bool Enabled { get; set; }
 
-        public static void Track(string methodName,
-            Action action,
-            [CanBeNull] string assetPair = null)
+        public static void Track(MethodIdentity methodIdentity, Action action)
         {
-            var key = GetKey(methodName, assetPair);
-
-            var t = TrackInternalAsync(key, () =>
+            var t = TrackInternalAsync(methodIdentity, () =>
             {
                 action();
                 return Task.CompletedTask;
@@ -46,16 +69,12 @@ namespace MarginTrading.Backend.Services
             t.GetAwaiter().GetResult();
         }
         
-        public static Task TrackAsync(string methodName,
-            Func<Task> action,
-            [CanBeNull] string assetPair = null)
+        public static Task TrackAsync(MethodIdentity methodIdentity, Func<Task> action)
         {
-            var key = GetKey(methodName, assetPair);
-
-            return TrackInternalAsync(key, action);
+            return TrackInternalAsync(methodIdentity, action);
         }
 
-        private static async Task TrackInternalAsync(string key, Func<Task> action)
+        private static async Task TrackInternalAsync(MethodIdentity methodIdentity, Func<Task> action)
         {
             if (!Enabled)
             {
@@ -71,17 +90,11 @@ namespace MarginTrading.Backend.Services
             
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            Statistics.AddOrUpdate(key, new MethodStatistics(1, elapsedMs, elapsedMs),
+            Statistics.AddOrUpdate(methodIdentity, new MethodStatistics(1, elapsedMs, elapsedMs),
                 (_, stats) => new MethodStatistics(
                     stats.CallsCounter + 1,
                     stats.TotalExecutionMs + elapsedMs,
                     elapsedMs > stats.MaxExecutionMs ? elapsedMs : stats.MaxExecutionMs));
-        }
-
-        private static string GetKey(string methodName, [CanBeNull] string assetPair)
-        {
-            var assetPairStr = assetPair ?? "AssetPairNotApplicable";
-            return $"{methodName}:{assetPairStr}";   
         }
     }
 }

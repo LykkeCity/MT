@@ -39,15 +39,15 @@ namespace MarginTrading.Backend.Services.Events
                     
                     var assetPairId = ea is BestPriceChangeEventArgs bestPriceChangeEventArgs
                         ? bestPriceChangeEventArgs.BidAskPair.Instrument
-                        : "N/A";
+                        : null;
                     
                     assetPairId = ea is FxBestPriceChangeEventArgs fxBestPriceChangeEventArgs
                         ? fxBestPriceChangeEventArgs.BidAskPair.Instrument
                         : assetPairId;
                     
-                    PerformanceTracker.Track($"{consumerName}:{eventName}", 
-                        () => consumer.ConsumeEvent(sender, ea), 
-                        assetPairId);
+                    PerformanceTracker.Track(
+                        new PerformanceTracker.MethodIdentity(consumerName, eventName, assetPairId), 
+                        () => consumer.ConsumeEvent(sender, ea));
                 }
                 catch (Exception e)
                 {

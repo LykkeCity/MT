@@ -43,7 +43,7 @@ namespace MarginTrading.Backend.Services
             sb.AppendLine("=======-Performance statistics-==========");
             foreach (var stat in PerformanceTracker.Statistics)
             {
-                var line = PerformanceInfoFormatter.FormatMethodStatistics(stat.Key, stat.Value);
+                var line = PerformanceInfoFormatter.FormatMethodStatistics(stat.Key.ToString(), stat.Value);
                 sb.AppendLine(line);
             }
             sb.AppendLine("====-Performance statistics (end)-=======");
