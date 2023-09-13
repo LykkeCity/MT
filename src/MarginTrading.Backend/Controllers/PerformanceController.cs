@@ -10,7 +10,7 @@ namespace MarginTrading.Backend.Controllers
 {
     [Route("api/performance")]
     [ApiController]
-    public class PerformanceStatController : ControllerBase
+    public class PerformanceController : ControllerBase
     {
         /// <summary>
         /// Create statistics report for performance and return it as text file
@@ -22,6 +22,17 @@ namespace MarginTrading.Backend.Controllers
             var txtReport = PerformanceLogger.PrintPerformanceStatistics();
             var fileContent = File(Encoding.UTF8.GetBytes(txtReport), "text/plain", "performance.txt");
             return Task.FromResult((IActionResult)fileContent);
+        }
+        
+        /// <summary>
+        /// Resets statistics report for performance
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("report")]
+        public Task<IActionResult> ResetStatisticsReport()
+        {
+            PerformanceTracker.Statistics.Clear();
+            return Task.FromResult((IActionResult)Ok());
         }
     }
 }
