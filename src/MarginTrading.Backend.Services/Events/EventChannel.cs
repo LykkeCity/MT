@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Services.Events
                     
                     var assetPairId = ea is BestPriceChangeEventArgs bestPriceChangeEventArgs
                         ? bestPriceChangeEventArgs.BidAskPair.Instrument
-                        : "N/A";
+                        : null;
                     
                     assetPairId = ea is FxBestPriceChangeEventArgs fxBestPriceChangeEventArgs
                         ? fxBestPriceChangeEventArgs.BidAskPair.Instrument
