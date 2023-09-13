@@ -18,9 +18,7 @@ namespace MarginTrading.Backend.Services.Quotes
         int IEventConsumer.ConsumerRank => 110;
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            PerformanceTracker.TrackAsync("PublishBestPrice",
-                async () => await _rabbitMqNotifyService.OrderBookPrice(ea.BidAskPair, ea.IsEod), 
-                ea.BidAskPair.Instrument).GetAwaiter().GetResult();
+            _rabbitMqNotifyService.OrderBookPrice(ea.BidAskPair, ea.IsEod);
         }
     }
 }
