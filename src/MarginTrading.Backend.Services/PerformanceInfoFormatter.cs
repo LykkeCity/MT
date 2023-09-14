@@ -10,20 +10,23 @@ namespace MarginTrading.Backend.Services
             var totalExecutionTimeFormatted = FormattingUtils.FormatMilliseconds(stat.TotalExecutionMs);
             var averageExecutionTimeFormatted =
                 FormattingUtils.FormatMilliseconds(stat.TotalExecutionMs / stat.CallsCounter);
-            
-            var methodInfo = $"Method: {methodKey}".PadRight(120);
-            var callsInfo = $"Calls: {stat.CallsCounter}".PadRight(20);
-            var totalExecutionTimeInfo = $"Total execution time: {totalExecutionTimeFormatted}".PadRight(40);
-            var averageExecutionTimeInfo = $"Average execution time: {averageExecutionTimeFormatted}".PadRight(40);
+            var maxExecutionTimeFormatted = FormattingUtils.FormatMilliseconds(stat.MaxExecutionMs);
 
-            return $"{methodInfo} | {callsInfo} | {totalExecutionTimeInfo} | {averageExecutionTimeInfo}";
+            var methodInfo = $"Method: {methodKey}".PadRight(100);
+            var callsInfo = $"Calls: {stat.CallsCounter}".PadRight(15);
+            var totalExecutionTimeInfo = $"Total execution time: {totalExecutionTimeFormatted}".PadRight(30);
+            var averageExecutionTimeInfo = $"Average execution time: {averageExecutionTimeFormatted}".PadRight(30);
+            var maxExecutionTimeInfo = $"Max execution time: {maxExecutionTimeFormatted}".PadRight(25);
+
+            return
+                $"{methodInfo} | {callsInfo} | {totalExecutionTimeInfo} | {averageExecutionTimeInfo} | {maxExecutionTimeInfo}";
         }
 
         public static string FormatPositionStatistics(string assetPairId, int counter)
         {
             var assetInfo = $"Asset: {assetPairId}".PadRight(100);
             var countInfo = $"Count: {counter}".PadRight(20);
-                
+
             return $"{assetInfo} | {countInfo}";
         }
     }

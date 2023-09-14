@@ -128,6 +128,6 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional] public FeatureManagement FeatureManagement { get; set; } = new FeatureManagement();
 
         // todo: probably should be moved turned in to a feature flag
-        [Optional] public bool PerformanceTrackerEnabled { get; set; } = false;
+        [Optional] public bool PerformanceLoggerEnabled { get; set; } = false;
     }
 }
