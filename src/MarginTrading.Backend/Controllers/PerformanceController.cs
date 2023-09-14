@@ -8,6 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.Backend.Controllers
 {
+    public enum StatisticsFormat
+    {
+        Text,
+        Sql
+    }
+    
     [Route("api/performance")]
     [ApiController]
     public class PerformanceController : ControllerBase
@@ -17,10 +23,21 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("report")]
-        public Task<IActionResult> GetStatisticsReport()
+        public Task<IActionResult> GetStatisticsReport([FromQuery] StatisticsFormat format = StatisticsFormat.Text)
         {
-            var txtReport = PerformanceLogger.PrintPerformanceStatistics();
-            var fileContent = File(Encoding.UTF8.GetBytes(txtReport), "text/plain", "performance.txt");
+            FileContentResult fileContent = null;
+            if (format == StatisticsFormat.Text)
+            {
+                var txtReport = PerformanceLogger.PrintPerformanceStatistics();
+                fileContent = File(Encoding.UTF8.GetBytes(txtReport), "text/plain", "performance.txt");    
+            }
+
+            if (format == StatisticsFormat.Sql)
+            {
+                var sql = PerformanceStatisticsSqlFormatter.GenerateInsertions();
+                fileContent = File(Encoding.UTF8.GetBytes(sql), "text/plain", "performance.sql");
+            }
+            
             return Task.FromResult((IActionResult)fileContent);
         }
         
