@@ -1,7 +1,6 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System.Linq;
 using System.Text;
 using MarginTrading.Backend.Services.Extensions;
 
@@ -14,12 +13,8 @@ namespace MarginTrading.Backend.Services
             var sql = new StringBuilder();
             sql.AppendLine(Ddl);
 
-            return PerformanceTracker.Statistics.Aggregate(sql, (sb, s) =>
-            {
-                var line = s.Value.ToSqlStatement(s.Key);
-                sb.AppendLine(line);
-                return sb;
-            }).ToString();
+            var bulkInsertions = PerformanceTracker.Statistics.ToBulkSqlStatement();
+            return sql.AppendLine(bulkInsertions).ToString();
         }
 
         private static string Ddl =>
