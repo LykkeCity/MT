@@ -4,7 +4,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Common.Log;
 using MarginTrading.Backend.Core.Settings;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -21,22 +20,19 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private const string LockKey = "TradingEngine:DeduplicationLock";
         private readonly string _lockValue = Environment.MachineName;
         private readonly IWebHostEnvironment _hostingEnvironment; 
-        private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
-        private readonly IConnectionMultiplexer _redis;
+        private readonly IDatabase _database;
 
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public StartupDeduplicationService(
             IWebHostEnvironment hostingEnvironment,
-            ILog log,
             MarginTradingSettings marginTradingSettings,
             IConnectionMultiplexer redis)
         {
             _hostingEnvironment = hostingEnvironment;
-            _log = log;
             _marginTradingSettings = marginTradingSettings;
-            _redis = redis;
+            _database = redis.GetDatabase();
         }
 
         /// <summary>
@@ -57,10 +53,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             {
                 return;
             }
-            
-            var database = _redis.GetDatabase();
 
-            if (!database.LockTake(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod))
+            if (!_database.LockTake(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod))
             {
                 throw new Exception("Trading Engine failed to start due to deduplication validation failure.");
                 // exception is logged by the global handler
@@ -77,9 +71,9 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     while (true)
                     {
                         // wait and extend lock
-                        Thread.Sleep(_marginTradingSettings.DeduplicationLockExtensionPeriod);
+                        await Task.Delay(_marginTradingSettings.DeduplicationLockExtensionPeriod);
 
-                        await database.LockExtendAsync(LockKey, _lockValue,
+                        await _database.LockExtendAsync(LockKey, _lockValue,
                             _marginTradingSettings.DeduplicationLockExpiryPeriod);
                     }
                 }

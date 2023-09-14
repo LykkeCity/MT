@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services
         
         private Dictionary<string, MarginTradingAccount> _accounts = new Dictionary<string, MarginTradingAccount>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
-        private readonly IConnectionMultiplexer _redis;
+        private readonly IDatabase _database;
         private readonly IDateService _dateService;
         private readonly ILog _log;
         
@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Services
         {
             _dateService = dateService;
             _log = log;
-            _redis = redis;
+            _database = redis.GetDatabase();
         }
         
         public IReadOnlyList<MarginTradingAccount> GetAll()
@@ -353,8 +353,7 @@ namespace MarginTrading.Backend.Services
         {
             var keys = accounts.Select(GetRedisKey);
 
-            var results = await _redis
-                .GetDatabase()
+            var results = await _database
                 .StringGetAsync(keys.ToArray());
             
             foreach (var redisValue in results)
@@ -370,16 +369,13 @@ namespace MarginTrading.Backend.Services
 
             var serialized = ProtoBufSerializer.Serialize(info);
 
-            var added = await _redis
-                .GetDatabase()
+            var added = await _database
                 .StringSetAsync(GetRedisKey(accountId), serialized, when: When.NotExists);
 
             return added;
         }
 
         private Task<bool> RemoveLiquidationInfo(string accountId) =>
-            _redis
-                .GetDatabase()
-                .KeyDeleteAsync(GetRedisKey(accountId));
+            _database.KeyDeleteAsync(GetRedisKey(accountId));
     }
 }
