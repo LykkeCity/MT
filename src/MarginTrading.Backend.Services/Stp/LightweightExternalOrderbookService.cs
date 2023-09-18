@@ -219,7 +219,7 @@ namespace MarginTrading.Backend.Services.Stp
 
             _orderbooks.AddOrUpdate(orderbook.AssetPairId,a => orderbook, (s, book) => orderbook);
             
-            _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba, isEodOrderbook));
+            //_bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba, isEodOrderbook));
         }
 
         private bool CheckZeroQuote(ExternalOrderBook orderbook, bool isEodOrderbook)
