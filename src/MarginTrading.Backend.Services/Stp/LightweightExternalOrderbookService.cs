@@ -217,7 +217,7 @@ namespace MarginTrading.Backend.Services.Stp
 
             var bba = orderbook.GetBestPrice();
 
-            //_orderbooks.AddOrUpdate(orderbook.AssetPairId,a => orderbook, (s, book) => orderbook);
+            _orderbooks.AddOrUpdate(orderbook.AssetPairId,a => orderbook, (s, book) => orderbook);
             
             _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba, isEodOrderbook));
         }
