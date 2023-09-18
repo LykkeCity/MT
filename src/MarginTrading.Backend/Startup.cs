@@ -140,7 +140,13 @@ namespace MarginTrading.Backend
         [UsedImplicitly]
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            var deduplicationService = RunHealthChecks(_mtSettingsManager.CurrentValue.MtBackend);
+            var redis = ConnectionMultiplexer.Connect(
+                _mtSettingsManager.CurrentValue.MtBackend.RedisSettings.Configuration);
+            builder.Register(c => redis)
+                .As<IConnectionMultiplexer>()
+                .SingleInstance();
+            
+            var deduplicationService = RunHealthChecks(redis, _mtSettingsManager.CurrentValue.MtBackend);
 
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
             
@@ -344,12 +350,11 @@ namespace MarginTrading.Backend
             ApplicationContainer.Resolve<IScheduleControlService>().ScheduleNext();
         }
 
-        private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)
+        private StartupDeduplicationService RunHealthChecks(IConnectionMultiplexer redis, MarginTradingSettings marginTradingSettings)
         {
             var deduplicationService = new StartupDeduplicationService(Environment, 
-                LogLocator.CommonLog, 
                 marginTradingSettings, 
-                ConnectionMultiplexer.Connect(marginTradingSettings.RedisSettings.Configuration));
+                redis);
             
             deduplicationService.HoldLock();
 
