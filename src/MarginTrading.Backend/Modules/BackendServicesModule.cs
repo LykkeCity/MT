@@ -86,9 +86,9 @@ namespace MarginTrading.Backend.Modules
                 .WithParameter(new TypedParameter(typeof(bool), _settings.WriteOperationLog && !_settings.UseSerilog))
                 .SingleInstance();
 
-            // builder.RegisterType<PricesUpdateRabbitMqNotifier>()
-            //     .As<IEventConsumer<BestPriceChangeEventArgs>>()
-            //     .SingleInstance();
+            builder.RegisterType<PricesUpdateRabbitMqNotifier>()
+                .As<IEventConsumer<BestPriceChangeEventArgs>>()
+                .SingleInstance();
 
             builder.RegisterType<Application>()
                 .AsSelf()
