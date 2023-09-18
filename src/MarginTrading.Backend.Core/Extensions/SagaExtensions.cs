@@ -41,9 +41,6 @@ namespace MarginTrading.Backend.Core.Extensions
         public static bool SwitchState(this OperationDataBase<SpecialLiquidationOperationState> data,
             SpecialLiquidationOperationState expectedState, SpecialLiquidationOperationState nextState)
         {
-            // TODO: remove
-            LogLocator.CommonLog.WriteInfo(nameof(SagaExtensions), nameof(SwitchState), $"🚩 Switching state to {nextState}");
-
             if (data == null)
             {
                 throw new InvalidOperationException("Operation execution data was not properly initialized.");
