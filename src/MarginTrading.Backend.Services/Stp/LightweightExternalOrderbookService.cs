@@ -178,42 +178,42 @@ namespace MarginTrading.Backend.Services.Stp
         {
             var isEodOrderbook = orderbook.ExchangeName == ExternalOrderbookService.EodExternalExchange;
 
-            var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
-
-            if (!isEodOrderbook &&
-                !instrumentTradingStatus.TradingEnabled &&
-                (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled ||
-                 instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentNotFound))
-            {
-                return;
-            }
-
-            if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && isEodOrderbook ||
-                _orderbookValidation.ValidateInstrumentStatusForTradingQuotes && !isEodOrderbook)
-            {
-                // we should process normal orderbook only if instrument is currently tradable
-                if (_orderbookValidation.ValidateInstrumentStatusForTradingQuotes && instrumentTradingStatus && !isEodOrderbook)    
-                {
-                    return;
-                }
-
-                // and process EOD orderbook only if instrument is currently not tradable
-                if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && !instrumentTradingStatus && isEodOrderbook)
-                {
-                    //log current schedule for the instrument
-                    var schedule = _scheduleSettingsCache.GetMarketTradingScheduleByAssetPair(orderbook.AssetPairId);
-
-                    _log.WriteWarning("EOD quotes processing", $"Current schedule for the instrument's market: {schedule.ToJson()}",
-                        $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
-
-                    return;
-                }
-            }
+            // var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
+            //
+            // if (!isEodOrderbook &&
+            //     !instrumentTradingStatus.TradingEnabled &&
+            //     (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled ||
+            //      instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentNotFound))
+            // {
+            //     return;
+            // }
+            //
+            // if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && isEodOrderbook ||
+            //     _orderbookValidation.ValidateInstrumentStatusForTradingQuotes && !isEodOrderbook)
+            // {
+            //     // we should process normal orderbook only if instrument is currently tradable
+            //     if (_orderbookValidation.ValidateInstrumentStatusForTradingQuotes && instrumentTradingStatus && !isEodOrderbook)    
+            //     {
+            //         return;
+            //     }
+            //
+            //     // and process EOD orderbook only if instrument is currently not tradable
+            //     if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && !instrumentTradingStatus && isEodOrderbook)
+            //     {
+            //         //log current schedule for the instrument
+            //         var schedule = _scheduleSettingsCache.GetMarketTradingScheduleByAssetPair(orderbook.AssetPairId);
+            //
+            //         _log.WriteWarning("EOD quotes processing", $"Current schedule for the instrument's market: {schedule.ToJson()}",
+            //             $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
+            //
+            //         return;
+            //     }
+            // }
             
-            if (!CheckZeroQuote(orderbook, isEodOrderbook))
-                return;
+            // if (!CheckZeroQuote(orderbook, isEodOrderbook))
+            //     return;
             
-            orderbook.ApplyExchangeIdFromSettings(_defaultExternalExchangeId);
+            //orderbook.ApplyExchangeIdFromSettings(_defaultExternalExchangeId);
 
             var bba = orderbook.GetBestPrice();
 
