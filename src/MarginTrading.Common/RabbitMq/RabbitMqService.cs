@@ -38,7 +38,7 @@ namespace MarginTrading.Common.RabbitMq
             new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStartStop>>(
                 new SubscriptionSettingsEqualityComparer());
         
-        private static readonly ConcurrentDictionary<string, IAutorecoveringConnection> Connections =
+        private readonly ConcurrentDictionary<string, IAutorecoveringConnection> Connections =
             new ConcurrentDictionary<string, IAutorecoveringConnection>();
 
         private const short QueueNotFoundErrorCode = 404;
@@ -64,8 +64,7 @@ namespace MarginTrading.Common.RabbitMq
         /// </summary>
         public static uint GetMessageCount(string connectionString, string queueName)
         {
-            var connection = GetConnection(connectionString);
-            
+            using var connection = CreateConnection(connectionString);
             using var channel = connection.CreateModel();
             try
             {
@@ -187,23 +186,13 @@ namespace MarginTrading.Common.RabbitMq
 
         #region Connection establishment
 
-        private static IAutorecoveringConnection GetConnection(string connectionString, bool reuse = true)
+        private IAutorecoveringConnection GetConnection(string connectionString, bool reuse = true)
         {
             var exists = Connections.TryGetValue(connectionString, out var connection);
             if (exists && reuse)
                 return connection;
 
-            var factory = new ConnectionFactory
-            {
-                Uri = new Uri(connectionString, UriKind.Absolute),
-                AutomaticRecoveryEnabled = true,
-                TopologyRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromSeconds(60),
-                ContinuationTimeout = TimeSpan.FromSeconds(30),
-                ClientProvidedName = typeof(RabbitMqService).FullName
-            };
-
-            connection = factory.CreateConnection() as IAutorecoveringConnection;
+            connection = CreateConnection(connectionString);
 
             var key = exists ? Guid.NewGuid().ToString("N") : connectionString;
             if (!Connections.TryAdd(key, connection))
@@ -215,6 +204,21 @@ namespace MarginTrading.Common.RabbitMq
             AttachConnectionEventHandlers(connection);
             
             return connection;
+        }
+
+        private static IAutorecoveringConnection CreateConnection(string connectionString)
+        {
+            var factory = new ConnectionFactory
+            {
+                Uri = new Uri(connectionString, UriKind.Absolute),
+                AutomaticRecoveryEnabled = true,
+                TopologyRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(60),
+                ContinuationTimeout = TimeSpan.FromSeconds(30),
+                ClientProvidedName = typeof(RabbitMqService).FullName
+            };
+            
+            return factory.CreateConnection() as IAutorecoveringConnection;
         }
         
         private static void AttachConnectionEventHandlers(IAutorecoveringConnection connection)

@@ -142,6 +142,7 @@ namespace MarginTrading.Backend
         {
             var deduplicationService = RunHealthChecks(_mtSettingsManager.CurrentValue.MtBackend);
 
+            // todo: this is not required, remove it
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
             
             RegisterModules(builder, _mtSettingsManager, Environment);
@@ -349,6 +350,7 @@ namespace MarginTrading.Backend
             var deduplicationService = new StartupDeduplicationService(Environment, 
                 LogLocator.CommonLog, 
                 marginTradingSettings, 
+                // todo: such instantiation leads to memory leak, fix it
                 ConnectionMultiplexer.Connect(marginTradingSettings.RedisSettings.Configuration));
             
             deduplicationService.HoldLock();
