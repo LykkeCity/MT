@@ -128,13 +128,13 @@ namespace MarginTrading.Backend.Services.Notifications
         private void RegisterPublishers()
         {
             _producerContainer.RegisterProducer<OrderHistoryEvent>(_settings.RabbitMqPublishers.OrderHistory);
-            _producerContainer.RegisterProducer<BidAskPairRabbitMqContract>(_settings.RabbitMqPublishers.OrderbookPrices);
+            _producerContainer.RegisterProducer<BidAskPairRabbitMqContract>(
+                _settings.RabbitMqPublishers.OrderbookPrices);
             _producerContainer.RegisterProducer<MarginEventMessage>(_settings.RabbitMqPublishers.AccountMarginEvents);
             _producerContainer.RegisterProducer<AccountStatsUpdateMessage>(_settings.RabbitMqPublishers.AccountStats);
             _producerContainer.RegisterProducer<TradeContract>(_settings.RabbitMqPublishers.Trades);
             _producerContainer.RegisterProducer<PositionHistoryEvent>(_settings.RabbitMqPublishers.PositionHistory);
             _producerContainer.RegisterProducer<ExecutionReport>(_settings.RabbitMqPublishers.ExternalOrder);
-
             _producerContainer.RegisterProducer<RfqEvent>(_settings.RabbitMqPublishers.RfqChanged);
         }
     }
