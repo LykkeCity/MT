@@ -320,8 +320,6 @@ namespace MarginTrading.Backend.Services.Stp
                         Timestamp = _dateService.Now(),
                         IsSuspended = true,
                     });
-                    
-                    _log.Info($"Suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
                 }
             }
             else
