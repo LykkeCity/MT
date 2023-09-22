@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services
 {
@@ -102,8 +102,10 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(position.AccountId);
-            account?.CacheNeedsToBeUpdated();
+            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
+            {
+                accountsCacheService.Get(position.AccountId)?.CacheNeedsToBeUpdated();
+            }
             
             _observers.ForEach(o => o.OnNext(position));
         }
@@ -129,8 +131,10 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(position.AccountId);
-            account?.CacheNeedsToBeUpdated();
+            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
+            {
+                accountsCacheService.Get(position.AccountId)?.CacheNeedsToBeUpdated();
+            }
             
             _observers.ForEach(o => o.OnNext(position));
         }
