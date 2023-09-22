@@ -261,8 +261,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             if (assetPair == null)
             {
-                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(GetInstrumentTradingStatus),
-                    $"AssetPair [{assetPairId}] does not exist in cache. Trading is disabled.").GetAwaiter().GetResult();
                 return InstrumentTradingStatus.Disabled(InstrumentTradingDisabledReason.InstrumentNotFound);
             }
 
@@ -270,8 +268,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             if (!_marketStates.TryGetValue(assetPair.MarketId, out var marketState))
             {
-                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(GetInstrumentTradingStatus),
-                    $"Market status of market [{assetPair.MarketId}] for asset pair [{assetPairId}] does not exist in cache. Trading is disabled.").GetAwaiter().GetResult();
                 return InstrumentTradingStatus.Disabled(InstrumentTradingDisabledReason.MarketStateNotFound);
             }
 
