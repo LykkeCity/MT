@@ -102,11 +102,12 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
+            if (ContainerProvider.Container?.TryResolveWithoutException<IAccountsCacheService>(
+                    out var accountsCacheService) ?? false)
             {
                 accountsCacheService.Get(position.AccountId)?.CacheNeedsToBeUpdated();
             }
-            
+
             _observers.ForEach(o => o.OnNext(position));
         }
 
@@ -131,11 +132,12 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
+            if (ContainerProvider.Container?.TryResolveWithoutException<IAccountsCacheService>(
+                    out var accountsCacheService) ?? false)
             {
                 accountsCacheService.Get(position.AccountId)?.CacheNeedsToBeUpdated();
             }
-            
+
             _observers.ForEach(o => o.OnNext(position));
         }
 
