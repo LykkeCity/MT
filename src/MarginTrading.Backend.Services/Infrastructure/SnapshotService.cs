@@ -81,7 +81,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 
                 if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out disabledInterval))
                 {
-                    throw new Exception($"Trading should be stopped for whole platform in order to make trading data snapshot. Current schedule: {_scheduleSettingsCacheService.GetPlatformTradingSchedule()?.ToJson()}");
+                    throw new Exception($"Trading should be stopped for whole platform in order to make trading data snapshot.");
                 }
             }
 
