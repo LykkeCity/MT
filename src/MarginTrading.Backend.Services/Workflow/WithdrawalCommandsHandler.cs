@@ -92,6 +92,11 @@ namespace MarginTrading.Backend.Services.Workflow
 
                 lock (GetLockObject(command.AccountId))
                 {
+                    _logger.LogInformation($"LT-5000: Account {command.AccountId} free margin1 = {freeMargin}");
+                    _logger.LogInformation($"LT-5000: Account {command.AccountId} free margin2 = {account.GetFreeMargin()}");
+                    _logger.LogInformation($"LT-5000: Account {command.AccountId} total capital = {account.GetTotalCapital()}");
+                    _logger.LogInformation($"LT-5000: Account {command.AccountId} used margin = {account.GetUsedMargin()}");
+                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, commad amount = {command.Amount}");
                     if (account.GetFreeMargin() >= command.Amount)
                     {
                         var freezeAmount = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
