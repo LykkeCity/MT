@@ -9,6 +9,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
@@ -40,6 +41,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
+        private readonly CorrelationContextAccessor _correlationContextAccessor;
 
         public const string OperationName = "SpecialLiquidation";
 
@@ -54,7 +56,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             OrdersCache ordersCache,
             IRfqPauseService rfqPauseService,
             ILog log,
-            IAssetPairsCache assetPairsCache)
+            IAssetPairsCache assetPairsCache,
+            CorrelationContextAccessor correlationContextAccessor)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
@@ -67,6 +70,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _rfqPauseService = rfqPauseService;
             _log = log;
             _assetPairsCache = assetPairsCache;
+            _correlationContextAccessor = correlationContextAccessor;
         }
 
         [UsedImplicitly]
@@ -75,6 +79,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
+            
+            // TODO: remove
+            await _log.WriteInfoAsync(nameof(SpecialLiquidationSaga), "SpecialLiquidationStartedInternalEvent", $"🚩 CorrelationId here is {_correlationContextAccessor.GetOrGenerateCorrelationId()}");
             
             if (executionInfo?.Data == null)
             {
@@ -473,6 +480,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 RequestNumber = executionInfo.Data.RequestNumber,
                 RequestedFromCorporateActions = executionInfo.Data.RequestedFromCorporateActions
             };
+
+            _log.WriteInfo(nameof(SpecialLiquidationSaga), "RequestPrice", $"🚩 CorrelationId here is {_correlationContextAccessor.GetOrGenerateCorrelationId()}");
             
             if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
             {
