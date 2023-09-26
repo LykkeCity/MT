@@ -96,15 +96,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     _logger.LogInformation($"LT-5000: Account {command.AccountId} free margin2 = {account.GetFreeMargin()}");
                     _logger.LogInformation($"LT-5000: Account {command.AccountId} total capital = {account.GetTotalCapital()}");
                     _logger.LogInformation($"LT-5000: Account {command.AccountId} used margin = {account.GetUsedMargin()}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, command amount = {command.Amount}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, balance = {account.Balance}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, unrealized daily pnl = {account.GetUnrealizedDailyPnl()}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, temporary capital = {account.TemporaryCapital}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, WithdrawTransferLimit = {account.WithdrawTransferLimit}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, log info = {account.LogInfo}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, LastBalanceChangeTime = {account.LastBalanceChangeTime}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, LastUpdateTime = {account.LastUpdateTime}");
-                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, BaseAssetId = {account.BaseAssetId}");
+                    _logger.LogInformation($"LT-5000: Account {command.AccountId}, commad amount = {command.Amount}");
                     if (account.GetFreeMargin() >= command.Amount)
                     {
                         var freezeAmount = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
