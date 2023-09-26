@@ -94,11 +94,9 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     if (account.GetFreeMargin() >= command.Amount)
                     {
-                        _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
+                        freezeSucceeded = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
                             command.OperationId,
                             command.Amount);
-
-                        freezeSucceeded = true;
                     }
                 }
 
@@ -116,7 +114,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 }
                 else
                 {
-                    var reasonStr = $"There's not enough free margin. Available free margin is: {Math.Round(freeMargin, 2)}";
+                    var reasonStr = $"Couldn't freeze withdrawal margin. Available free margin is: {Math.Round(freeMargin, 2)}";
 
                     _logger.LogWarning("Freezing the amount for withdrawal has failed. " +
                         "Details: (Amount: {Amount}, AccountId: {AccountId}, OperationId: {OperationId}, Reason: {Reason})",
