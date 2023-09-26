@@ -94,7 +94,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     if (account.GetFreeMargin() >= command.Amount)
                     {
-                        var freezeAmount = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
+                        _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
                             command.OperationId,
                             command.Amount);
 
