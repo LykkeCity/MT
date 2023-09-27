@@ -132,6 +132,20 @@ namespace MarginTrading.Backend.Core
             
             return false;
         }
+        
+        public bool TryUnfreezeWithdrawalMargin(string operationId)
+        {
+            if (string.IsNullOrWhiteSpace(operationId))
+                throw new ArgumentNullException(nameof(operationId));
+            
+            if (AccountFpl.WithdrawalFrozenMarginData.TryRemove(operationId, out _))
+            {
+                AccountFpl.WithdrawalFrozenMargin = AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
+                return true;
+            }
+            
+            return false;
+        }
 
         public int CompareTo(MarginTradingAccount other)
         {

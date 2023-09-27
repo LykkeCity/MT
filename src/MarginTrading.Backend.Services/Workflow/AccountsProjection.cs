@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services.Workflow
                                             HandleSwap(e);
                                             break;
                                         case AccountBalanceChangeReasonTypeContract.Withdraw:
-                                            await _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id,
+                                            _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id,
                                                 e.BalanceChange.Id);
                                             break;
                                         case AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL:

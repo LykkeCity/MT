@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Core.Services
     {
         void UpdateAccount(IMarginTradingAccount account);
         bool FreezeWithdrawalMargin(string accountId, string operationId, decimal amount);
-        Task UnfreezeWithdrawalMargin(string accountId, string operationId);
+        bool UnfreezeWithdrawalMargin(string accountId, string operationId);
         Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount);
         Task UnfreezeUnconfirmedMargin(string accountId, string operationId);
 
