@@ -2,14 +2,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
-using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Contracts.Account;
@@ -21,7 +18,6 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Services.Workflow
 {

@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Snow.Common.Costs;
 using Lykke.Snow.Common.Percents;
 using Lykke.Snow.Domain.Costs;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
@@ -22,7 +21,6 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.TradingConditions;
 
 #pragma warning disable 1998
 
@@ -39,7 +37,6 @@ namespace MarginTrading.Backend.Services.Services
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IClientProfileSettingsCache _clientProfileSettingsCache;
         private readonly IAssetPairsCache _assetPairsCache;
-        private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
 
         private readonly IOrdersProvider _ordersProvider;
         private readonly IPositionsProvider _positionsProvider;
@@ -58,7 +55,6 @@ namespace MarginTrading.Backend.Services.Services
             IPositionsProvider positionsProvider,
             IOrdersProvider ordersProvider,
             IAccountsProvider accountsProvider,
-            ITradingInstrumentsCacheService tradingInstrumentsCache,
             IAccountsCacheService accountsCacheService)
         {
             _fplService = fplService;
@@ -71,7 +67,6 @@ namespace MarginTrading.Backend.Services.Services
             _positionsProvider = positionsProvider;
             _ordersProvider = ordersProvider;
             _accountsProvider = accountsProvider;
-            _tradingInstrumentsCache = tradingInstrumentsCache;
             _accountsCacheService = accountsCacheService;
         }
 
@@ -80,13 +75,7 @@ namespace MarginTrading.Backend.Services.Services
             UpdateAccount(account, GetPositions(account.Id), GetActiveOrders(account.Id));
         }
 
-        public bool FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
-        {
-            var account = _accountsProvider.GetAccountById(accountId);
-
-            return account.TryFreezeWithdrawalMargin(operationId, amount);
-        }
-
+        // TODO: this method should be removed after refactoring
         public bool UnfreezeWithdrawalMargin(string accountId, string operationId)
         {
             var account = _accountsProvider.GetAccountById(accountId);
