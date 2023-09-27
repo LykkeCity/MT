@@ -21,8 +21,7 @@ namespace MarginTrading.Backend.Services.Workflow
     public class WithdrawalCommandsHandler
     {
         private readonly IDateService _dateService;
-        private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IAccountUpdateService _accountUpdateService;
+        private readonly IAccountsProvider _accountsProvider;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILogger<WithdrawalCommandsHandler> _logger;
@@ -33,18 +32,16 @@ namespace MarginTrading.Backend.Services.Workflow
 
         public WithdrawalCommandsHandler(
             IDateService dateService,
-            IAccountsCacheService accountsCacheService,
-            IAccountUpdateService accountUpdateService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
-            ILogger<WithdrawalCommandsHandler> logger)
+            ILogger<WithdrawalCommandsHandler> logger,
+            IAccountsProvider accountsProvider)
         {
             _dateService = dateService;
-            _accountsCacheService = accountsCacheService;
-            _accountUpdateService = accountUpdateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _logger = logger;
+            _accountsProvider = accountsProvider;
         }
 
         /// <summary>
@@ -68,15 +65,11 @@ namespace MarginTrading.Backend.Services.Workflow
                     }
                 ));
 
-            MarginTradingAccount account = null;
-            try
-            {
-                account = _accountsCacheService.Get(command.AccountId);
-            }
-            catch
+            var account = _accountsProvider.GetAccountById(command.AccountId);
+            if (account == null)
             {
                 _logger.LogWarning("Freezing the amount for withdrawal has failed. Reason: Failed to get account data. " +
-                    "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
+                                   "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
                     command.OperationId, command.AccountId, command.Amount);
 
                 publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(),
@@ -88,15 +81,12 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 // freezeSucceeded is used to minimize the scope under lock
                 var freezeSucceeded = false;
-                var freeMargin = account.GetFreeMargin();
 
                 lock (GetLockObject(command.AccountId))
                 {
                     if (account.CanWithdraw(command.Amount))
                     {
-                        freezeSucceeded = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
-                            command.OperationId,
-                            command.Amount);
+                        freezeSucceeded = account.TryFreezeWithdrawalMargin(command.OperationId, command.Amount);
                     }
                 }
 
@@ -114,7 +104,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 }
                 else
                 {
-                    var reasonStr = $"Couldn't freeze withdrawal margin. Available free margin is: {Math.Round(freeMargin, 2)}";
+                    var reasonStr = $"Couldn't freeze withdrawal margin for account {command.AccountId}";
 
                     _logger.LogWarning("Freezing the amount for withdrawal has failed. " +
                         "Details: (Amount: {Amount}, AccountId: {AccountId}, OperationId: {OperationId}, Reason: {Reason})",
@@ -124,8 +114,7 @@ namespace MarginTrading.Backend.Services.Workflow
                         _dateService.Now(),
                         command.AccountId, command.Amount, reasonStr));
                 }
-            
-
+                
                 _chaosKitty.Meow(command.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
@@ -146,10 +135,17 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo == null)
                 return;
+            
+            var account = _accountsProvider.GetAccountById(executionInfo.Data.AccountId);
+            if (account == null)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to get account {executionInfo.Data.AccountId} for unfreezing margin on fail withdrawal");
+            }
 
             if (executionInfo.Data.SwitchState(OperationState.Started, OperationState.Finished))
             {
-                _accountUpdateService.UnfreezeWithdrawalMargin(executionInfo.Data.AccountId, command.OperationId);
+                account.TryUnfreezeWithdrawalMargin(command.OperationId);
 
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
                     _dateService.Now(), executionInfo.Data.AccountId, executionInfo.Data.Amount));

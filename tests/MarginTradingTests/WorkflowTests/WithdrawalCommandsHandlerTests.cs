@@ -23,15 +23,13 @@ namespace MarginTradingTests.WorkflowTests
     [TestFixture]
     public class WithdrawalCommandsHandlerTests : BaseTests
     {
-        private IAccountsCacheService _accountsCacheService;
-        private IAccountUpdateService _accountUpdateService;
+        private IAccountsProvider _accountsProvider;
 
         [SetUp]
         public void SetUp()
         {
             RegisterDependencies();
-            _accountsCacheService = Container.Resolve<IAccountsCacheService>();
-            _accountUpdateService = Container.Resolve<IAccountUpdateService>();
+            _accountsProvider = Container.Resolve<IAccountsProvider>();
         }
 
         /// <summary>
@@ -77,11 +75,10 @@ namespace MarginTradingTests.WorkflowTests
 
             var withdrawalCommandsHandler = new WithdrawalCommandsHandler(
                 dateService.Object,
-                _accountsCacheService,
-                _accountUpdateService,
                 chaosKitty.Object,
                 operationExecutionInfoRepository.Object,
-                logger.Object
+                logger.Object,
+                _accountsProvider
             );
 
             var command1 = new FreezeAmountForWithdrawalCommand("command1",
