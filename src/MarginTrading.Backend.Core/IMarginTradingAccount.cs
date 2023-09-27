@@ -146,6 +146,14 @@ namespace MarginTrading.Backend.Core
             
             return false;
         }
+        
+        public bool CanWithdraw(decimal amount)
+        {
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount to withdraw must be positive");
+            
+            return this.GetFreeMargin() >= amount;
+        }
 
         public int CompareTo(MarginTradingAccount other)
         {

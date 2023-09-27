@@ -92,7 +92,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
                 lock (GetLockObject(command.AccountId))
                 {
-                    if (account.GetFreeMargin() >= command.Amount)
+                    if (account.CanWithdraw(command.Amount))
                     {
                         freezeSucceeded = _accountUpdateService.FreezeWithdrawalMargin(command.AccountId,
                             command.OperationId,
