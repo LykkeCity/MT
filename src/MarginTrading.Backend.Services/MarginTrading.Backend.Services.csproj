@@ -26,7 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="FluentScheduler" Version="5.5.1" />
-    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="7.8.0" />
+    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="7.14.0" />
     <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" Version="11.7.6" />
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="1.5.2" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />

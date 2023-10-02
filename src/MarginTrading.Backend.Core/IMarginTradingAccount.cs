@@ -118,6 +118,45 @@ namespace MarginTrading.Backend.Core
             return string.Join(", ", warnings);
         }
 
+        public bool TryFreezeWithdrawalMargin(string operationId, decimal amount)
+        {
+            if (string.IsNullOrWhiteSpace(operationId))
+                throw new ArgumentNullException(nameof(operationId));
+            
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount to withdraw must be positive");
+            
+            if (AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
+            {
+                AccountFpl.WithdrawalFrozenMargin = AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
+                return true;
+            }
+            
+            return false;
+        }
+        
+        public bool TryUnfreezeWithdrawalMargin(string operationId)
+        {
+            if (string.IsNullOrWhiteSpace(operationId))
+                throw new ArgumentNullException(nameof(operationId));
+            
+            if (AccountFpl.WithdrawalFrozenMarginData.TryRemove(operationId, out _))
+            {
+                AccountFpl.WithdrawalFrozenMargin = AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
+                return true;
+            }
+            
+            return false;
+        }
+        
+        public bool CanWithdraw(decimal disposableCapital, decimal amount)
+        {
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount to withdraw must be positive");
+            
+            return disposableCapital >= amount;
+        }
+
         public int CompareTo(MarginTradingAccount other)
         {
             var result = string.Compare(Id, other.Id, StringComparison.Ordinal);
