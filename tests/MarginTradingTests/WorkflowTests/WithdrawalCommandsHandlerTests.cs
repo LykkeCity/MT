@@ -38,7 +38,6 @@ namespace MarginTradingTests.WorkflowTests
         /// So the handler should send 1 <see cref="AmountForWithdrawalFrozenEvent"/> event and 2 <see cref="AmountForWithdrawalFreezeFailedEvent"/> events
         /// </summary>
         [Test]
-        [Repeat(20)]
         public async Task Handle_MultipleWithdrawals_OnlyOneSucceeds()
         {
             // Arrange

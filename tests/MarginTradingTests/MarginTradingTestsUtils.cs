@@ -19,6 +19,7 @@ using MarginTrading.AssetService.Contracts.TradingConditions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FeatureManagement;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
+using MarginTrading.AccountsManagement.Contracts.Api;
 using Moq;
 using AssetPairContract = MarginTrading.AssetService.Contracts.AssetPair.AssetPairContract;
 using MarginTrading.AssetService.Contracts.LegacyAsset;
@@ -68,7 +69,23 @@ namespace MarginTradingTests
                 IsDeleted = false,
                 AdditionalInfo = "{}"
             }).ToList();
-            return Mock.Of<IAccountsApi>(a => a.List(null, false) == Task.FromResult(list));
+
+            var mock = new Mock<IAccountsApi>();
+            mock.Setup(x => x.List(It.IsAny<string>(), It.IsAny<bool>()))
+                .ReturnsAsync(list);
+
+            // emulate disposable capital exhaustion after 1st withdrawal
+            // however, it is important to note that SetupSequence API is
+            // known to have issues in multi-threaded environment
+            mock.SetupSequence(x =>
+                    x.GetDisposableCapital(
+                        It.IsIn(accounts.Select(a => a.Id)),
+                        It.IsAny<GetDisposableCapitalRequest>()))
+                .ReturnsAsync(1000)
+                .ReturnsAsync(0)
+                .ReturnsAsync(0);
+            
+            return mock.Object;
         }
         
         public static IAccountBalanceHistoryApi GetPopulatedAccountBalanceHistoryApi()
