@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -25,10 +26,11 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILogger<WithdrawalCommandsHandler> _logger;
-        private const string OperationName = "FreezeAmountForWithdrawal";
 
-        private static readonly ConcurrentDictionary<string, object> LockObjects =
-            new ConcurrentDictionary<string, object>();
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> Lock =
+            new ConcurrentDictionary<string, SemaphoreSlim>();
+        
+        private const string OperationName = "FreezeAmountForWithdrawal";
 
         public WithdrawalCommandsHandler(
             IDateService dateService,
@@ -79,16 +81,16 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
             {
-                // freezeSucceeded is used to minimize the scope under lock
-                var freezeSucceeded = false;
-
-                lock (GetLockObject(command.AccountId))
+                var freezeSucceeded = await WithAccountLock(command.AccountId, async () =>
                 {
-                    if (account.CanWithdraw(command.Amount))
+                    var disposableCapital = await _accountsProvider.GetDisposableCapital(command.AccountId);
+                    if (disposableCapital.HasValue && account.CanWithdraw(disposableCapital.Value, command.Amount))
                     {
-                        freezeSucceeded = account.TryFreezeWithdrawalMargin(command.OperationId, command.Amount);
+                        return account.TryFreezeWithdrawalMargin(command.OperationId, command.Amount);
                     }
-                }
+
+                    return false;
+                });
 
                 if (freezeSucceeded)
                 {
@@ -156,9 +158,20 @@ namespace MarginTrading.Backend.Services.Workflow
             }
         }
 
-        private object GetLockObject(string accountId)
+        [ItemCanBeNull]
+        private async Task<T> WithAccountLock<T>(string accountId, Func<Task<T>> action)
         {
-            return LockObjects.GetOrAdd(accountId, new object());
+            var locker = Lock.GetOrAdd(accountId, new SemaphoreSlim(1, 1));
+            await locker.WaitAsync();
+            try
+            {
+                var result = await action();
+                return result;
+            }
+            finally
+            {
+                locker.Release();
+            }
         }
     }
 }

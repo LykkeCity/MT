@@ -180,7 +180,7 @@ namespace MarginTrading.Backend.Controllers
             if (account == null) return AccountCapitalFigures.Empty;
             if(account.IsDeleted) return AccountCapitalFigures.Deleted;
             
-            return account.ConvertToCapitalFiguresContract();
+            return account.ToCapitalFiguresResponseContract();
         }
 
         [HttpPost, Route("resume-liquidation/{accountId}")]
