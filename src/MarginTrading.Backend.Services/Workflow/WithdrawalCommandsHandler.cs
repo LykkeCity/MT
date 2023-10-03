@@ -81,40 +81,47 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
             {
-                var freezeSucceeded = await WithAccountLock(command.AccountId, async () =>
+                var succeeded = await WithAccountLock(command.AccountId, async () =>
                 {
+                    var frozen = false;
+                    
                     var disposableCapital = await _accountsProvider.GetDisposableCapital(command.AccountId);
                     if (disposableCapital.HasValue && account.CanWithdraw(disposableCapital.Value, command.Amount))
                     {
-                        return account.TryFreezeWithdrawalMargin(command.OperationId, command.Amount);
+                        frozen = account.TryFreezeWithdrawalMargin(command.OperationId, command.Amount);
                     }
 
-                    return false;
+                    if (frozen)
+                    {
+                        publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId,
+                            _dateService.Now(), command.AccountId, command.Amount, command.Reason));
+                    }
+                    else
+                    {
+                        publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
+                            _dateService.Now(),
+                            command.AccountId, 
+                            command.Amount,
+                            $"Couldn't freeze withdrawal margin for account {command.AccountId}"));
+                    }
+
+                    return frozen;
                 });
 
-                if (freezeSucceeded)
+                if (succeeded)
                 {
-                    _chaosKitty.Meow(command.OperationId);
-
                     _logger.LogInformation("The amount for withdrawal has been frozen. " +
                         "Details: (OperationId: {OperationId}, AccountId: {AccountId}, Amount: {Amount})",
                         command.OperationId, command.AccountId, command.Amount);
-
-                    publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId,
-                        _dateService.Now(),
-                        command.AccountId, command.Amount, command.Reason));
                 }
                 else
                 {
-                    var reasonStr = $"Couldn't freeze withdrawal margin for account {command.AccountId}";
-
                     _logger.LogWarning("Freezing the amount for withdrawal has failed. " +
-                        "Details: (Amount: {Amount}, AccountId: {AccountId}, OperationId: {OperationId}, Reason: {Reason})",
-                        command.Amount, command.AccountId, command.OperationId, reasonStr);
-
-                    publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
-                        _dateService.Now(),
-                        command.AccountId, command.Amount, reasonStr));
+                                       "Details: (Amount: {Amount}, AccountId: {AccountId}, OperationId: {OperationId}, Reason: {Reason})",
+                        command.Amount, 
+                        command.AccountId, 
+                        command.OperationId,
+                        $"Couldn't freeze withdrawal margin for account {command.AccountId}");
                 }
                 
                 _chaosKitty.Meow(command.OperationId);
