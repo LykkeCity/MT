@@ -26,9 +26,7 @@ namespace MarginTrading.Backend.Contracts.Account
         public decimal TodayCommissionAmount { get; set; }
         public decimal TodayOtherAmount { get; set; }
         public decimal TodayStartBalance { get; set; }
-
         public decimal UnconfirmedMargin { get; set; }
-
         public bool AccountIsDeleted { get; set; }
 
         public static AccountCapitalFigures Empty = new AccountCapitalFigures()
