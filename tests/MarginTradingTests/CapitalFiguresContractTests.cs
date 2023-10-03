@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -31,18 +32,59 @@ namespace MarginTradingTests
         [Test]
         public void CapitalFigures_ShouldBeSame_ForRequest_And_ForResponse()
         {
-            var amModelProps = typeof(AccountManagementModel).GetProperties(BindingFlags);
-            var ownModelProps = typeof(OwnModel).GetProperties(BindingFlags);
+            var amModelProps = GetAccountManagementModelProperties();
+            var ownModelProps = GetOwnModelProperties();
             
-            Assert.AreEqual(amModelProps.Length, ownModelProps.Length, "Different number of properties");
-            
-            foreach (var ownModelProp in ownModelProps)
+            if (HasMissedProperties(amModelProps, ownModelProps, out var missedInOwnModel))
             {
-                var correspondingAmModelProp = amModelProps.SingleOrDefault(p =>
-                    p.Name == ownModelProp.Name && p.PropertyType == ownModelProp.PropertyType);
-                
-                Assert.NotNull(correspondingAmModelProp, "Property not found: " + ownModelProp.Name);
+                Assert.Fail(PrepareWarning(typeof(OwnModel), missedInOwnModel));
             }
+            
+            if (HasMissedProperties(ownModelProps, amModelProps, out var missedInAmModel))
+            {
+                Assert.Fail(PrepareWarning(typeof(AccountManagementModel), missedInAmModel));
+            }
+        }
+
+        private static PropertyInfo[] GetAccountManagementModelProperties()
+        {
+            return typeof(AccountManagementModel).GetProperties(BindingFlags);
+        }
+        
+        private static PropertyInfo[] GetOwnModelProperties()
+        {
+            return typeof(OwnModel).GetProperties(BindingFlags);
+        }
+
+        private static T[] ObjectsMissed<T>(T[] source, T[] target)
+        {
+            return source.Except(target).ToArray();
+        }
+
+        private static string[] PropertiesMissed(PropertyInfo[] source, PropertyInfo[] target)
+        {
+            var sourceNames = source.Select(p => p.Name).ToArray();
+            var targetNames = target.Select(p => p.Name).ToArray();
+            
+            return ObjectsMissed(sourceNames, targetNames);
+        }
+        
+        private static string PrepareWarning(Type type, string[] missedProperties)
+        {
+            if (missedProperties == null || !missedProperties.Any())
+            {
+                return string.Empty;
+            }
+            
+            return $"{type.FullName} model is missing properties: " + string.Join(", ", missedProperties);
+        }
+
+        private static bool HasMissedProperties(PropertyInfo[] source,
+            PropertyInfo[] target,
+            out string[] missedProperties)
+        {
+            missedProperties = PropertiesMissed(source, target);
+            return missedProperties.Any();
         }
     }
 }
