@@ -127,20 +127,10 @@ namespace MarginTrading.Backend.Services.Stp
 
         public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)
         {
-            if (!_orderbooks.TryGetValue(assetPairId, out var orderBook))
-            {
-                _log.WriteInfo(nameof(GetPriceForPositionClose),
-                    new { assetPairId, volume, externalProviderId }.ToJson(),
-                    "No orderbook found for asset pair");
-                return null;
-            }
-
-            _log.WriteInfo(nameof(GetPriceForPositionClose),
-                new { assetPairId, volume, externalProviderId }.ToJson(),
-                "Orderbook found for asset pair");
-            _log.WriteInfo(nameof(GetPriceForPositionClose), orderBook.ToJson(),"Orderbook");
+            if (_orderbooks.TryGetValue(assetPairId, out var orderBook))
+                return MatchBestPriceForPositionClose(orderBook, volume);
             
-            return MatchBestPriceForPositionClose(orderBook, volume);
+            return null;
         }
 
         //TODO: understand which orderbook should be used (best price? aggregated?)
