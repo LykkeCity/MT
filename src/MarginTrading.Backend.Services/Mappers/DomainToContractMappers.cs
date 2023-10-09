@@ -1,10 +1,9 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -201,9 +200,36 @@ namespace MarginTrading.Backend.Services.Mappers
                 : position.ConvertToContract(orderReader);
         }
 
-        public static AccountCapitalFigures ConvertToCapitalFiguresContract(this IMarginTradingAccount account)
+        public static AccountCapitalFigures ToCapitalFiguresResponseContract(this IMarginTradingAccount account)
         {
             return new AccountCapitalFigures
+            {
+                Balance = account.Balance,
+                LastBalanceChangeTime = account.LastBalanceChangeTime,
+                TotalCapital = account.GetTotalCapital(),
+                FreeMargin = account.GetFreeMargin(),
+                UsedMargin = account.GetUsedMargin(),
+                CurrentlyUsedMargin = account.GetCurrentlyUsedMargin(),
+                InitiallyUsedMargin = account.GetInitiallyUsedMargin(),
+                PnL = account.GetPnl(),
+                UnrealizedDailyPnl = account.GetUnrealizedDailyPnl(),
+                OpenPositionsCount = account.GetOpenPositionsCount(),
+                TodayStartBalance = account.TodayStartBalance,
+                TodayRealizedPnL = account.TodayRealizedPnL,
+                TodayUnrealizedPnL = account.TodayUnrealizedPnL,
+                TodayDepositAmount = account.TodayDepositAmount,
+                TodayWithdrawAmount = account.TodayWithdrawAmount,
+                TodayCommissionAmount = account.TodayCommissionAmount,
+                TodayOtherAmount = account.TodayOtherAmount,
+                AdditionalInfo = account.AdditionalInfo,
+                AccountIsDeleted = account.IsDeleted,
+            };
+        }
+
+        public static GetDisposableCapitalRequest.AccountCapitalFigures ToCapitalFiguresRequestContract(
+            this IMarginTradingAccount account)
+        {
+            return new GetDisposableCapitalRequest.AccountCapitalFigures
             {
                 Balance = account.Balance,
                 LastBalanceChangeTime = account.LastBalanceChangeTime,

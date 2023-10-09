@@ -386,8 +386,7 @@ namespace MarginTradingTests
         {
             _accountBalanceChangedEventChannelMock = new Mock<IEventChannel<AccountBalanceChangedEventArgs>>();
             _accountUpdateServiceMock = new Mock<IAccountUpdateService>();
-            _accountUpdateServiceMock.Setup(s => s.UnfreezeWithdrawalMargin(It.Is<string>(x => x == accountId), "test"))
-                .Returns(Task.CompletedTask);
+            _accountUpdateServiceMock.Setup(s => s.UnfreezeWithdrawalMargin(It.Is<string>(x => x == accountId), "test")).Returns(true);
             _operationExecutionInfoRepositoryMock = new Mock<IOperationExecutionInfoRepository>();
             _operationExecutionInfoRepositoryMock.Setup(s => s.GetOrAddAsync(It.Is<string>(x => x == "AccountsProjection"),
                     It.IsAny<string>(), It.IsAny<Func<IOperationExecutionInfo<OperationData>>>()))

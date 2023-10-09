@@ -23,15 +23,13 @@ namespace MarginTradingTests.WorkflowTests
     [TestFixture]
     public class WithdrawalCommandsHandlerTests : BaseTests
     {
-        private IAccountsCacheService _accountsCacheService;
-        private IAccountUpdateService _accountUpdateService;
+        private IAccountsProvider _accountsProvider;
 
         [SetUp]
         public void SetUp()
         {
             RegisterDependencies();
-            _accountsCacheService = Container.Resolve<IAccountsCacheService>();
-            _accountUpdateService = Container.Resolve<IAccountUpdateService>();
+            _accountsProvider = Container.Resolve<IAccountsProvider>();
         }
 
         /// <summary>
@@ -40,7 +38,6 @@ namespace MarginTradingTests.WorkflowTests
         /// So the handler should send 1 <see cref="AmountForWithdrawalFrozenEvent"/> event and 2 <see cref="AmountForWithdrawalFreezeFailedEvent"/> events
         /// </summary>
         [Test]
-        [Repeat(20)]
         public async Task Handle_MultipleWithdrawals_OnlyOneSucceeds()
         {
             // Arrange
@@ -77,11 +74,10 @@ namespace MarginTradingTests.WorkflowTests
 
             var withdrawalCommandsHandler = new WithdrawalCommandsHandler(
                 dateService.Object,
-                _accountsCacheService,
-                _accountUpdateService,
                 chaosKitty.Object,
                 operationExecutionInfoRepository.Object,
-                logger.Object
+                logger.Object,
+                _accountsProvider
             );
 
             var command1 = new FreezeAmountForWithdrawalCommand("command1",

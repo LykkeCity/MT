@@ -12,5 +12,7 @@ namespace MarginTrading.Backend.Core.Services
         Task<bool> TryFinishLiquidation(string accountId, string reason, string liquidationOperationId = null);
 
         Task<MarginTradingAccount> GetActiveOrDeleted(string accountId);
+        
+        Task<decimal?> GetDisposableCapital(string accountId);
     }
 }

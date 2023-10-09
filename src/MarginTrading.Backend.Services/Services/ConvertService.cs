@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using AutoMapper;
 using JetBrains.Annotations;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
@@ -47,12 +48,8 @@ namespace MarginTrading.Backend.Services.Services
                 cfg.CreateMap<AccountContract, MarginTradingAccount>(MemberList.Source)
                         .ForSourceMember(x => x.ModificationTimestamp, opt => opt.DoNotValidate())
                         .ForSourceMember(x => x.ClientModificationTimestamp, opt => opt.DoNotValidate())
+                        .ForSourceMember(x => x.ReferenceAccount, opt => opt.DoNotValidate())
                         .ForMember(d => d.LastUpdateTime, opt => opt.MapFrom(x => x.ModificationTimestamp));
-
-                cfg.CreateMap<MarginTradingAccount, AccountContract>(MemberList.Destination)
-                    .ForMember(p => p.ClientModificationTimestamp, opt => opt.Ignore())
-                    .ForMember(p => p.ModificationTimestamp,
-                        opt => opt.MapFrom(tradingAccount => DateTime.UtcNow));
 
                 cfg.CreateMap<AssetPairContract, AssetPair>(MemberList.None);
 
@@ -63,6 +60,15 @@ namespace MarginTrading.Backend.Services.Services
 
                 cfg.CreateMap<IAccountMarginFreezing, AccountMarginFreezingEntity>();
                 cfg.CreateMap<MatchingEngineRouteContract, MatchingEngineRoute>();
+
+                // add all profiles from MT assemblies
+                // the idea is to be able to add custom mappings for testing purposes only
+                var mtAssemblies = AppDomain
+                    .CurrentDomain
+                    .GetAssemblies()
+                    .Where(a => a.GetName().Name?.StartsWith("MarginTrading") ?? false);
+                cfg.AddMaps(mtAssemblies);
+                
             }).CreateMapper();
         }
 
