@@ -44,7 +44,7 @@ namespace MarginTrading.Common.Extensions
             }
             catch (Exception e)
             {
-                if (e is InvalidCastException || e is DependencyResolutionException)
+                if (e is InvalidCastException || e is DependencyResolutionException || e is ObjectDisposedException)
                 {
                     return false;
                 }

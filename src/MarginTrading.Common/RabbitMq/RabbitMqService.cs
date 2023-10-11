@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
@@ -14,13 +15,15 @@ using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.RabbitMqBroker.Subscriber.Deserializers;
 using Lykke.RabbitMqBroker.Subscriber.Middleware.ErrorHandling;
 using Lykke.Snow.Common.Correlation.RabbitMq;
+using MarginTrading.Common.Services;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 
 namespace MarginTrading.Common.RabbitMq
 {
-    public class RabbitMqService : IRabbitMqService, IDisposable
+    public sealed class RabbitMqService : IRabbitMqService, IDisposable
     {
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILog _logger;
@@ -34,8 +37,12 @@ namespace MarginTrading.Common.RabbitMq
         private readonly ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStartStop>> _producers =
             new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStartStop>>(
                 new SubscriptionSettingsEqualityComparer());
+        
+        private readonly ConcurrentDictionary<string, IAutorecoveringConnection> Connections =
+            new ConcurrentDictionary<string, IAutorecoveringConnection>();
 
         private const short QueueNotFoundErrorCode = 404;
+        private const int PrefetchCount = 200;
 
         public RabbitMqService(
             ILoggerFactory loggerFactory,
@@ -57,9 +64,7 @@ namespace MarginTrading.Common.RabbitMq
         /// </summary>
         public static uint GetMessageCount(string connectionString, string queueName)
         {
-            var factory = new ConnectionFactory { Uri = new Uri(connectionString, UriKind.Absolute) };
-
-            using var connection = factory.CreateConnection();
+            using var connection = CreateConnection(connectionString);
             using var channel = connection.CreateModel();
             try
             {
@@ -75,8 +80,15 @@ namespace MarginTrading.Common.RabbitMq
         {
             foreach (var stoppable in _subscribers.Values)
                 stoppable.Stop();
+            
             foreach (var stoppable in _producers.Values)
                 stoppable.Value.Stop();
+            
+            foreach (var connection in Connections.Values)
+            {
+                DetachConnectionEventHandlers(connection);
+                connection.Dispose();
+            }
         }
 
         public IRabbitMqSerializer<TMessage> GetJsonSerializer<TMessage>()
@@ -99,7 +111,7 @@ namespace MarginTrading.Common.RabbitMq
             return new MessagePackMessageDeserializer<TMessage>();
         }
 
-        public IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
+        public Lykke.RabbitMqBroker.Publisher.IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
             IRabbitMqSerializer<TMessage> serializer)
         {
             // on-the fly connection strings switch is not supported currently for rabbitMq
@@ -110,7 +122,7 @@ namespace MarginTrading.Common.RabbitMq
                 IsDurable = settings.IsDurable,
             };
 
-            return (IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
+            return (Lykke.RabbitMqBroker.Publisher.IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
 
             Lazy<IStartStop> CreateProducer(RabbitMqSubscriptionSettings s)
             {
@@ -133,7 +145,7 @@ namespace MarginTrading.Common.RabbitMq
                 });
             }
         }
-        
+
         public void Subscribe<TMessage>(RabbitMqSettings settings, 
             bool isDurable,
             Func<TMessage, Task> handler, 
@@ -152,12 +164,14 @@ namespace MarginTrading.Common.RabbitMq
                     RoutingKey = settings.RoutingKey,
                 };
                 
-                var rabbitMqSubscriber = new RabbitMqPullingSubscriber<TMessage>(
-                        _loggerFactory.CreateLogger<RabbitMqPullingSubscriber<TMessage>>(),
-                        subscriptionSettings)
+                var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(
+                        _loggerFactory.CreateLogger<RabbitMqSubscriber<TMessage>>(),
+                        subscriptionSettings,
+                        GetConnection(settings.ConnectionString, false))
                     .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(_loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()))
                     .SetMessageDeserializer(deserializer)
                     .SetReadHeadersAction(_correlationManager.FetchCorrelationIfExists)
+                    .SetPrefetchCount(PrefetchCount)
                     .Subscribe(handler);
 
                 if (!_subscribers.TryAdd((subscriptionSettings, consumerNumber), rabbitMqSubscriber))
@@ -169,7 +183,105 @@ namespace MarginTrading.Common.RabbitMq
                 rabbitMqSubscriber.Start();
             }
         }
+
+        #region Connection establishment
+
+        private IAutorecoveringConnection GetConnection(string connectionString, bool reuse = true)
+        {
+            var exists = Connections.TryGetValue(connectionString, out var connection);
+            if (exists && reuse)
+                return connection;
+
+            connection = CreateConnection(connectionString);
+
+            var key = exists ? Guid.NewGuid().ToString("N") : connectionString;
+            if (!Connections.TryAdd(key, connection))
+            {
+                key = Guid.NewGuid().ToString("N");
+                Connections.TryAdd(key, connection);
+            }
+            
+            AttachConnectionEventHandlers(connection);
+            
+            return connection;
+        }
+
+        private static IAutorecoveringConnection CreateConnection(string connectionString)
+        {
+            var factory = new ConnectionFactory
+            {
+                Uri = new Uri(connectionString, UriKind.Absolute),
+                AutomaticRecoveryEnabled = true,
+                TopologyRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(60),
+                ContinuationTimeout = TimeSpan.FromSeconds(30),
+                ClientProvidedName = typeof(RabbitMqService).FullName
+            };
+            
+            return factory.CreateConnection() as IAutorecoveringConnection;
+        }
         
+        private static void AttachConnectionEventHandlers(IAutorecoveringConnection connection)
+        {
+            connection.RecoverySucceeded += OnRecoverySucceeded;
+            connection.ConnectionBlocked += OnConnectionBlocked;
+            connection.ConnectionShutdown += OnConnectionShutdown;
+            connection.ConnectionUnblocked += OnConnectionUnblocked;
+            connection.CallbackException += OnCallbackException;
+            connection.ConnectionRecoveryError += OnConnectionRecoveryError;
+        }
+
+        private static void DetachConnectionEventHandlers(IAutorecoveringConnection connection)
+        {
+            connection.RecoverySucceeded -= OnRecoverySucceeded;
+            connection.ConnectionBlocked -= OnConnectionBlocked;
+            connection.ConnectionShutdown -= OnConnectionShutdown;
+            connection.ConnectionUnblocked -= OnConnectionUnblocked;
+            connection.CallbackException -= OnCallbackException;
+            connection.ConnectionRecoveryError -= OnConnectionRecoveryError;
+        }
+        
+        private static void OnRecoverySucceeded(object sender, EventArgs e)
+        {
+            LogLocator.CommonLog.WriteInfo(nameof(RabbitMqService), null, "RabbitMq connection recovered");
+        } 
+        
+        private static void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
+        {
+            LogLocator.CommonLog.WriteWarning(nameof(RabbitMqService), new { Reason = e.Reason }.ToJson(),
+                "RabbitMq connection blocked");
+        }
+        
+        private static void OnConnectionShutdown(object sender, ShutdownEventArgs e)
+        {
+            LogLocator.CommonLog.WriteWarning(nameof(RabbitMqService),
+                new { Initiator = e.Initiator.ToString(), e.ReplyCode, e.ReplyText, e.MethodId }.ToJson(),
+                "RabbitMq connection shutdown");
+
+            if (e.Cause != null)
+            {
+                LogLocator.CommonLog.WriteWarning(nameof(RabbitMqService),
+                    new { CauseObjectType = e.Cause.GetType().FullName }, "Object causing the shutdown");
+            }
+        }
+        
+        private static void OnConnectionUnblocked(object sender, EventArgs e)
+        {
+            LogLocator.CommonLog.WriteInfo(nameof(RabbitMqService), null, "RabbitMq connection unblocked");
+        }
+        
+        private static void OnCallbackException(object sender, CallbackExceptionEventArgs e)
+        {
+            LogLocator.CommonLog.WriteError(nameof(RabbitMqService), null, e.Exception);
+        }
+        
+        private static void OnConnectionRecoveryError(object sender, ConnectionRecoveryErrorEventArgs e)
+        {
+            LogLocator.CommonLog.WriteError(nameof(RabbitMqService), null, e.Exception);
+        }
+        
+        # endregion
+
         /// <remarks>
         ///     ReSharper auto-generated
         /// </remarks>

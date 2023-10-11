@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Autofac;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.StateMachines;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Common.Extensions;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core.Orders
@@ -207,8 +207,11 @@ namespace MarginTrading.Backend.Core.Orders
         {
             CloseFxPrice = closeFxPrice;
             FplData.ActualHash++;
-            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(AccountId);
-            account.CacheNeedsToBeUpdated();
+            
+            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
+            {
+                accountsCacheService.Get(AccountId).CacheNeedsToBeUpdated();
+            }
         }
         
         public void UpdateCloseFxPriceWithoutAccountUpdate(decimal closeFxPrice)
@@ -228,8 +231,11 @@ namespace MarginTrading.Backend.Core.Orders
         {
             ClosePrice = closePrice;
             FplData.ActualHash++;
-            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(AccountId);
-            account.CacheNeedsToBeUpdated();
+            
+            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
+            {
+                accountsCacheService.Get(AccountId).CacheNeedsToBeUpdated();
+            }
         }
 
         public void SetCommissionRates(decimal swapCommissionRate, decimal openCommissionRate, decimal closeCommissionRate,
