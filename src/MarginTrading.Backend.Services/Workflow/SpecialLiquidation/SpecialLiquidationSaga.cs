@@ -162,23 +162,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
-            
+
             if (executionInfo?.Data == null)
                 return;
-
-            if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
-            {
-                var isDiscontinued = await FailIfInstrumentDiscontinued(executionInfo, sender);
-                if (isDiscontinued) return;
-
-                var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(executionInfo.Id);
-                if (pauseAcknowledged) return;
-
-                await InternalRetryPriceRequest(e.CreationTime, sender, executionInfo,
-                    _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
-                
-                return;
-            }
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
                 SpecialLiquidationOperationState.OnTheWayToFail))
@@ -333,6 +319,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
                 {
+                    var isDiscontinued = await FailIfInstrumentDiscontinued(executionInfo, sender);
+                    if (isDiscontinued) return;
+                    
                     var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(executionInfo.Id);
                     if (pauseAcknowledged) return;
                     
