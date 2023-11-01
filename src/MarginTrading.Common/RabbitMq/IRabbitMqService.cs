@@ -11,10 +11,10 @@ namespace MarginTrading.Common.RabbitMq
 {
     public interface IRabbitMqService
     {
-        IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
+        IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqPublisherConfiguration configuration,
             IRabbitMqSerializer<TMessage> serializer);
 
-        void Subscribe<TMessage>(RabbitMqSettings settings, bool isDurable, Func<TMessage, Task> handler,
+        void Subscribe<TMessage>(RabbitMqConsumerConfiguration configuration, bool isDurable, Func<TMessage, Task> handler,
             IMessageDeserializer<TMessage> deserializer);
 
         IRabbitMqSerializer<TMessage> GetJsonSerializer<TMessage>();

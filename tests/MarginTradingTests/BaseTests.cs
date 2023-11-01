@@ -70,7 +70,7 @@ namespace MarginTradingTests
                 RabbitMqPublishers =
                     new RabbitMqPublishers
                     {
-                        MarginTradingEnabledChanged = new RabbitMqPublisherInfo { ExchangeName = "" }
+                        MarginTradingEnabledChanged = new RabbitMqPublisherConfiguration { ExchangeName = "" }
                     },
                 BlobPersistence = new BlobPersistenceSettings()
                 {

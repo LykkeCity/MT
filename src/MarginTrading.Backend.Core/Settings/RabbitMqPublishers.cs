@@ -7,15 +7,14 @@ namespace MarginTrading.Backend.Core.Settings
 {
     public class RabbitMqPublishers
     {
-        public RabbitMqPublisherInfoWithLogging OrderHistory { get; set; }
-        public RabbitMqPublisherInfoWithOccasionalLogging OrderbookPrices { get; set; }
-        public RabbitMqPublisherInfoWithLogging AccountMarginEvents { get; set; }
-        public RabbitMqPublisherInfoWithLogging AccountStats { get; set; }
-        public RabbitMqPublisherInfoWithLogging Trades { get; set; }
-        public RabbitMqPublisherInfoWithLogging PositionHistory { get; set; }
-        public RabbitMqPublisherInfo MarginTradingEnabledChanged { get; set; }
-        public RabbitMqPublisherInfoWithLogging ExternalOrder { get; set; }
-        
-        public RabbitMqPublisherInfoWithLogging RfqChanged { get; set; }
+        public RabbitMqPublisherConfigurationWithLogging OrderHistory { get; set; }
+        public RabbitMqPublisherConfigurationWithOccasionalLogging OrderbookPrices { get; set; }
+        public RabbitMqPublisherConfigurationWithLogging AccountMarginEvents { get; set; }
+        public RabbitMqPublisherConfigurationWithLogging AccountStats { get; set; }
+        public RabbitMqPublisherConfigurationWithLogging Trades { get; set; }
+        public RabbitMqPublisherConfigurationWithLogging PositionHistory { get; set; }
+        public RabbitMqPublisherConfiguration MarginTradingEnabledChanged { get; set; }
+        public RabbitMqPublisherConfigurationWithLogging ExternalOrder { get; set; }
+        public RabbitMqPublisherConfigurationWithLogging RfqChanged { get; set; }
     }
 }

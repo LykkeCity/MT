@@ -38,7 +38,7 @@ namespace MarginTradingTests.Services
             Mock.Get(publisher)
                 .Setup(s => s.ProduceAsync(It.IsNotNull<MarginTradingEnabledChangedMessage>()))
                 .Returns(Task.CompletedTask).Callback<MarginTradingEnabledChangedMessage>(m => _sentMessage = m);
-            var expectedRabbitMqSettings = new RabbitMqSettings
+            var expectedRabbitMqSettings = new RabbitMqPublisherConfiguration
             {
                 ConnectionString = "conn str",
                 ExchangeName = "exchange name"
@@ -52,7 +52,7 @@ namespace MarginTradingTests.Services
                 MtRabbitMqConnString = "conn str",
                 RabbitMqPublishers = new RabbitMqPublishers
                 {
-                    MarginTradingEnabledChanged = new RabbitMqPublisherInfo {ExchangeName = "exchange name"}
+                    MarginTradingEnabledChanged = new RabbitMqPublisherConfiguration {ExchangeName = "exchange name"}
                 }
             };
 

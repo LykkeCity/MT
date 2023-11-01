@@ -5,8 +5,8 @@ using System;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.SettingsReader.Attributes;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
-using RabbitMqSettings = MarginTrading.Common.RabbitMq.RabbitMqSettings;
 
 namespace MarginTrading.Backend.Core.Settings
 {
@@ -27,20 +27,20 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqPublishers RabbitMqPublishers { get; set; }
         
         [Optional, CanBeNull]
-        public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
+        public RabbitMqConsumerConfiguration MarketMakerRabbitMqSettings { get; set; }
         
         [Optional, CanBeNull]
-        public RabbitMqSettings StpAggregatorRabbitMqSettings { get; set; }
+        public RabbitMqConsumerConfiguration StpAggregatorRabbitMqSettings { get; set; }
         
         [Optional, CanBeNull] 
-        public RabbitMqSettings FxRateRabbitMqSettings { get; set; } 
+        public RabbitMqConsumerConfiguration FxRateRabbitMqSettings { get; set; } 
         
         [Optional, CanBeNull]
-        public RabbitMqSettings RisksRabbitMqSettings { get; set; }
+        public RabbitMqConsumerConfiguration RisksRabbitMqSettings { get; set; }
 
-        public RabbitMqSettings BrokerSettingsRabbitMqSettings { get; set; }
+        public RabbitMqConsumerConfiguration BrokerSettingsRabbitMqSettings { get; set; }
 
-        public RabbitMqSettings SettingsChangedRabbitMqSettings { get; set; }
+        public RabbitMqConsumerConfiguration SettingsChangedRabbitMqSettings { get; set; }
 
         [AmqpCheck]
         public string MtRabbitMqConnString { get; set; }

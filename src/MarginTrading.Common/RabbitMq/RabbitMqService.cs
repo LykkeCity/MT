@@ -111,15 +111,15 @@ namespace MarginTrading.Common.RabbitMq
             return new MessagePackMessageDeserializer<TMessage>();
         }
 
-        public Lykke.RabbitMqBroker.Publisher.IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
+        public Lykke.RabbitMqBroker.Publisher.IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqPublisherConfiguration configuration,
             IRabbitMqSerializer<TMessage> serializer)
         {
             // on-the fly connection strings switch is not supported currently for rabbitMq
             var subscriptionSettings = new RabbitMqSubscriptionSettings
             {
-                ConnectionString = settings.ConnectionString,
-                ExchangeName = settings.ExchangeName,
-                IsDurable = settings.IsDurable,
+                ConnectionString = configuration.ConnectionString,
+                ExchangeName = configuration.ExchangeName,
+                IsDurable = configuration.IsDurable,
             };
 
             return (Lykke.RabbitMqBroker.Publisher.IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
@@ -146,28 +146,28 @@ namespace MarginTrading.Common.RabbitMq
             }
         }
 
-        public void Subscribe<TMessage>(RabbitMqSettings settings, 
+        public void Subscribe<TMessage>(RabbitMqConsumerConfiguration configuration, 
             bool isDurable,
             Func<TMessage, Task> handler, 
             IMessageDeserializer<TMessage> deserializer)
         {
-            var consumerCount = settings.ConsumerCount == 0 ? 1 : settings.ConsumerCount;
+            var consumerCount = configuration.ConsumerCount == 0 ? 1 : configuration.ConsumerCount;
             
             foreach (var consumerNumber in Enumerable.Range(1, consumerCount))
             {
                 var subscriptionSettings = new RabbitMqSubscriptionSettings
                 {
-                    ConnectionString = settings.ConnectionString,
-                    QueueName = QueueHelper.BuildQueueName(settings.ExchangeName, _env),
-                    ExchangeName = settings.ExchangeName,
+                    ConnectionString = configuration.ConnectionString,
+                    QueueName = QueueHelper.BuildQueueName(configuration.ExchangeName, _env),
+                    ExchangeName = configuration.ExchangeName,
                     IsDurable = isDurable,
-                    RoutingKey = settings.RoutingKey,
+                    RoutingKey = configuration.RoutingKey,
                 };
                 
                 var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(
                         _loggerFactory.CreateLogger<RabbitMqSubscriber<TMessage>>(),
                         subscriptionSettings,
-                        GetConnection(settings.ConnectionString, false))
+                        GetConnection(configuration.ConnectionString, false))
                     .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(_loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()))
                     .SetMessageDeserializer(deserializer)
                     .SetReadHeadersAction(_correlationManager.FetchCorrelationIfExists)
