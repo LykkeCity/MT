@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log; 
@@ -42,6 +43,7 @@ using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -116,13 +118,14 @@ namespace MarginTrading.Backend
             }).AddSwaggerGenNewtonsoftSupport();
 
             _mtSettingsManager = Configuration.LoadSettings<MtBackendSettings>(
+                    configure: OverrideEmptyRabbitMqConnectionStrings,
                     throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation())
                 .Nested(s =>
                 {
                     s.MtBackend.Env = Configuration.ServerType();
                     return s;
                 });
-            
+
             services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend);
             
             services.Configure<RabbitMqRetryPolicyOptions>(opt =>
@@ -368,6 +371,17 @@ namespace MarginTrading.Backend
                 .ThrowExceptionIfQueuesNotEmpty(!marginTradingSettings.StartupQueuesChecker.DisablePoisonQueueCheck);
 
             return deduplicationService;
+        }
+        
+        private static void OverrideEmptyRabbitMqConnectionStrings(MtBackendSettings cfg)
+        {
+            var defaultRabbitMqConnString = cfg.MtBackend.MtRabbitMqConnString;
+            
+            // set main RabbitMq connection string if it was not configured on
+            // particular publisher/subscriber level
+            cfg.GetPropertiesOfType<RabbitMqConfigurationBase>()
+                .Where(c => string.IsNullOrWhiteSpace(c.ConnectionString))
+                .SetConnectionString(defaultRabbitMqConnString);
         }
     }
 }

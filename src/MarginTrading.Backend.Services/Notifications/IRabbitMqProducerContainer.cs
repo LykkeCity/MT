@@ -12,17 +12,17 @@ namespace MarginTrading.Backend.Services.Notifications
         /// Registers a producer with RabbitMqPublisherInfoWithLogging publisherInfo.
         /// Human-readable message logging is enabled based on a setting in publisherInfo.
         /// </summary>
-        /// <param name="publisherInfo"></param>
+        /// <param name="publisherConfig"></param>
         /// <typeparam name="TMessage"></typeparam>
-        void RegisterProducer<TMessage>(RabbitMqPublisherInfoWithLogging publisherInfo);
+        void RegisterProducer<TMessage>(RabbitMqPublisherConfigurationWithLogging publisherConfig);
         
         /// <summary>
         /// Registers a producer with RabbitMqPublisherInfo publisherInfo.
         /// Human-readable message logging is disabled.
         /// </summary>
-        /// <param name="publisherInfo"></param>
+        /// <param name="publisherConfig"></param>
         /// <typeparam name="TMessage"></typeparam>
-        void RegisterProducer<TMessage>(RabbitMqPublisherInfo publisherInfo);
+        void RegisterProducer<TMessage>(RabbitMqPublisherConfiguration publisherConfig);
 
         /// <summary>
         /// Gets producer for a specified type.
@@ -30,6 +30,6 @@ namespace MarginTrading.Backend.Services.Notifications
         /// </summary>
         /// <typeparam name="TMessage">Type of produced message</typeparam>
         /// <returns></returns>
-        (RabbitMqPublisherInfoWithLogging PublisherInfo, IMessageProducer<TMessage> Producer) GetProducer<TMessage>();
+        (RabbitMqPublisherConfigurationWithLogging PublisherConfig, IMessageProducer<TMessage> Producer) GetProducer<TMessage>();
     }
 }

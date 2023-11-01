@@ -4,7 +4,6 @@
 using JetBrains.Annotations;
 using Lykke.MarginTrading.BrokerBase.Models;
 using Lykke.MarginTrading.BrokerBase.Settings;
-using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.AccountMarginEventsBroker
@@ -28,6 +27,6 @@ namespace MarginTrading.AccountMarginEventsBroker
     [UsedImplicitly]
     public class RabbitMqQueues
     {
-        public RabbitMqPublisherInfo AccountMarginEvents { get; set; }
+        public RabbitMqPublisherConfiguration AccountMarginEvents { get; set; }
     }
 }

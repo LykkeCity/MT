@@ -16,8 +16,8 @@ namespace MarginTrading.Backend.Services.Notifications
 
         private readonly Dictionary<Type, object> _producers = new Dictionary<Type, object>();
 
-        private readonly Dictionary<Type, RabbitMqPublisherInfoWithLogging> _producerSettings =
-            new Dictionary<Type, RabbitMqPublisherInfoWithLogging>();
+        private readonly Dictionary<Type, RabbitMqPublisherConfigurationWithLogging> _producerSettings =
+            new Dictionary<Type, RabbitMqPublisherConfigurationWithLogging>();
 
         public RabbitMqProducerContainer(IRabbitMqService rabbitMqService,
             MarginTradingSettings settings)
@@ -27,21 +27,20 @@ namespace MarginTrading.Backend.Services.Notifications
         }
 
         /// <inheritdoc />
-        public void RegisterProducer<TMessage>(RabbitMqPublisherInfoWithLogging publisherInfo)
+        public void RegisterProducer<TMessage>(RabbitMqPublisherConfigurationWithLogging publisherConfig)
         {
-            RegisterProducerImpl<TMessage>(publisherInfo);
+            RegisterProducerImpl<TMessage>(publisherConfig);
         }
 
         /// <inheritdoc />
-        public void RegisterProducer<TMessage>(RabbitMqPublisherInfo publisherInfo)
+        public void RegisterProducer<TMessage>(RabbitMqPublisherConfiguration publisherConfig)
         {
-            RegisterProducerImpl<TMessage>(publisherInfo.WithLogging(false));
+            RegisterProducerImpl<TMessage>(publisherConfig.ToPublisherConfigWithLogging(false));
         }
 
-        private void RegisterProducerImpl<TMessage>(RabbitMqPublisherInfoWithLogging publisherInfo)
+        private void RegisterProducerImpl<TMessage>(RabbitMqPublisherConfigurationWithLogging publisherInfo)
         {
-            var settings = publisherInfo.ToRabbitMqSettings(_settings.MtRabbitMqConnString);
-            var producer = _rabbitMqService.GetProducer(settings, _rabbitMqService.GetJsonSerializer<TMessage>());
+            var producer = _rabbitMqService.GetProducer(publisherInfo, _rabbitMqService.GetJsonSerializer<TMessage>());
             var type = typeof(TMessage);
             _producers.Add(type, producer);
             _producerSettings.Add(type, publisherInfo);
@@ -49,7 +48,7 @@ namespace MarginTrading.Backend.Services.Notifications
 
 
         /// <inheritdoc />
-        public (RabbitMqPublisherInfoWithLogging PublisherInfo, IMessageProducer<TMessage> Producer)
+        public (RabbitMqPublisherConfigurationWithLogging PublisherConfig, IMessageProducer<TMessage> Producer)
             GetProducer<TMessage>()
         {
             var type = typeof(TMessage);
