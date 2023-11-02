@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Snapshots;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Extensions;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Middleware;
 using Microsoft.AspNetCore.Authorization;
@@ -45,21 +47,29 @@ namespace MarginTrading.Backend.Controllers
         /// Save snapshot of orders, positions, account stats, best fx prices, best trading prices for current moment.
         /// Throws an error in case if trading is not stopped.
         /// </summary>
+        /// <param name="tradingDay">Trading day.</param>
+        /// <param name="correlationId">Correlation ID.</param>
+        /// <param name="status">Snapshot target status.</param>
         /// <returns>Snapshot statistics.</returns>
         [HttpPost("make-trading-data-snapshot")]
-        public async Task<string> MakeTradingDataSnapshot([FromQuery] DateTime tradingDay, [FromQuery] string correlationId = null)
+        public Task<string> MakeTradingDataSnapshot([FromQuery] DateTime tradingDay,
+            [FromQuery] string correlationId = null,
+            [FromQuery] SnapshotStatusContract status = SnapshotStatusContract.Final)
         {
             if (tradingDay == default)
             {
                 throw new Exception($"{nameof(tradingDay)} must be set");
             }
-            
+
             if (string.IsNullOrWhiteSpace(correlationId))
             {
                 correlationId = _identityGenerator.GenerateGuid();
             }
-            
-            return await _snapshotService.MakeTradingDataSnapshot(tradingDay, correlationId);
+
+            var domainStatus = status.ToDomain();
+            if (domainStatus == null)
+                throw new ArgumentOutOfRangeException(nameof(status), status, "Invalid status value");
+            return _snapshotService.MakeTradingDataSnapshot(tradingDay, correlationId, domainStatus.Value);
         }
 
         /// <summary>
