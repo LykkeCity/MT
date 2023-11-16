@@ -39,13 +39,12 @@ namespace MarginTrading.Backend
                 ? restartAttemptsIntervalFromEnv
                 : 10000;
 
-            bool fatalErrorOccured;
-            do
+            while (restartAttemptsLeft > 0)
             {
                 try
                 {
-                    fatalErrorOccured = false;
-                    
+                    //Host.CreateDefaultBuilder(args)
+
                     var configuration = new ConfigurationBuilder()
                         .AddJsonFile("appsettings.json", optional: true)
                         .AddUserSecrets<Startup>()
@@ -57,11 +56,11 @@ namespace MarginTrading.Backend
                         .ConfigureWebHostDefaults(webBuilder =>
                         {
                             webBuilder.ConfigureKestrel(serverOptions =>
-                                {
-                                    // Set properties and call methods on options
-                                })
-                                .UseConfiguration(configuration)
-                                .UseStartup<Startup>();
+                            {
+                                // Set properties and call methods on options
+                            })
+                            .UseConfiguration(configuration)
+                            .UseStartup<Startup>();
                         })
                         .Build();
 
@@ -69,15 +68,13 @@ namespace MarginTrading.Backend
                 }
                 catch (Exception e)
                 {
-                    fatalErrorOccured = true;
-                    Console.WriteLine(
-                        $@"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
+                    Console.WriteLine($@"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
                     LogLocator.CommonLog?.WriteFatalErrorAsync(
                         "MT Backend", "Restart host", $"Attempts left: {restartAttemptsLeft}", e);
                     restartAttemptsLeft--;
                     Thread.Sleep(restartAttemptsInterval);
                 }
-            } while (restartAttemptsLeft > 0 && fatalErrorOccured);
+            }
 
             Console.WriteLine(@"Terminated");
         }
