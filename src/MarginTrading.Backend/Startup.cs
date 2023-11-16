@@ -328,8 +328,8 @@ namespace MarginTrading.Backend
 
             services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(LogLocator.CommonLog));
 
-            PerformanceTracker.Enabled = true;
-            if (settings.CurrentValue.PerformanceLoggerEnabled)
+            PerformanceTracker.Enabled = settings.CurrentValue.PerformanceTrackerEnabled;
+            if (PerformanceTracker.Enabled)
             {
                 services.AddHostedService<PerformanceLogger>();
             }

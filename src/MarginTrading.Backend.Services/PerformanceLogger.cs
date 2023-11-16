@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public static string PrintPerformanceStatistics()
+        private static string PrintPerformanceStatistics()
         {
             var sb = new StringBuilder();
             sb.AppendLine();
