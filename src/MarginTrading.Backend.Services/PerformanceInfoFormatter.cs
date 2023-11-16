@@ -10,16 +10,13 @@ namespace MarginTrading.Backend.Services
             var totalExecutionTimeFormatted = FormattingUtils.FormatMilliseconds(stat.TotalExecutionMs);
             var averageExecutionTimeFormatted =
                 FormattingUtils.FormatMilliseconds(stat.TotalExecutionMs / stat.CallsCounter);
-            var maxExecutionTimeFormatted = FormattingUtils.FormatMilliseconds(stat.MaxExecutionMs);
             
-            var methodInfo = $"Method: {methodKey}".PadRight(100);
-            var callsInfo = $"Calls: {stat.CallsCounter}".PadRight(15);
-            var totalExecutionTimeInfo = $"Total execution time: {totalExecutionTimeFormatted}".PadRight(30);
-            var averageExecutionTimeInfo = $"Average execution time: {averageExecutionTimeFormatted}".PadRight(30);
-            var maxExecutionTimeInfo = $"Max execution time: {maxExecutionTimeFormatted}".PadRight(25);
+            var methodInfo = $"Method: {methodKey}".PadRight(120);
+            var callsInfo = $"Calls: {stat.CallsCounter}".PadRight(20);
+            var totalExecutionTimeInfo = $"Total execution time: {totalExecutionTimeFormatted}".PadRight(40);
+            var averageExecutionTimeInfo = $"Average execution time: {averageExecutionTimeFormatted}".PadRight(40);
 
-            return
-                $"{methodInfo} | {callsInfo} | {totalExecutionTimeInfo} | {averageExecutionTimeInfo} | {maxExecutionTimeInfo}";
+            return $"{methodInfo} | {callsInfo} | {totalExecutionTimeInfo} | {averageExecutionTimeInfo}";
         }
 
         public static string FormatPositionStatistics(string assetPairId, int counter)
