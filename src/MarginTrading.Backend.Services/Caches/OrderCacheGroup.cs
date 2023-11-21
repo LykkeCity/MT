@@ -10,7 +10,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services
 {
@@ -99,11 +98,9 @@ namespace MarginTrading.Backend.Services
             {
                 _lockSlim.ExitWriteLock();
             }
-            
-            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
-            {
-                accountsCacheService.Get(order.AccountId)?.CacheNeedsToBeUpdated();
-            }
+
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(order.AccountId);
+            account.CacheNeedsToBeUpdated();
         }
 
         public void Remove(Order order)
@@ -128,10 +125,8 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            if (ContainerProvider.Container.TryResolveWithoutException<IAccountsCacheService>(out var accountsCacheService))
-            {
-                accountsCacheService.Get(order.AccountId)?.CacheNeedsToBeUpdated();
-            }
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(order.AccountId);
+            account?.CacheNeedsToBeUpdated();
         }
         
         public bool TryPopById(string orderId, out Order result)

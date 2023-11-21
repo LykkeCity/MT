@@ -45,7 +45,7 @@ namespace MarginTrading.Backend
                 try
                 {
                     fatalErrorOccured = false;
-                    
+
                     var configuration = new ConfigurationBuilder()
                         .AddJsonFile("appsettings.json", optional: true)
                         .AddUserSecrets<Startup>()

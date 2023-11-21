@@ -186,7 +186,7 @@ namespace MarginTrading.Backend.Core
             {
                 if (accountInstance.AccountFpl.ActualHash == accountInstance.AccountFpl.CalculatedHash)
                     return accountInstance.AccountFpl;
-
+                
                 try
                 {
                     using var scope = ContainerProvider.Container.BeginLifetimeScope();

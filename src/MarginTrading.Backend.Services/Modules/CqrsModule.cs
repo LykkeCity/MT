@@ -14,7 +14,6 @@ using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Cqrs.Configuration.Saga;
 using Lykke.Cqrs.Middleware.Logging;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
-using Lykke.Messaging.RabbitMq.Retry;
 using Lykke.Messaging.Serialization;
 using Lykke.Snow.Common.Correlation.Cqrs;
 using Lykke.Snow.Cqrs;
@@ -39,7 +38,7 @@ using MarginTrading.AssetService.Contracts.Products;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
-using Microsoft.Extensions.Logging;
+using Common.Log;
 
 namespace MarginTrading.Backend.Services.Modules
 {
@@ -51,12 +50,16 @@ namespace MarginTrading.Backend.Services.Modules
         private readonly CqrsSettings _settings;
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly long _defaultRetryDelayMs;
+        private readonly ILog _log;
 
-        public CqrsModule(CqrsSettings settings, MarginTradingSettings marginTradingSettings)
+        public CqrsModule(CqrsSettings settings,
+            MarginTradingSettings marginTradingSettings,
+            ILog log)
         {
             _settings = settings;
             _marginTradingSettings = marginTradingSettings;
             _defaultRetryDelayMs = (long)_settings.RetryDelay.TotalMilliseconds;
+            _log = log;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -71,7 +74,7 @@ namespace MarginTrading.Backend.Services.Modules
 
             // Sagas & command handlers
             builder.RegisterAssemblyTypes(GetType().Assembly).Where(t =>
-                new[] {"Saga", "CommandsHandler", "Projection"}.Any(ending => t.Name.EndsWith(ending))).AsSelf();
+                new[] { "Saga", "CommandsHandler", "Projection" }.Any(ending => t.Name.EndsWith(ending))).AsSelf();
 
             builder.Register(CreateEngine)
                 .As<ICqrsEngine>()
@@ -83,8 +86,6 @@ namespace MarginTrading.Backend.Services.Modules
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
                     environment: _settings.EnvironmentName);
-            
-            var loggerFactory = ctx.Resolve<ILoggerFactory>();
 
             var registrations = new List<IRegistration>
             {
@@ -93,8 +94,8 @@ namespace MarginTrading.Backend.Services.Modules
                 RegisterSpecialLiquidationSaga(),
                 RegisterLiquidationSaga(),
                 RegisterContext(),
-                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(loggerFactory)),
-                Register.EventInterceptors(new DefaultEventLoggingInterceptor(loggerFactory))
+                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(_log)),
+                Register.EventInterceptors(new DefaultEventLoggingInterceptor(_log))
             };
 
             var fakeGavel = RegisterGavelContextIfNeeded();
@@ -106,15 +107,13 @@ namespace MarginTrading.Backend.Services.Modules
             {
                 Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
-            var engine = new RabbitMqCqrsEngine(ctx.Resolve<ILoggerFactory>(),
+            var engine = new RabbitMqCqrsEngine(_log,
                 ctx.Resolve<IDependencyResolver>(),
                 new DefaultEndpointProvider(),
                 rabbitMqSettings.Endpoint.ToString(),
                 rabbitMqSettings.UserName,
                 rabbitMqSettings.Password,
                 true,
-                TimeSpan.FromSeconds(5),
-                ctx.Resolve<IRetryPolicyProvider>(),
                 registrations.ToArray());
             engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
             engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);

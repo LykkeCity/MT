@@ -36,14 +36,14 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public static string PrintPerformanceStatistics()
+        private static string PrintPerformanceStatistics()
         {
             var sb = new StringBuilder();
             sb.AppendLine();
             sb.AppendLine("=======-Performance statistics-==========");
             foreach (var stat in PerformanceTracker.Statistics)
             {
-                var line = PerformanceInfoFormatter.FormatMethodStatistics(stat.Key.ToString(), stat.Value);
+                var line = PerformanceInfoFormatter.FormatMethodStatistics(stat.Key, stat.Value);
                 sb.AppendLine(line);
             }
             sb.AppendLine("====-Performance statistics (end)-=======");
