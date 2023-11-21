@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Core
 {
@@ -185,9 +187,18 @@ namespace MarginTrading.Backend.Core
                 if (accountInstance.AccountFpl.ActualHash == accountInstance.AccountFpl.CalculatedHash)
                     return accountInstance.AccountFpl;
                 
-                using var scope = ContainerProvider.Container.BeginLifetimeScope();
-                var svc = scope.Resolve<IAccountUpdateService>();
-                svc.UpdateAccount(accountInstance);
+                try
+                {
+                    using var scope = ContainerProvider.Container.BeginLifetimeScope();
+                    var svc = scope.Resolve<IAccountUpdateService>();
+                    svc.UpdateAccount(accountInstance);
+                }
+                catch (Exception)
+                {
+                    LogLocator.CommonLog.WriteWarning(nameof(MarginTradingAccountExtensions),
+                        $"AccountId = {account.Id}",
+                        "Couldn't update account FPL");
+                }
 
                 return accountInstance.AccountFpl;
             }
