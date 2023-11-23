@@ -28,26 +28,13 @@ namespace MarginTrading.Backend.Services.Events
         {
             if (_isDisposed)
                 return;
-            
+
             AssertInitialized();
             foreach (var consumer in _consumers)
             {
                 try
                 {
-                    var consumerName = consumer.GetType().Name;
-                    var eventName = typeof(TEventArgs).Name;
-                    
-                    var assetPairId = ea is BestPriceChangeEventArgs bestPriceChangeEventArgs
-                        ? bestPriceChangeEventArgs.BidAskPair.Instrument
-                        : null;
-                    
-                    assetPairId = ea is FxBestPriceChangeEventArgs fxBestPriceChangeEventArgs
-                        ? fxBestPriceChangeEventArgs.BidAskPair.Instrument
-                        : assetPairId;
-
-                    PerformanceTracker.Track(
-                        new PerformanceTracker.MethodIdentity(consumerName, eventName, assetPairId), 
-                        () => consumer.ConsumeEvent(sender, ea));
+                    consumer.ConsumeEvent(sender, ea);
                 }
                 catch (Exception e)
                 {
@@ -67,7 +54,7 @@ namespace MarginTrading.Backend.Services.Events
         {
             if (null != _consumers)
                 return;
-            
+
             lock (_sync)
             {
                 if (null != _consumers)
