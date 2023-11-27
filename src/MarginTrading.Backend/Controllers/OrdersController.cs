@@ -541,7 +541,7 @@ namespace MarginTrading.Backend.Controllers
                 contents: filteredOrderList.Select(o => o.ConvertToContract(_ordersCache)).ToList(),
                 start: skip ?? 0,
                 size: filteredOrderList.Count,
-                totalSize: filteredOrderList.Count
+                totalSize: orders.Count()
             ));
         }
 
