@@ -43,6 +43,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
         public const string OperationName = "SpecialLiquidation";
 
+        private readonly IEnumerable<ISpecialLiquidationSagaEventHandler> _eventHandlers;
+
         public SpecialLiquidationSaga(
             IDateService dateService,
             IChaosKitty chaosKitty,
@@ -289,6 +291,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         [UsedImplicitly]
         private async Task Handle(SpecialLiquidationFailedEvent e, ICommandSender sender)
         {
+            await _eventHandlers.HandleEvent(e, sender);
+            
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
