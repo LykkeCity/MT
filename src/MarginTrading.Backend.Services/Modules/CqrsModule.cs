@@ -72,6 +72,10 @@ namespace MarginTrading.Backend.Services.Modules
                 .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
+            builder.RegisterType<SpecialLiquidationFailedEventHandler>()
+                .As<ISpecialLiquidationSagaEventHandler>()
+                .InstancePerDependency();
+                
             // Sagas & command handlers
             builder.RegisterAssemblyTypes(GetType().Assembly).Where(t =>
                 new[] { "Saga", "CommandsHandler", "Projection" }.Any(ending => t.Name.EndsWith(ending))).AsSelf();
