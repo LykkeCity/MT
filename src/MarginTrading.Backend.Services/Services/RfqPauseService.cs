@@ -73,7 +73,7 @@ namespace MarginTrading.Backend.Services.Services
             {
                 var existingPause = (await _pauseRepository.FindAsync(
                         operationId,
-                        SpecialLiquidationSaga.OperationName,
+                        SpecialLiquidationSaga.Name,
                         NotCancelledPredicate))
                     .SingleOrDefault();
 
@@ -84,7 +84,7 @@ namespace MarginTrading.Backend.Services.Services
                 }
             
                 var executionInfo = await _executionInfoRepository
-                    .GetAsync<SpecialLiquidationOperationData>(SpecialLiquidationSaga.OperationName, operationId);
+                    .GetAsync<SpecialLiquidationOperationData>(SpecialLiquidationSaga.Name, operationId);
                 
                 if (executionInfo == null)
                     return RfqPauseErrorCode.NotFound;
@@ -99,7 +99,7 @@ namespace MarginTrading.Backend.Services.Services
                 
                 var pause = Pause.Create(
                     operationId,
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     source,
                     initiator,
                     _dateService.Now());
@@ -123,7 +123,7 @@ namespace MarginTrading.Backend.Services.Services
 
             return (await _pauseRepository.FindAsync(
                     operationId,
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     NotCancelledPredicate))
                 .SingleOrDefault();
         }
@@ -138,21 +138,21 @@ namespace MarginTrading.Backend.Services.Services
             {
                 var activePause = (await _pauseRepository.FindAsync(
                         operationId,
-                        SpecialLiquidationSaga.OperationName,
+                        SpecialLiquidationSaga.Name,
                         ActivePredicate))
                     .SingleOrDefault();
 
                 if (activePause != null)
                 {
                     await _log.WriteInfoAsync(nameof(RfqPauseService), nameof(AcknowledgeAsync), null,
-                        $"The pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] is effective since [{activePause.EffectiveSince}]");
+                        $"The pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.Name}] is effective since [{activePause.EffectiveSince}]");
 
                     return true;
                 }
 
                 var pendingPause = (await _pauseRepository.FindAsync(
                         operationId,
-                        SpecialLiquidationSaga.OperationName,
+                        SpecialLiquidationSaga.Name,
                         PendingPredicate))
                     .SingleOrDefault();
 
@@ -173,7 +173,7 @@ namespace MarginTrading.Backend.Services.Services
                     if (!updated)
                     {
                         await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(AcknowledgeAsync), null,
-                            $"Couldn't activate pending pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}]");
+                            $"Couldn't activate pending pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.Name}]");
 
                         return false;
                     }
@@ -201,7 +201,7 @@ namespace MarginTrading.Backend.Services.Services
             {
                 var pendingPause = (await _pauseRepository.FindAsync(
                         operationId,
-                        SpecialLiquidationSaga.OperationName,
+                        SpecialLiquidationSaga.Name,
                         PendingPredicate))
                     .SingleOrDefault();
 
@@ -222,7 +222,7 @@ namespace MarginTrading.Backend.Services.Services
                     if (!updated)
                     {
                         await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(StopPendingAsync), null,
-                            $"Couldn't stop pending pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}]");
+                            $"Couldn't stop pending pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.Name}]");
                     }
                 }
 
@@ -244,7 +244,7 @@ namespace MarginTrading.Backend.Services.Services
             {
                 var pendingCancellationPause = (await _pauseRepository.FindAsync(
                         operationId,
-                        SpecialLiquidationSaga.OperationName,
+                        SpecialLiquidationSaga.Name,
                         PendingCancellationPredicate))
                     .SingleOrDefault();
 
@@ -265,7 +265,7 @@ namespace MarginTrading.Backend.Services.Services
                     if (!updated)
                     {
                         await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(AcknowledgeCancellationAsync), null,
-                            $"Couldn't cancel pending cancellation pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}]");
+                            $"Couldn't cancel pending cancellation pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.Name}]");
 
                         return false;
                     }
@@ -295,21 +295,21 @@ namespace MarginTrading.Backend.Services.Services
             try
             {
                 var executionInfo = await _executionInfoRepository
-                    .GetAsync<SpecialLiquidationOperationData>(SpecialLiquidationSaga.OperationName, operationId);
+                    .GetAsync<SpecialLiquidationOperationData>(SpecialLiquidationSaga.Name, operationId);
                 
                 if (executionInfo == null)
                     return RfqResumeErrorCode.NotFound;
                 
                 var activePause = (await _pauseRepository.FindAsync(
                         operationId,
-                        SpecialLiquidationSaga.OperationName,
+                        SpecialLiquidationSaga.Name,
                         ActivePredicate))
                     .SingleOrDefault();
 
                 if (activePause == null)
                 {
                     await _log.WriteInfoAsync(nameof(RfqPauseService), nameof(ResumeAsync), null,
-                        $"The active pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] was not found");
+                        $"The active pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.Name}] was not found");
 
                     return RfqResumeErrorCode.NotPaused;
                 }
@@ -342,7 +342,7 @@ namespace MarginTrading.Backend.Services.Services
                 else
                 {
                     await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(ResumeAsync), null,
-                        $"Couldn't cancel active pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] due to database issues");
+                        $"Couldn't cancel active pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.Name}] due to database issues");
 
                     return RfqResumeErrorCode.Persistence;
                 }
