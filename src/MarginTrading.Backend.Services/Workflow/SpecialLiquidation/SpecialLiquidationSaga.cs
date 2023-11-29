@@ -53,7 +53,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IRfqPauseService rfqPauseService,
             ILog log,
             IAssetPairsCache assetPairsCache,
-            LiquidationHelper liquidationHelper)
+            LiquidationHelper liquidationHelper,
+            IEnumerable<ISpecialLiquidationSagaEventHandler> eventHandlers)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
@@ -64,6 +65,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _rfqPauseService = rfqPauseService;
             _log = log;
             _liquidationHelper = liquidationHelper;
+            _eventHandlers = eventHandlers;
         }
 
         [UsedImplicitly]
