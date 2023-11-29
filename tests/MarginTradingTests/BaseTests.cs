@@ -188,6 +188,7 @@ namespace MarginTradingTests
             var exchangeConnector = Mock.Of<IExchangeConnectorClient>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorClient>();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
+            builder.RegisterInstance(Mock.Of<IRfqService>()).As<IRfqService>();
             
             builder.RegisterBuildCallback(c =>
             {
