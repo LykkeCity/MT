@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Core.Extensions
 
             if (Convert.ToInt32(data.State) > Convert.ToInt32(expectedState))
             {
-                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchState),
+                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchToState),
                     $"Operation is already in the next state, so this event is ignored, {new {data, expectedState, nextState}.ToJson()}.");
                 return false;
             }
@@ -37,6 +37,14 @@ namespace MarginTrading.Backend.Core.Extensions
 
             return true;
         }
+
+        public static bool SwitchToState(this OperationDataBase<SpecialLiquidationOperationState> data,
+            SpecialLiquidationOperationState nextState) =>
+            data.SwitchState(data.State, nextState);
+        
+        public static bool SwitchToState(this IOperationExecutionInfo<SpecialLiquidationOperationData> info,
+            SpecialLiquidationOperationState nextState) =>
+            info.Data.SwitchToState(nextState);
 
         public static bool SwitchState(this OperationDataBase<SpecialLiquidationOperationState> data,
             SpecialLiquidationOperationState expectedState, SpecialLiquidationOperationState nextState)
@@ -55,7 +63,7 @@ namespace MarginTrading.Backend.Core.Extensions
 
             if (Convert.ToInt32(data.State) > Convert.ToInt32(expectedState))
             {
-                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchState),
+                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchToState),
                     $"Operation is already in the next state, so this event is ignored, {new {data, expectedState, nextState}.ToJson()}.");
                 return false;
             }
@@ -63,7 +71,7 @@ namespace MarginTrading.Backend.Core.Extensions
             if (data.State == SpecialLiquidationOperationState.Failed &&
                 nextState == SpecialLiquidationOperationState.Cancelled)
             {
-                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchState),
+                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchToState),
                     $"Cannot switch from Failed to Cancelled state (both states are final), so this event is ignored, {new {data, expectedState, nextState}.ToJson()}.");
                 return false;
             }
