@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Common.Chaos;
@@ -16,10 +17,26 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Services;
-using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Workflow
 {
+    public static class SpecialLiquidationCommandSenderExtensions
+    {
+        public static void SendResume(this ICommandSender sender,
+            IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo,
+            DateTime timestamp)
+        {
+            sender.SendCommand(new ResumeLiquidationInternalCommand
+            {
+                OperationId = executionInfo.Data.CausationOperationId,
+                CreationTime = timestamp,
+                Comment = $"Resume after special liquidation {executionInfo.Id} failed.",
+                IsCausedBySpecialLiquidation = true,
+                CausationOperationId = executionInfo.Id
+            }, "TradingEngine");
+        }
+    }
+    
     /// <summary>
     /// Event handler implementation for <see cref="SpecialLiquidationFailedEvent"/>
     /// </summary>
@@ -35,10 +52,8 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IRfqPauseService _rfqPauseService;
-        private readonly ILogger<SpecialLiquidationFailedEventHandler> _logger;
 
-        public SpecialLiquidationFailedEventHandler(ILogger<SpecialLiquidationFailedEventHandler> logger,
-            IOperationExecutionInfoRepository operationExecutionInfoRepository,
+        public SpecialLiquidationFailedEventHandler(IOperationExecutionInfoRepository operationExecutionInfoRepository,
             OrdersCache ordersCache,
             LiquidationHelper liquidationHelper,
             CqrsContextNamesSettings cqrsContextNamesSettings,
@@ -47,7 +62,6 @@ namespace MarginTrading.Backend.Services.Workflow
             IChaosKitty chaosKitty,
             MarginTradingSettings marginTradingSettings)
         {
-            _logger = logger;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _ordersCache = ordersCache;
             _liquidationHelper = liquidationHelper;
@@ -58,75 +72,70 @@ namespace MarginTrading.Backend.Services.Workflow
             _marginTradingSettings = marginTradingSettings;
         }
 
-        public async Task Handle(SpecialLiquidationFailedEvent @event, ICommandSender sender)
-        {
-            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+        private Task<IOperationExecutionInfo<SpecialLiquidationOperationData>> GetExecutionInfo(string operationId) =>
+            _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 // todo: remove this dependency on SpecialLiquidationSaga class
                 operationName: SpecialLiquidationSaga.Name,
-                id: @event.OperationId);
+                operationId);
+
+        public async Task Handle(SpecialLiquidationFailedEvent @event, ICommandSender sender)
+        {
+            var eInfo = await GetExecutionInfo(@event.OperationId);
             
-            if (executionInfo?.Data == null)
+            if (eInfo?.Data == null)
                 return;
             
-            if (@event.CanRetryPriceRequest)
+            var isDiscontinued = await _liquidationHelper.FailIfInstrumentDiscontinued(eInfo, sender);
+            if (isDiscontinued) return;
+            
+            if (!eInfo.Data.RequestedFromCorporateActions)
             {
-                if (!executionInfo.Data.RequestedFromCorporateActions)
+                var positions = _ordersCache.Positions
+                    .GetPositionsByAccountIds(eInfo.Data.AccountId)
+                    .Where(p => eInfo.Data.PositionIds.Contains(p.Id))
+                    .ToArray();
+            
+                if (_liquidationHelper.CheckIfNetVolumeCanBeLiquidated(eInfo.Data.Instrument, positions, out _))
                 {
-                    var positions = _ordersCache.Positions
-                        .GetPositionsByAccountIds(executionInfo.Data.AccountId)
-                        .Where(p => executionInfo.Data.PositionIds.Contains(p.Id))
-                        .ToArray();
-
-                    if (_liquidationHelper.CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.Instrument, positions, out _))
+                    // there is liquidity so we can cancel the special liquidation flow.
+                    sender.SendCommand(new CancelSpecialLiquidationCommand
                     {
-                        // there is liquidity so we can cancel the special liquidation flow.
-                        sender.SendCommand(new CancelSpecialLiquidationCommand
-                        {
-                            OperationId = @event.OperationId,
-                            Reason = "Liquidity is enough to close positions within regular flow"
-                        }, _cqrsContextNamesSettings.TradingEngine);
-                        return;
-                    }
-                }
-
-                if (SpecialLiquidationSaga.PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions, 
-                        _marginTradingSettings.SpecialLiquidation))
-                {
-                    var isDiscontinued = await _liquidationHelper.FailIfInstrumentDiscontinued(executionInfo, sender);
-                    if (isDiscontinued) return;
-                    
-                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(executionInfo.Id);
-                    if (pauseAcknowledged) return;
-                    
-                    if (executionInfo.Data.SwitchState(executionInfo.Data.State,
-                            SpecialLiquidationOperationState.PriceRequested))
-                    {
-                        await _liquidationHelper.InternalRetryPriceRequest(@event.CreationTime, sender, executionInfo,
-                            _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
-                        
-                        return;
-                    }
+                        OperationId = @event.OperationId,
+                        Reason = "Liquidity is enough to close positions within regular flow"
+                    }, _cqrsContextNamesSettings.TradingEngine);
+                    return;
                 }
             }
-
-            if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
-                SpecialLiquidationOperationState.Failed))
+            
+            if (SpecialLiquidationSaga.PriceRequestRetryRequired(
+                    eInfo.Data.RequestedFromCorporateActions,
+                    _marginTradingSettings.SpecialLiquidation) &&
+                @event.CanRetryPriceRequest)
             {
-                if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
+                var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(eInfo.Id);
+                if (pauseAcknowledged) return;
+            
+                if (eInfo.SwitchToState(SpecialLiquidationOperationState.PriceRequested))
                 {
-                    sender.SendCommand(new ResumeLiquidationInternalCommand
-                    {
-                        OperationId = executionInfo.Data.CausationOperationId,
-                        CreationTime = _dateService.Now(),
-                        Comment = $"Resume after special liquidation {executionInfo.Id} failed. Reason: {@event.Reason}",
-                        IsCausedBySpecialLiquidation = true,
-                        CausationOperationId = executionInfo.Id
-                    }, _cqrsContextNamesSettings.TradingEngine);
+                    await _liquidationHelper.InternalRetryPriceRequest(@event.CreationTime, sender, eInfo,
+                        _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
+                
+                    await _operationExecutionInfoRepository.Save(eInfo);
+                
+                    return;
+                }
+            }
+            
+            if (eInfo.SwitchToState(SpecialLiquidationOperationState.Failed))
+            {
+                if (!string.IsNullOrEmpty(eInfo.Data.CausationOperationId))
+                {
+                    sender.SendResume(eInfo, _dateService.Now());
                 }
                 
                 _chaosKitty.Meow(@event.OperationId);
-
-                await _operationExecutionInfoRepository.Save(executionInfo);
+            
+                await _operationExecutionInfoRepository.Save(eInfo);
             }
         }
     }

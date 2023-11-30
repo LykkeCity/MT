@@ -58,7 +58,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             ILog log,
             IAssetPairsCache assetPairsCache,
             CorrelationContextAccessor correlationContextAccessor,
-            LiquidationHelper liquidationHelper)
+            LiquidationHelper liquidationHelper,
+            IEnumerable<ISpecialLiquidationSagaEventHandler> eventHandlers)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
@@ -70,6 +71,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _log = log;
             _liquidationHelper = liquidationHelper;
             _correlationContextAccessor = correlationContextAccessor;
+            _eventHandlers = eventHandlers;
         }
 
         [UsedImplicitly]
