@@ -38,10 +38,16 @@ namespace MarginTrading.Backend.Services.Workflow
         /// <param name="sender"></param>
         /// <typeparam name="TEvent"></typeparam>
         /// <returns></returns>
-        public static Task Handle<TEvent>(
+        /// <remarks>Before calling handler checks if it can handle event</remarks>
+        public static async Task Handle<TEvent>(
             this IEnumerable<ISpecialLiquidationSagaEventHandler> handlers,
             TEvent @event,
-            ICommandSender sender) =>
-            handlers.First<TEvent>().Handle(@event, sender);
+            ICommandSender sender)
+        {
+            var firstHandler = handlers.First<TEvent>();
+
+            if (await firstHandler.CanHandle(@event))
+                await firstHandler.Handle(@event, sender);
+        }
     }
 }

@@ -71,7 +71,7 @@ namespace MarginTrading.Backend.Services.Modules
 
             builder.RegisterType<SpecialLiquidationFailedEventHandler>()
                 .AsImplementedInterfaces()
-                .InstancePerDependency();
+                .SingleInstance();
                 
             // Sagas & command handlers
             builder.RegisterAssemblyTypes(GetType().Assembly).Where(t =>
