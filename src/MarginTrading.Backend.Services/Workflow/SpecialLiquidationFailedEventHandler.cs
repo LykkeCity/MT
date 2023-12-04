@@ -103,7 +103,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
             var instrument = _assetPairsCache.GetAssetPairById(executionInfo!.Data.Instrument);
 
-            var nextAction = await GetNextAction(
+            var nextAction = await DetermineNextAction(
                 executionInfo: executionInfo,
                 instrumentDiscontinued: instrument.IsDiscontinued,
                 liquidityIsEnough: GetLiquidityIsEnough,
@@ -115,25 +115,24 @@ namespace MarginTrading.Backend.Services.Workflow
             if (!await TrySaveState(executionInfo, nextState))
                 return;
             
-            if (nextAction == NextAction.Cancel)
+            switch (nextAction)
             {
-                sender.SendCancellation(@event.OperationId);
-                return;
-            }
-            
-            if (nextAction == NextAction.ResumeInitialFlow)
-            {
-                sender.SendResumeLiquidation(executionInfo.Data.CausationOperationId, 
-                    executionInfo.Id, 
-                    _dateService.Now());
-                return;
-            }
-
-            if (nextAction == NextAction.RetryPriceRequest)
-            {
-                await _liquidationHelper.InternalRetryPriceRequest(@event.CreationTime, sender, executionInfo,
-                    _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
-                return;
+                case NextAction.Cancel:
+                    sender.SendCancellation(@event.OperationId);
+                    break;
+                case NextAction.ResumeInitialFlow:
+                    sender.SendResumeLiquidation(executionInfo.Data.CausationOperationId, 
+                        executionInfo.Id, 
+                        _dateService.Now());
+                    break;
+                case NextAction.RetryPriceRequest:
+                    await _liquidationHelper.InternalRetryPriceRequest(@event.CreationTime, 
+                        sender, 
+                        executionInfo,
+                        _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout!.Value);
+                    break;
+                default:
+                    return;
             }
         }
         
@@ -155,7 +154,7 @@ namespace MarginTrading.Backend.Services.Workflow
         /// <param name="configuration">Special liquidation settings</param>
         /// <returns></returns>
         [Pure]
-        internal static async Task<NextAction> GetNextAction(
+        internal static async Task<NextAction> DetermineNextAction(
             ExecutionInfo executionInfo, 
             bool instrumentDiscontinued,
             Func<ExecutionInfo, bool> liquidityIsEnough,
