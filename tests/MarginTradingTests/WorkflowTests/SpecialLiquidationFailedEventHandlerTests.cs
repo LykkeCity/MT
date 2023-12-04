@@ -16,9 +16,9 @@ namespace MarginTradingTests.WorkflowTests
     public class SpecialLiquidationFailedEventHandlerTests
     {
         [Test]
-        public async Task GetNextAction_ReturnsComplete_WhenInstrumentIsDiscontinued()
+        public async Task DetermineNextAction_ReturnsComplete_WhenInstrumentIsDiscontinued()
         {
-            var result = await SpecialLiquidationFailedEventHandler.GetNextAction(null, 
+            var result = await SpecialLiquidationFailedEventHandler.DetermineNextAction(null, 
                 true, 
                 _ => false,
                 false, 
@@ -29,12 +29,12 @@ namespace MarginTradingTests.WorkflowTests
         }
 
         [Test]
-        public async Task GetNextAction_ReturnsCancel_WhenLiquidityIsEnough()
+        public async Task DetermineNextAction_ReturnsCancel_WhenLiquidityIsEnough()
         {
             var executionInfo = Mock.Of<ExecutionInfo>(x =>
                 x.Data == new SpecialLiquidationOperationData { RequestedFromCorporateActions = false });
             
-            var result = await SpecialLiquidationFailedEventHandler.GetNextAction(executionInfo, 
+            var result = await SpecialLiquidationFailedEventHandler.DetermineNextAction(executionInfo, 
                 false, 
                 _ => true,
                 false, 
@@ -45,13 +45,13 @@ namespace MarginTradingTests.WorkflowTests
         }
         
         [Test]
-        public void GetNextAction_ChecksLiquidity_IfOnly_NotInitiatedByCorporateActions()
+        public void DetermineNextAction_ChecksLiquidity_IfOnly_NotInitiatedByCorporateActions()
         {
             var executionInfo = Mock.Of<ExecutionInfo>(x =>
                 x.Data == new SpecialLiquidationOperationData { RequestedFromCorporateActions = false });
             
             var ex = Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await SpecialLiquidationFailedEventHandler.GetNextAction(executionInfo, 
+                await SpecialLiquidationFailedEventHandler.DetermineNextAction(executionInfo, 
                     false, 
                     _ => throw new InvalidOperationException("Liquidity check expected"),
                     false, 
@@ -63,12 +63,12 @@ namespace MarginTradingTests.WorkflowTests
         }
 
         [Test]
-        public async Task GetNextAction_ReturnsRetryPriceRequest_WhenRetryIsRequiredAndCanRetryPriceRequest()
+        public async Task DetermineNextAction_ReturnsRetryPriceRequest_WhenRetryIsRequiredAndCanRetryPriceRequest()
         {
             var executionInfo = Mock.Of<ExecutionInfo>(x =>
                 x.Data == new SpecialLiquidationOperationData { RequestedFromCorporateActions = true }); // to skip liquidity check
 
-            var result = await SpecialLiquidationFailedEventHandler.GetNextAction(executionInfo,
+            var result = await SpecialLiquidationFailedEventHandler.DetermineNextAction(executionInfo,
                 false,
                 _ => false,
                 true,
@@ -80,12 +80,12 @@ namespace MarginTradingTests.WorkflowTests
         }
         
         [Test]
-        public async Task GetNextAction_ChecksForPause_BeforeRetryingPriceRequest()
+        public async Task DetermineNextAction_ChecksForPause_BeforeRetryingPriceRequest()
         {
             var executionInfo = Mock.Of<ExecutionInfo>(x =>
                 x.Data == new SpecialLiquidationOperationData { RequestedFromCorporateActions = true }); // to skip liquidity check
 
-            var result = await SpecialLiquidationFailedEventHandler.GetNextAction(executionInfo,
+            var result = await SpecialLiquidationFailedEventHandler.DetermineNextAction(executionInfo,
                 false,
                 _ => false,
                 true,
@@ -97,7 +97,7 @@ namespace MarginTradingTests.WorkflowTests
         }
         
         [Test]
-        public async Task GetNextAction_ResumesInitialFlow_WhenHasCausingLiquidation()
+        public async Task DetermineNextAction_ResumesInitialFlow_WhenHasCausingLiquidation()
         {
             var executionInfo = Mock.Of<ExecutionInfo>(x =>
                 x.Data == new SpecialLiquidationOperationData
@@ -106,7 +106,7 @@ namespace MarginTradingTests.WorkflowTests
                     RequestedFromCorporateActions = true
                 });
 
-            var result = await SpecialLiquidationFailedEventHandler.GetNextAction(executionInfo,
+            var result = await SpecialLiquidationFailedEventHandler.DetermineNextAction(executionInfo,
                 false,
                 _ => false,
                 false,
@@ -118,7 +118,7 @@ namespace MarginTradingTests.WorkflowTests
         }
         
         [Test]
-        public async Task GetNextAction_ReturnsComplete_WhenAsDefault()
+        public async Task DetermineNextAction_ReturnsComplete_WhenAsDefault()
         {
             var executionInfo = Mock.Of<ExecutionInfo>(x =>
                 x.Data == new SpecialLiquidationOperationData
@@ -127,7 +127,7 @@ namespace MarginTradingTests.WorkflowTests
                     RequestedFromCorporateActions = false
                 });
 
-            var result = await SpecialLiquidationFailedEventHandler.GetNextAction(executionInfo,
+            var result = await SpecialLiquidationFailedEventHandler.DetermineNextAction(executionInfo,
                 false,
                 _ => false,
                 false,
