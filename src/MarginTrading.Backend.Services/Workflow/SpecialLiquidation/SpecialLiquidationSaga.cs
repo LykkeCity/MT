@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -382,16 +381,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
-        }
-
-        private decimal GetActualNetPositionCloseVolume(ICollection<string> positionIds, string accountId)
-        {
-            var netPositionVolume = _ordersCache.GetPositions()
-                .Where(x => positionIds.Contains(x.Id)
-                            && (string.IsNullOrEmpty(accountId) || x.AccountId == accountId))
-                .Sum(x => x.Volume);
-
-            return -netPositionVolume;
         }
 
         internal static bool PriceRequestRetryRequired(bool requestedFromCorporateActions, SpecialLiquidationSettings specialLiquidationSettings) =>

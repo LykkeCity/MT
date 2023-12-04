@@ -12,5 +12,7 @@ namespace MarginTrading.Backend.Services.Workflow
     public interface ISagaEventHandler<in TEvent>
     {
         Task Handle(TEvent @event, ICommandSender sender);
+        
+        Task<bool> CanHandle(TEvent @event) => Task.FromResult(true);
     }
 }
