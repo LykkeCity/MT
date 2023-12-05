@@ -531,18 +531,17 @@ namespace MarginTrading.Backend.Controllers
             if (!string.IsNullOrWhiteSpace(parentOrderId))
                 orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
-            var orderList = (order == LykkeConstants.AscendingOrder
+            orders = (order == LykkeConstants.AscendingOrder
                     ? orders.OrderBy(x => x.Created)
-                    : orders.OrderByDescending(x => x.Created))
-                .ToList();
-            var filtered = (take == null ? orderList : orderList.Skip(skip.Value))
+                    : orders.OrderByDescending(x => x.Created));
+            var filteredOrderList = (take == null ? orders : orders.Skip(skip.Value))
                 .Take(PaginationHelper.GetTake(take)).ToList();
 
             return Task.FromResult(new Lykke.Contracts.Responses.PaginatedResponse<OrderContract>(
-                contents: filtered.Select(o => o.ConvertToContract(_ordersCache)).ToList(),
+                contents: filteredOrderList.Select(o => o.ConvertToContract(_ordersCache)).ToList(),
                 start: skip ?? 0,
-                size: filtered.Count,
-                totalSize: orderList.Count
+                size: filteredOrderList.Count,
+                totalSize: orders.Count()
             ));
         }
 
