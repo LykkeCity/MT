@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Controllers
             return Task.FromResult(response);
         }
 
-        [HttpPost]
+        [HttpPost("filtered")]
         public Task<List<SentimentInfoContract>> ListFilteredSentimentInfoAsync(SentimentInfoRequest request)
         {
             var response = _sentimentCache
