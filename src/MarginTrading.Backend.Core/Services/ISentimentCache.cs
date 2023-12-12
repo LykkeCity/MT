@@ -16,5 +16,7 @@ namespace MarginTrading.Backend.Core.Services
         (decimal, decimal) Get(string productId);
 
         IReadOnlyCollection<Sentiment> GetAll();
+        
+        IReadOnlyCollection<Sentiment> GetFiltered(HashSet<string> productIds);
     }
 }

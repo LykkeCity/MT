@@ -56,6 +56,10 @@ namespace MarginTrading.Backend.Services.Caches
 
         public IReadOnlyCollection<Sentiment> GetAll() => _sentiments.Values.ToList();
 
+        public IReadOnlyCollection<Sentiment> GetFiltered(HashSet<string> productIds) => _sentiments.Values
+            .Where(x => productIds.Contains(x.ProductId))
+            .ToList();
+
         public void Subscribe(IObservable<Position> provider)
         {
             if (provider == null)
