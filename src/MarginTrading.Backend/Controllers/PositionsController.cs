@@ -155,7 +155,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<OpenPositionContract> GetAsync(string positionId)
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
-                return null;
+                return Task.FromResult((OpenPositionContract)null);
 
             return Task.FromResult(position.ConvertToContract(_ordersCache));
         }
