@@ -179,10 +179,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
 
             var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<SpecialLiquidationOperationData>(
-                    operationName: SpecialLiquidationSaga.OperationName,
+                    operationName: SpecialLiquidationSaga.Name,
                     id: command.OperationId,
                     lastModified: _dateService.Now(),
                     data: new SpecialLiquidationOperationData
@@ -275,10 +275,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
             
             var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<SpecialLiquidationOperationData>(
-                    operationName: SpecialLiquidationSaga.OperationName,
+                    operationName: SpecialLiquidationSaga.Name,
                     id: command.OperationId,
                     lastModified: _dateService.Now(),
                     data: new SpecialLiquidationOperationData
@@ -313,7 +313,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 id: command.OperationId);
 
             if (executionInfo?.Data != null)
@@ -356,7 +356,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private async Task Handle(ExecuteSpecialLiquidationOrderCommand command, IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 id: command.OperationId);
 
             if (executionInfo?.Data == null)
@@ -515,7 +515,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private async Task Handle(ExecuteSpecialLiquidationOrdersInternalCommand command, IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 id: command.OperationId);
 
             if (executionInfo?.Data == null)
@@ -570,7 +570,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private async Task Handle(FailSpecialLiquidationInternalCommand command, IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 id: command.OperationId);
             
             if (executionInfo?.Data == null)
@@ -598,7 +598,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private async Task Handle(CancelSpecialLiquidationCommand command, IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 id: command.OperationId);
             
             if (executionInfo?.Data == null)
@@ -628,7 +628,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private async Task Handle(ClosePositionsRegularFlowCommand command, IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 id: command.OperationId);
             
             if (executionInfo?.Data == null)
@@ -662,7 +662,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private async Task Handle(ResumePausedSpecialLiquidationCommand command, IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                operationName: SpecialLiquidationSaga.OperationName,
+                operationName: SpecialLiquidationSaga.Name,
                 id: command.OperationId);
             
             if (executionInfo?.Data == null)

@@ -49,5 +49,16 @@ namespace MarginTrading.Backend.Controllers
 
             return Task.FromResult(response);
         }
+
+        [HttpPost("filtered")]
+        public Task<List<SentimentInfoContract>> ListFilteredSentimentInfoAsync(SentimentInfoRequest request)
+        {
+            var response = _sentimentCache
+                .GetFiltered(request.ProductIds)
+                .Select(SentimentExtensions.ToContract)
+                .ToList();
+
+            return Task.FromResult(response);
+        }
     }
 }

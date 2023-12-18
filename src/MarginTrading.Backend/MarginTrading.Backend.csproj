@@ -93,9 +93,16 @@
     <None Include="..\MarginTrading.SqlRepositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
   </ItemGroup>
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-        <_Parameter1>MarginTradingTests</_Parameter1>
-    </AssemblyAttribute>
+    <InternalsVisibleTo Include="MarginTradingTests" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="logs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="logs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="logs\MTCore\BackendLog.buffer-20230602.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="logs\**" />

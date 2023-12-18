@@ -29,5 +29,13 @@ namespace MarginTrading.Backend.Contracts
         /// <returns></returns>
         [Get("/api/sentiments")]
         Task<List<SentimentInfoContract>> ListSentimentInfoAsync();
+        
+        /// <summary>
+        /// Get filtered product sentiments
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [Post("/api/sentiments/filtered")]
+        Task<List<SentimentInfoContract>> ListFilteredSentimentInfoAsync([Body] SentimentInfoRequest request);
     }
 }

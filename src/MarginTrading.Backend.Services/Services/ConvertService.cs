@@ -40,7 +40,7 @@ namespace MarginTrading.Backend.Services.Services
                     .ForMember(dest => dest.MaintenanceLeverage,
                         opt => opt.MapFrom(x => new Leverage(x.MaintenanceLeverage)))
                     .ForMember(dest => dest.MarginRate, opt => opt.MapFrom(x => new MarginRate(x.MarginRatePercent)));
-            
+
                 cfg.CreateMap<RelatedOrderInfo, RelatedOrderInfoContract>(MemberList.Source);
                 cfg.CreateMap<Position, PositionContract>(MemberList.Destination)
                     .ForMember(x => x.TotalPnL, opt => opt.MapFrom(p => p.GetFpl()));

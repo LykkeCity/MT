@@ -106,7 +106,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     "active",
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     It.IsAny<Func<Pause, bool>>()))
                 .ReturnsAsync(new[] { GetPause(PauseState.Active) });
             
@@ -124,7 +124,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     "pending",
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     RfqPauseService.ActivePredicate))
                 .ReturnsAsync(Enumerable.Empty<Pause>());
 
@@ -133,7 +133,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     "pending",
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     RfqPauseService.PendingPredicate))
                 .ReturnsAsync(new[] { GetPersistedPause(PauseState.Pending) });
 
@@ -173,7 +173,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     It.IsAny<string>(),
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     It.IsAny<Func<Pause, bool>>()))
                 .ReturnsAsync(Enumerable.Empty<Pause>());
             
@@ -191,7 +191,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     "pending",
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     RfqPauseService.PendingPredicate))
                 .ReturnsAsync(new[] { GetPersistedPause(PauseState.Pending) });
 
@@ -217,7 +217,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     "pending cancellation",
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     RfqPauseService.PendingCancellationPredicate))
                 .ReturnsAsync(new[] { GetPersistedPause(PauseState.PendingCancellation) });
             
@@ -257,7 +257,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     It.IsAny<string>(),
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     It.IsAny<Func<Pause, bool>>()))
                 .ReturnsAsync(Enumerable.Empty<Pause>());
             
@@ -301,7 +301,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     It.IsAny<string>(),
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     RfqPauseService.ActivePredicate))
                 .ReturnsAsync(Enumerable.Empty<Pause>());
 
@@ -328,7 +328,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     "active",
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     RfqPauseService.ActivePredicate))
                 .ReturnsAsync(new[] { GetPersistedPause(PauseState.Active, PauseSource.TradingDisabled) });
             
@@ -355,7 +355,7 @@ namespace MarginTradingTests
             _repositoryPauseMock
                 .Setup(x => x.FindAsync(
                     "active",
-                    SpecialLiquidationSaga.OperationName,
+                    SpecialLiquidationSaga.Name,
                     RfqPauseService.ActivePredicate))
                 .ReturnsAsync(new[] { GetPersistedPause(PauseState.Active) });
 
@@ -514,7 +514,7 @@ namespace MarginTradingTests
         private static IOperationExecutionInfo<SpecialLiquidationOperationData> GetExecutionInfoWithState(SpecialLiquidationOperationState? state = null)
         {
             var result = new OperationExecutionInfo<SpecialLiquidationOperationData>(
-                SpecialLiquidationSaga.OperationName,
+                SpecialLiquidationSaga.Name,
                 "id",
                 DateTime.UtcNow,
                 new SpecialLiquidationOperationData());

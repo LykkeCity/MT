@@ -127,12 +127,10 @@ namespace MarginTrading.Backend.Services.Stp
 
         public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)
         {
-            if (!_orderbooks.TryGetValue(assetPairId, out var orderBook))
-            {
-                return null;
-            }
-
-            return MatchBestPriceForPositionClose(orderBook, volume);
+            if (_orderbooks.TryGetValue(assetPairId, out var orderBook))
+                return MatchBestPriceForPositionClose(orderBook, volume);
+            
+            return null;
         }
 
         //TODO: understand which orderbook should be used (best price? aggregated?)
@@ -163,7 +161,7 @@ namespace MarginTrading.Backend.Services.Stp
         private static decimal? MatchBestPriceForPositionClose(ExternalOrderBook externalOrderBook, decimal volume)
         {
             var direction = volume.GetClosePositionOrderDirection();
-            
+
             return externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
         }
 
