@@ -22,6 +22,8 @@ namespace MarginTrading.Backend.Services.Workflow
             switch (e.ChangeType)
             {
                 case ChangeType.Creation:
+                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
+                    break;
                 case ChangeType.Edition:
                     if (e.NewValue.IsDefault && (e.OldValue == null || !e.OldValue.IsDefault))
                         await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
