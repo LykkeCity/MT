@@ -14,6 +14,7 @@ using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.AssemblyLogging;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Cqrs;
 using Lykke.Snow.Common.Correlation.Http;
@@ -89,7 +90,7 @@ namespace MarginTrading.Backend
             services.AddSingleton<RabbitMqCorrelationManager>();
             services.AddSingleton<CqrsCorrelationManager>();
             services.AddTransient<HttpCorrelationHandler>();
-
+            services.AddAssemblyLogger();
             services.AddApplicationInsightsTelemetry();
 
             services.AddSingleton(Configuration);
@@ -202,7 +203,11 @@ namespace MarginTrading.Backend
                     ApplicationContainer
                         .Resolve<ICqrsEngine>()
                         .StartAll();
-
+                    
+                    ApplicationContainer
+                        .Resolve<AssemblyLogger>()
+                        .StartLogging();
+                    
                     Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
                     LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
                 }
