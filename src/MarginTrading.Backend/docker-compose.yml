@@ -15,20 +15,6 @@ services:
         aliases:
           - margintrading
 
-  rabbitmq:
-     image: rabbitmq:3-management
-     hostname: mtrabbit
-     volumes:
-       - ./definitions.json:/etc/rabbitmq/definitions.json:ro
-       - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
-     ports:
-       - "5672:5672"
-       - "15672:15672"
-     networks:
-      mynet:
-        aliases:
-          - mtrabbit
-
   mtaccounthistorybroker:
      image: lykkex/mtaccounthistorybroker
      container_name: mtaccounthistory
